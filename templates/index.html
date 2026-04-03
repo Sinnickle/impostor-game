@@ -8,6 +8,7 @@
 <h1>IMPOSTOR Hackathon Game</h1>
 
 <button onclick="createGame()">Create Game</button>
+
 <br><br>
 
 <input id="code" placeholder="Enter Code">
@@ -16,39 +17,39 @@
 
 <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
 <script>
-    const socket = io(window.location.origin);
+const socket = io();
 
-    socket.on("connect", () => {
-        console.log("Connected to server");
-    });
+socket.on("connect", () => {
+    console.log("Connected to server");
+});
 
-    function createGame() {
-        localStorage.setItem("isHost", "true");
-        socket.emit("create_game");
+function createGame() {
+    localStorage.setItem("isHost", "true");
+    socket.emit("create_game");
+}
+
+function joinGame() {
+    const code = document.getElementById("code").value.trim();
+    const team = document.getElementById("team").value.trim();
+
+    if (!team) {
+        alert("Enter a team name!");
+        return;
     }
 
-    function joinGame() {
-        const code = document.getElementById("code").value;
-        const team = document.getElementById("team").value;
+    localStorage.setItem("teamName", team);
+    localStorage.setItem("isHost", "false");
 
-        if (!team || team.trim() === "") {
-            alert("Enter a team name!");
-            return;
-        }
+    window.location.href = "/game/" + code;
+}
 
-        localStorage.setItem("teamName", team);
-        localStorage.setItem("isHost", "false");
+socket.on("redirect", (code) => {
+    window.location.href = "/game/" + code;
+});
 
-        window.location.href = "/game/" + code;
-    }
-
-    socket.on("redirect", (code) => {
-        window.location.href = "/game/" + code;
-    });
-
-    socket.on("error", (msg) => {
-        alert(msg);
-    });
+socket.on("error", (msg) => {
+    alert(msg);
+});
 </script>
 
 </body>

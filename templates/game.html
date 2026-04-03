@@ -13,38 +13,37 @@
 
 <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
 <script>
-    const socket = io(window.location.origin);
-    const code = "{{ code }}";
-    const isHost = localStorage.getItem("isHost");
-    const teamName = localStorage.getItem("teamName");
+const socket = io();
+const code = "{{ code }}";
+const isHost = localStorage.getItem("isHost");
+const teamName = localStorage.getItem("teamName");
 
-    // Emit join_game event
-    if (isHost === "true") {
-        socket.emit("join_game", { code: code, team: "Host" });
+if (isHost === "true") {
+    socket.emit("join_game", { code: code, team: "Host" });
+} else {
+    if (!teamName || teamName.trim() === "") {
+        alert("Please enter a team name before joining!");
+        window.location.href = "/";
     } else {
-        if (!teamName || teamName.trim() === "") {
-            alert("Please enter a team name before joining!");
-            window.location.href = "/";
-        } else {
-            socket.emit("join_game", { code: code, team: teamName });
-        }
+        socket.emit("join_game", { code: code, team: teamName });
     }
+}
 
-    socket.on("update_teams", (teams) => {
-        const list = document.getElementById("teamsList");
-        list.innerHTML = "";
-        teams.forEach(team => {
-            if (team && team.trim() !== "") {
-                const li = document.createElement("li");
-                li.innerText = team;
-                list.appendChild(li);
-            }
-        });
+socket.on("update_teams", (teams) => {
+    const list = document.getElementById("teamsList");
+    list.innerHTML = "";
+    teams.forEach(team => {
+        if (team && team.trim() !== "") {
+            const li = document.createElement("li");
+            li.innerText = team;
+            list.appendChild(li);
+        }
     });
+});
 
-    socket.on("error", (msg) => {
-        alert(msg);
-    });
+socket.on("error", (msg) => {
+    alert(msg);
+});
 </script>
 
 </body>
