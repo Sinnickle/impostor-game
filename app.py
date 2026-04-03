@@ -2,6 +2,10 @@ from flask import Flask, render_template, redirect, url_for
 from flask_socketio import SocketIO, emit, join_room
 import random
 import string
+import os
+import logging
+
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s] %(message)s")
 
 app = Flask(__name__)
 
@@ -64,6 +68,7 @@ def join_game(data):
 # -----------------------------
 # Run the app
 # -----------------------------
+
 if __name__ == "__main__":
-    port = 5000
+    port = int(os.environ.get("PORT", 5000))  # use Railway port
     socketio.run(app, host="0.0.0.0", port=port)
