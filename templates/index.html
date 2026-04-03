@@ -1,56 +1,124 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Impostor Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #f5f5f5;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: #1d1d1d;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        h1, h2 {
+            margin-top: 0;
+        }
+
+        input {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: #0f0f0f;
+            color: white;
+        }
+
+        button {
+            background: white;
+            color: black;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .muted {
+            color: #bbbbbb;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1>IMPOSTOR Hackathon Game</h1>
 
-<h1>IMPOSTOR Hackathon Game</h1>
+        <div class="card">
+            <h2>Create Game</h2>
+            <p class="muted">Hosts create a room and share the code with teams.</p>
+            <button onclick="createGame()">Create Game</button>
+        </div>
 
-<button onclick="createGame()">Create Game</button>
+        <div class="card">
+            <h2>Join Game</h2>
+            <input id="code" placeholder="Enter Code" maxlength="4">
+            <input id="team" placeholder="Team Name" maxlength="30">
+            <button onclick="joinGame()">Join Game</button>
+        </div>
+    </div>
 
-<br><br>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script>
+        const socket = io();
 
-<input id="code" placeholder="Enter Code">
-<input id="team" placeholder="Team Name">
-<button onclick="joinGame()">Join Game</button>
+        socket.on("connect", () => {
+            console.log("Connected to server");
+        });
 
-<script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
-<script>
-const socket = io();
+        function createGame() {
+            localStorage.removeItem("teamName");
+            localStorage.setItem("isHost", "true");
+            socket.emit("create_game");
+        }
 
-socket.on("connect", () => {
-    console.log("Connected to server");
-});
+        function joinGame() {
+            const codeInput = document.getElementById("code").value.trim().toUpperCase();
+            const teamInput = document.getElementById("team").value.trim();
 
-function createGame() {
-    localStorage.setItem("isHost", "true");
-    socket.emit("create_game");
-}
+            if (!codeInput) {
+                alert("Enter a game code.");
+                return;
+            }
 
-function joinGame() {
-    const code = document.getElementById("code").value.trim();
-    const team = document.getElementById("team").value.trim();
+            if (!teamInput) {
+                alert("Enter a team name.");
+                return;
+            }
 
-    if (!team) {
-        alert("Enter a team name!");
-        return;
-    }
+            localStorage.setItem("teamName", teamInput);
+            localStorage.setItem("isHost", "false");
 
-    localStorage.setItem("teamName", team);
-    localStorage.setItem("isHost", "false");
+            window.location.href = "/game/" + codeInput;
+        }
 
-    window.location.href = "/game/" + code;
-}
+        socket.on("redirect", (code) => {
+            window.location.href = "/game/" + code;
+        });
 
-socket.on("redirect", (code) => {
-    window.location.href = "/game/" + code;
-});
-
-socket.on("error", (msg) => {
-    alert(msg);
-});
-</script>
-
+        socket.on("error", (msg) => {
+            alert(msg);
+        });
+    </script>
 </body>
 </html>
