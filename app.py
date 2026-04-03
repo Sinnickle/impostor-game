@@ -111,7 +111,6 @@ def go_to_next_team_or_pause_before_voting(code):
         socketio.emit("show_continue", {
             "message": "All phrases are in. Host, press Continue to begin voting."
         }, room=code)
-
     else:
         start_phrase_phase(code)
 
@@ -182,7 +181,12 @@ def start_next_round_or_end(code):
     game["round"] += 1
     setup_round(code)
     send_role_info(code)
-    start_phrase_phase(code)
+
+    game["state"] = "paused_after_role"
+
+    socketio.emit("show_continue", {
+        "message": "New round roles revealed. Host, press Continue to begin phrase submission."
+    }, room=code)
 
 
 # -----------------------------
@@ -301,7 +305,12 @@ def start_game_request(data):
     setup_round(code)
     emit_team_and_score_updates(code)
     send_role_info(code)
-    start_phrase_phase(code)
+
+    game["state"] = "paused_after_role"
+
+    socketio.emit("show_continue", {
+        "message": "Roles revealed. Host, press Continue to begin phrase submission."
+    }, room=code)
 
 
 @socketio.on("host_continue")
@@ -321,7 +330,10 @@ def host_continue(data):
 
     socketio.emit("hide_continue", {}, room=code)
 
-    if game["state"] == "paused_before_voting":
+    if game["state"] == "paused_after_role":
+        start_phrase_phase(code)
+
+    elif game["state"] == "paused_before_voting":
         begin_voting_phase(code)
 
     elif game["state"] == "paused_after_result":

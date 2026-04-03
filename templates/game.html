@@ -94,18 +94,6 @@
             color: #d1d5db;
         }
 
-        .good {
-            color: #86efac;
-        }
-
-        .warning {
-            color: #fde68a;
-        }
-
-        .danger {
-            color: #fca5a5;
-        }
-
         .big {
             font-size: 1.1rem;
             font-weight: bold;
@@ -160,16 +148,6 @@
 
         li {
             margin-bottom: 6px;
-        }
-
-        .pill {
-            display: inline-block;
-            background: rgba(255,255,255,0.10);
-            border: 1px solid rgba(255,255,255,0.16);
-            border-radius: 999px;
-            padding: 6px 10px;
-            margin-right: 8px;
-            margin-bottom: 8px;
         }
 
         .hidden {
@@ -532,10 +510,10 @@
 
         socket.on("game_started", (data) => {
             phaseText.textContent = "Role Reveal";
-            mainInstruction.textContent = "Observe carefully. Roles are being revealed.";
+            mainInstruction.textContent = "Roles are being revealed now.";
             show(roundBox);
             hide(votingBox);
-            hide(continueBtn);
+            hide(phraseBox);
 
             roundText.textContent = `Round ${data.round}`;
             orderText.textContent = `Order: ${data.order.join(" → ")}`;
@@ -543,7 +521,11 @@
         });
 
         socket.on("role_info", (data) => {
-            hideMainBoxes();
+            phaseText.textContent = "Role Reveal";
+            mainInstruction.textContent = "Your role has been revealed. Wait for the host to continue.";
+
+            hide(phraseBox);
+            hide(votingBox);
             show(roleBox);
 
             if (data.role === "HOST") {
@@ -559,6 +541,8 @@
                 roleText.textContent = "Unknown role";
                 wordText.textContent = "";
             }
+
+            statusDiv.textContent = "Role received.";
         });
 
         socket.on("phrase_phase_started", (data) => {
