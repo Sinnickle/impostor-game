@@ -20,7 +20,12 @@
 <script>
     const socket = io();
 
+    socket.on("connect", () => {
+        console.log("Connected to server");
+    });
+
     function createGame() {
+        console.log("Creating game...");
         socket.emit("create_game");
     }
 
@@ -28,23 +33,23 @@
         const code = document.getElementById("code").value;
         const team = document.getElementById("team").value;
 
-        // Save team name locally
+        if (!team) {
+            alert("Enter a team name!");
+            return;
+        }
+
         localStorage.setItem("teamName", team);
         window.location.href = "/game/" + code;
     }
 
     socket.on("redirect", (code) => {
+        console.log("Redirecting to:", code);
         window.location.href = "/game/" + code;
     });
 
     socket.on("error", (msg) => {
         alert(msg);
     });
-
-    if (!team) {
-        alert("Enter a team name!");
-     return;
-    }
 </script>
 
 </body>
