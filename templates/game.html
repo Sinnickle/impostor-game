@@ -11,6 +11,24 @@
 
 <div id="statusMessage">Connecting...</div>
 
+<hr>
+
+<div id="gamePhase">
+    <h3>Phase: <span id="phaseText">Lobby</span></h3>
+</div>
+
+<div id="roleBox" style="display:none;">
+    <h3>Your Role</h3>
+    <p id="roleText"></p>
+    <p id="wordText"></p>
+</div>
+
+<div id="roundBox" style="display:none;">
+    <h3>Round Info</h3>
+    <p id="roundText"></p>
+    <p id="orderText"></p>
+</div>
+
 <h3>Teams Joined:</h3>
 <ul id="teamsList"></ul>
 
@@ -31,6 +49,13 @@ const code = "{{ code }}";
 const isHost = localStorage.getItem("isHost") === "true";
 const teamName = localStorage.getItem("teamName");
 const statusDiv = document.getElementById("statusMessage");
+const phaseText = document.getElementById("phaseText");
+const roleBox = document.getElementById("roleBox");
+const roleText = document.getElementById("roleText");
+const wordText = document.getElementById("wordText");
+const roundBox = document.getElementById("roundBox");
+const roundText = document.getElementById("roundText");
+const orderText = document.getElementById("orderText");
 
 // 2. Validation Logic
 if (!isHost && (!teamName || teamName.trim() === "")) {
@@ -52,6 +77,7 @@ if (!isHost && (!teamName || teamName.trim() === "")) {
 if (isHost) {
     const controls = document.getElementById("hostControls");
     controls.style.display = "block";
+    phaseText.innerText = "Lobby (Host)";
     document.getElementById("startGameBtn").onclick = () => {
         socket.emit("start_game_request", { code: code });
     };
@@ -89,6 +115,31 @@ socket.on("redirect", (targetCode) => {
 
 socket.on("disconnect", () => {
     statusDiv.innerText = "Connection lost. Reconnecting...";
+});
+socket.on("game_started", (data) => {
+    phaseText.innerText = "Role Reveal";
+    roundBox.style.display = "block";
+    roundText.innerText = "Round " + data.round;
+    orderText.innerText = "Order: " + data.order.join(" → ");
+    statusDiv.innerText = "The game has started.";
+});
+
+socket.on("role_info", (data) => {
+    roleBox.style.display = "block";
+
+    if (data.role === "HOST") {
+        roleText.innerText = "You are the HOST";
+        wordText.innerText = "Secret word: " + data.word + " | Impostor: " + data.impostor;
+    } else if (data.role === "IMPOSTOR") {
+        roleText.innerText = "You are the IMPOSTOR";
+        wordText.innerText = "You do not get the secret word.";
+    } else if (data.role === "HUMAN") {
+        roleText.innerText = "You are HUMAN";
+        wordText.innerText = "Secret word: " + data.word;
+    } else {
+        roleText.innerText = "Unknown role";
+        wordText.innerText = "";
+    }
 });
 </script>
 
