@@ -28,9 +28,8 @@
         const code = document.getElementById("code").value;
         const team = document.getElementById("team").value;
 
-        socket.emit("join_game", { code: code, team: team });
-
-        // Redirect to game page
+        // Save team name locally
+        localStorage.setItem("teamName", team);
         window.location.href = "/game/" + code;
     }
 
@@ -41,6 +40,11 @@
     socket.on("error", (msg) => {
         alert(msg);
     });
+
+    if (!team) {
+        alert("Enter a team name!");
+     return;
+    }
 </script>
 
 </body>

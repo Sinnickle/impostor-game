@@ -17,8 +17,10 @@
     const socket = io();
     const code = "{{ code }}";
 
-    // Join room when page loads
-    socket.emit("join_game", { code: code, team: "Player" + Math.floor(Math.random()*1000) });
+    // Get team name from previous page
+    const team = localStorage.getItem("teamName");
+
+    socket.emit("join_game", { code: code, team: team });
 
     socket.on("update_teams", (teams) => {
         const list = document.getElementById("teamsList");
