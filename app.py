@@ -70,10 +70,12 @@ def send_role_info(code):
                 "word": game["word"],
                 "impostor": game["impostor"]
             }, to=sid)
+
         elif team_name == game["impostor"]:
             socketio.emit("role_info", {
                 "role": "IMPOSTOR"
             }, to=sid)
+
         else:
             socketio.emit("role_info", {
                 "role": "HUMAN",
@@ -95,23 +97,33 @@ def start_phrase_phase(code):
     }, room=code)
 
 
-def go_to_next_team_or_voting(code):
+def go_to_next_team_or_pause_before_voting(code):
     game = games[code]
     game["current_turn"] += 1
 
     if game["current_turn"] >= len(game["order"]):
-        game["state"] = "voting"
+        game["state"] = "paused_before_voting"
 
         socketio.emit("all_phrases_complete", {
             "responses": game["responses"]
         }, room=code)
 
-        socketio.emit("start_voting", {
-            "teams": game["teams"],
-            "responses": game["responses"]
+        socketio.emit("show_continue", {
+            "message": "All phrases are in. Host, press Continue to begin voting."
         }, room=code)
+
     else:
         start_phrase_phase(code)
+
+
+def begin_voting_phase(code):
+    game = games[code]
+    game["state"] = "voting"
+
+    socketio.emit("start_voting", {
+        "teams": game["teams"],
+        "responses": game["responses"]
+    }, room=code)
 
 
 def calculate_round_result(code):
@@ -120,7 +132,6 @@ def calculate_round_result(code):
     vote_counts = Counter(game["votes"].values())
 
     if not vote_counts:
-        # Nobody voted, impostor survives
         voted_team = "No team"
         actual_impostor = game["impostor"]
         result_text = f"No votes were submitted. {actual_impostor} survives and gets +4 points."
@@ -129,7 +140,6 @@ def calculate_round_result(code):
         max_votes = max(vote_counts.values())
         tied_teams = [team for team, count in vote_counts.items() if count == max_votes]
 
-        # If tied, pick one randomly for now
         voted_team = random.choice(tied_teams)
         actual_impostor = game["impostor"]
 
@@ -150,6 +160,12 @@ def calculate_round_result(code):
     }, room=code)
 
     socketio.emit("update_scores", game["scores"], room=code)
+
+    game["state"] = "paused_after_result"
+
+    socketio.emit("show_continue", {
+        "message": "Round result shown. Host, press Continue when everyone is ready."
+    }, room=code)
 
 
 def start_next_round_or_end(code):
@@ -245,7 +261,6 @@ def join_game(data):
 
     team = str(team).strip()
 
-    # Prevent duplicate active team names
     active_non_host_teams = [name for name in game["players"].values() if name != "HOST"]
     if team in active_non_host_teams:
         emit("error", "That team name is already taken!")
@@ -287,6 +302,33 @@ def start_game_request(data):
     emit_team_and_score_updates(code)
     send_role_info(code)
     start_phrase_phase(code)
+
+
+@socketio.on("host_continue")
+def host_continue(data):
+    code = data.get("code")
+    sid = request.sid
+
+    if code not in games:
+        emit("error", "Game code not found!")
+        return
+
+    game = games[code]
+
+    if sid != game["host_sid"]:
+        emit("error", "Only the host can continue.")
+        return
+
+    socketio.emit("hide_continue", {}, room=code)
+
+    if game["state"] == "paused_before_voting":
+        begin_voting_phase(code)
+
+    elif game["state"] == "paused_after_result":
+        start_next_round_or_end(code)
+
+    else:
+        emit("error", "There is nothing to continue right now.")
 
 
 @socketio.on("submit_phrase")
@@ -334,7 +376,6 @@ def submit_phrase(data):
         emit("error", "Your team already submitted a phrase.")
         return
 
-    # Optional anti-cheat: humans cannot directly say the word
     if team_name != game["impostor"] and phrase.lower() == game["word"].lower():
         emit("error", "You cannot directly submit the secret word.")
         return
@@ -347,7 +388,7 @@ def submit_phrase(data):
         "responses": game["responses"]
     }, room=code)
 
-    go_to_next_team_or_voting(code)
+    go_to_next_team_or_pause_before_voting(code)
 
 
 @socketio.on("submit_vote")
@@ -394,10 +435,8 @@ def submit_vote(data):
         "message": f"You voted for {voted_team}."
     }, to=sid)
 
-    # When all non-host teams have voted, calculate result automatically
     if len(game["votes"]) >= len(game["teams"]):
         calculate_round_result(code)
-        start_next_round_or_end(code)
 
 
 @socketio.on("disconnect")
@@ -416,13 +455,11 @@ def handle_disconnect():
         else:
             logging.info(f"{team} disconnected from {code}")
 
-            # Remove team only if no other socket is using it
             remaining_teams = [name for name in game["players"].values() if name != "HOST"]
             if team not in remaining_teams:
                 if team in game["teams"]:
                     game["teams"].remove(team)
 
-        # If no players remain at all, delete game
         if not game["players"]:
             del games[code]
             logging.info(f"Game {code} deleted (empty)")

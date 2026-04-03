@@ -4,187 +4,289 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Impostor Game Room</title>
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #111;
-            color: #f5f5f5;
-            margin: 0;
-            padding: 20px;
+        * {
+            box-sizing: border-box;
         }
 
-        .container {
-            max-width: 950px;
-            margin: 0 auto;
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #ffffff;
+            background:
+                radial-gradient(circle at top left, #4f46e5 0%, transparent 25%),
+                radial-gradient(circle at top right, #db2777 0%, transparent 25%),
+                radial-gradient(circle at bottom left, #0ea5e9 0%, transparent 25%),
+                linear-gradient(135deg, #0f172a, #111827, #1e1b4b);
+            min-height: 100vh;
+        }
+
+        .app-shell {
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr) 260px;
+            gap: 18px;
+            padding: 18px;
+            min-height: 100vh;
+        }
+
+        .side-panel,
+        .main-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-height: 0;
         }
 
         .card {
-            background: #1d1d1d;
-            border: 1px solid #333;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 18px;
+            background: rgba(255, 255, 255, 0.10);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+            backdrop-filter: blur(10px);
         }
 
-        h1, h2, h3, h4 {
+        .compact {
+            padding: 14px;
+        }
+
+        .hero {
+            text-align: center;
+            background:
+                linear-gradient(135deg, rgba(244, 114, 182, 0.24), rgba(59, 130, 246, 0.24)),
+                rgba(255, 255, 255, 0.08);
+        }
+
+        .hero h1 {
+            margin: 0 0 10px 0;
+            font-size: 2rem;
+        }
+
+        .hero h2 {
+            margin: 0 0 12px 0;
+            font-size: 1.2rem;
+            color: #fde68a;
+        }
+
+        .phase-banner {
+            margin: 0 0 10px 0;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #fef08a;
+        }
+
+        .instruction {
+            margin: 0;
+            color: #e5e7eb;
+            font-size: 1rem;
+        }
+
+        h3, h4 {
             margin-top: 0;
         }
 
-        button {
-            background: #ffffff;
-            color: #000;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 14px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        input {
-            width: 100%;
-            max-width: 420px;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            background: #0f0f0f;
-            color: white;
-            margin-bottom: 10px;
-        }
-
-        ul {
-            padding-left: 20px;
+        p {
+            line-height: 1.5;
         }
 
         .muted {
-            color: #bbbbbb;
+            color: #d1d5db;
         }
 
         .good {
-            color: #7CFC98;
+            color: #86efac;
         }
 
         .warning {
-            color: #FFD166;
+            color: #fde68a;
         }
 
         .danger {
-            color: #FF7B7B;
+            color: #fca5a5;
         }
 
         .big {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
         }
 
         .row {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
+        }
+
+        button {
+            background: linear-gradient(135deg, #f97316, #ec4899);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            opacity: 0.95;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.20);
+            background: rgba(0, 0, 0, 0.24);
+            color: white;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        ul {
+            margin: 0;
+            padding-left: 18px;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        li {
+            margin-bottom: 6px;
         }
 
         .pill {
             display: inline-block;
-            background: #2a2a2a;
-            border: 1px solid #444;
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.16);
             border-radius: 999px;
             padding: 6px 10px;
             margin-right: 8px;
             margin-bottom: 8px;
         }
 
-        #responsesList li,
-        #teamsList li,
-        #scoreList li {
-            margin-bottom: 6px;
+        .hidden {
+            display: none !important;
         }
 
-        .hidden {
-            display: none;
+        .main-stage {
+            min-height: 320px;
+        }
+
+        .result-box {
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+
+        .small-note {
+            font-size: 0.92rem;
+        }
+
+        @media (max-width: 1100px) {
+            .app-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .side-panel {
+                order: 2;
+            }
+
+            .main-panel {
+                order: 1;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Impostor Game Room</h1>
-        <h2>Code: <span id="displayCode">{{ code }}</span></h2>
-
-        <div class="card">
-            <h3>Status</h3>
-            <p id="statusMessage">Connecting...</p>
-            <p class="muted">
-                You are:
-                <span id="identityText"></span>
-            </p>
-        </div>
-
-        <div class="card">
-            <h3>Game Phase</h3>
-            <p class="big">Phase: <span id="phaseText">Lobby</span></p>
-        </div>
-
-        <div id="hostControls" class="card hidden">
-            <h3>Host Controls</h3>
-            <button id="startGameBtn">Start Game</button>
-        </div>
-
-        <div id="roleBox" class="card hidden">
-            <h3>Your Role</h3>
-            <p id="roleText"></p>
-            <p id="wordText"></p>
-        </div>
-
-        <div id="roundBox" class="card hidden">
-            <h3>Round Info</h3>
-            <p id="roundText"></p>
-            <p id="orderText"></p>
-        </div>
-
-        <div id="phraseBox" class="card hidden">
-            <h3>Phrase Phase</h3>
-            <p id="turnText">Waiting for phrase phase...</p>
-
-            <div id="phraseInputArea" class="hidden">
-                <input
-                    id="phraseInput"
-                    type="text"
-                    maxlength="40"
-                    placeholder="Enter a phrase (up to 3 words)"
-                >
-                <div class="row">
-                    <button id="submitPhraseBtn">Submit Phrase</button>
-                </div>
-                <p class="muted">Rule: your phrase must be 3 words or fewer.</p>
+    <div class="app-shell">
+        <aside class="side-panel left-panel">
+            <div class="card compact">
+                <h3>Status</h3>
+                <p id="statusMessage">Connecting...</p>
+                <p class="muted">
+                    You are:
+                    <span id="identityText"></span>
+                </p>
             </div>
 
-            <h4>Submitted Phrases</h4>
-            <ul id="responsesList"></ul>
-        </div>
+            <div class="card compact">
+                <h3>Teams Joined</h3>
+                <ul id="teamsList"></ul>
+            </div>
+        </aside>
 
-        <div id="votingBox" class="card hidden">
-            <h3>Voting Phase</h3>
-            <p id="votingText">Voting has not started yet.</p>
-            <div id="voteOptions"></div>
-        </div>
+        <main class="main-panel">
+            <div class="card hero">
+                <h1>Impostor Game Room</h1>
+                <h2>Code: <span id="displayCode">{{ code }}</span></h2>
+                <p class="phase-banner">Phase: <span id="phaseText">Lobby</span></p>
+                <p id="mainInstruction" class="instruction">Waiting for the game to begin.</p>
+            </div>
 
-        <div class="card">
-            <h3>Teams Joined</h3>
-            <ul id="teamsList"></ul>
-        </div>
+            <div id="hostControls" class="card hidden">
+                <h3>Host Controls</h3>
+                <div class="row">
+                    <button id="startGameBtn">Start Game</button>
+                    <button id="continueBtn" class="hidden">Continue</button>
+                </div>
+                <p class="muted small-note">Use Continue to pause between major phases so teams can track what is happening.</p>
+            </div>
 
-        <div class="card">
-            <h3>Scoreboard</h3>
-            <ul id="scoreList"></ul>
-        </div>
+            <div id="roleBox" class="card hidden main-stage">
+                <h3>Your Role</h3>
+                <p id="roleText" class="big"></p>
+                <p id="wordText"></p>
+            </div>
+
+            <div id="roundBox" class="card hidden">
+                <h3>Round Info</h3>
+                <p id="roundText"></p>
+                <p id="orderText"></p>
+            </div>
+
+            <div id="phraseBox" class="card hidden main-stage">
+                <h3>Phrase Phase</h3>
+                <p id="turnText">Waiting for phrase phase...</p>
+
+                <div id="phraseInputArea" class="hidden">
+                    <input
+                        id="phraseInput"
+                        type="text"
+                        maxlength="40"
+                        placeholder="Enter a phrase (up to 3 words)"
+                    >
+                    <div class="row">
+                        <button id="submitPhraseBtn">Submit Phrase</button>
+                    </div>
+                    <p class="muted">Rule: your phrase must be 3 words or fewer.</p>
+                </div>
+            </div>
+
+            <div id="votingBox" class="card hidden main-stage">
+                <h3>Voting / Results</h3>
+                <p id="votingText">Voting has not started yet.</p>
+                <div id="voteOptions"></div>
+            </div>
+        </main>
+
+        <aside class="side-panel right-panel">
+            <div class="card compact">
+                <h3>Submitted Phrases</h3>
+                <ul id="responsesList"></ul>
+            </div>
+
+            <div class="card compact">
+                <h3>Scoreboard</h3>
+                <ul id="scoreList"></ul>
+            </div>
+        </aside>
     </div>
 
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
@@ -201,9 +303,11 @@
         const statusDiv = document.getElementById("statusMessage");
         const identityText = document.getElementById("identityText");
         const phaseText = document.getElementById("phaseText");
+        const mainInstruction = document.getElementById("mainInstruction");
 
         const hostControls = document.getElementById("hostControls");
         const startGameBtn = document.getElementById("startGameBtn");
+        const continueBtn = document.getElementById("continueBtn");
 
         const roleBox = document.getElementById("roleBox");
         const roleText = document.getElementById("roleText");
@@ -218,6 +322,7 @@
         const phraseInputArea = document.getElementById("phraseInputArea");
         const phraseInput = document.getElementById("phraseInput");
         const submitPhraseBtn = document.getElementById("submitPhraseBtn");
+
         const responsesList = document.getElementById("responsesList");
 
         const votingBox = document.getElementById("votingBox");
@@ -316,6 +421,9 @@
                 const btn = document.createElement("button");
                 btn.textContent = `Vote for ${team}`;
                 btn.onclick = () => {
+                    const allBtns = voteOptions.querySelectorAll("button");
+                    allBtns.forEach(b => b.disabled = true);
+
                     socket.emit("submit_vote", {
                         code: code,
                         voted_team: team
@@ -325,6 +433,12 @@
                 wrapper.appendChild(btn);
                 voteOptions.appendChild(wrapper);
             });
+        }
+
+        function hideMainBoxes() {
+            hide(roleBox);
+            hide(phraseBox);
+            hide(votingBox);
         }
 
         if (!isHost && (!teamName || teamName.trim() === "")) {
@@ -337,6 +451,8 @@
         if (isHost) {
             show(hostControls);
         }
+
+        hide(continueBtn);
 
         socket.on("connect", () => {
             statusDiv.textContent = "Connected.";
@@ -358,6 +474,12 @@
 
         socket.on("error", (msg) => {
             alert(msg);
+
+            if (!isHost) {
+                submitPhraseBtn.disabled = false;
+                const allBtns = voteOptions.querySelectorAll("button");
+                allBtns.forEach(b => b.disabled = false);
+            }
         });
 
         socket.on("update_teams", (teams) => {
@@ -370,6 +492,12 @@
 
         startGameBtn.onclick = () => {
             socket.emit("start_game_request", {
+                code: code
+            });
+        };
+
+        continueBtn.onclick = () => {
+            socket.emit("host_continue", {
                 code: code
             });
         };
@@ -388,6 +516,8 @@
                 return;
             }
 
+            submitPhraseBtn.disabled = true;
+
             socket.emit("submit_phrase", {
                 code: code,
                 phrase: phrase
@@ -402,16 +532,18 @@
 
         socket.on("game_started", (data) => {
             phaseText.textContent = "Role Reveal";
+            mainInstruction.textContent = "Observe carefully. Roles are being revealed.";
             show(roundBox);
+            hide(votingBox);
+            hide(continueBtn);
 
             roundText.textContent = `Round ${data.round}`;
             orderText.textContent = `Order: ${data.order.join(" → ")}`;
             statusDiv.textContent = "The game has started.";
-
-            hide(votingBox);
         });
 
         socket.on("role_info", (data) => {
+            hideMainBoxes();
             show(roleBox);
 
             if (data.role === "HOST") {
@@ -431,11 +563,16 @@
 
         socket.on("phrase_phase_started", (data) => {
             phaseText.textContent = "Phrase Submission";
+            mainInstruction.textContent = "Submit a phrase related to the word. Watch the order carefully.";
+
+            hideMainBoxes();
             show(phraseBox);
             hide(votingBox);
+            hide(continueBtn);
 
             turnText.textContent = `Turn ${data.current_index}/${data.total_teams}: ${data.current_team}`;
             renderResponses(data.responses);
+            submitPhraseBtn.disabled = false;
 
             if (!isHost && teamName === data.current_team) {
                 show(phraseInputArea);
@@ -456,13 +593,37 @@
 
         socket.on("all_phrases_complete", (data) => {
             phaseText.textContent = "Phrase Phase Complete";
+            mainInstruction.textContent = "All phrases are visible. Take a moment to analyze before voting begins.";
+
+            hideMainBoxes();
+            show(phraseBox);
+
             renderResponses(data.responses);
             hide(phraseInputArea);
-            statusDiv.textContent = "All teams have submitted. Voting phase is next.";
+            turnText.textContent = "All teams have submitted their phrases.";
+            statusDiv.textContent = "All teams have submitted. Waiting for host to begin voting.";
+        });
+
+        socket.on("show_continue", (data) => {
+            if (isHost) {
+                show(continueBtn);
+            }
+
+            if (data && data.message) {
+                statusDiv.textContent = data.message;
+                mainInstruction.textContent = data.message;
+            }
+        });
+
+        socket.on("hide_continue", () => {
+            hide(continueBtn);
         });
 
         socket.on("start_voting", (data) => {
             phaseText.textContent = "Voting";
+            mainInstruction.textContent = "Vote for the team you believe is the impostor.";
+
+            hideMainBoxes();
             show(votingBox);
             hide(phraseInputArea);
 
@@ -479,17 +640,25 @@
 
         socket.on("vote_received", (data) => {
             statusDiv.textContent = data.message || "Vote received.";
+            mainInstruction.textContent = "Your vote has been submitted. Waiting for the other teams.";
         });
 
         socket.on("round_result", (data) => {
             phaseText.textContent = "Round Result";
+            mainInstruction.textContent = "The round result is now displayed. Review it before continuing.";
+
+            hideMainBoxes();
             show(votingBox);
 
             votingText.innerHTML = `
-                <strong>Voted Team:</strong> ${data.voted_team}<br>
-                <strong>Actual Impostor:</strong> ${data.actual_impostor}<br>
-                <strong>Result:</strong> ${data.result_text}
+                <div class="result-box">
+                    <strong>Voted Team:</strong> ${data.voted_team}<br>
+                    <strong>Actual Impostor:</strong> ${data.actual_impostor}<br>
+                    <strong>Result:</strong> ${data.result_text}
+                </div>
             `;
+
+            voteOptions.innerHTML = "";
 
             if (data.scores) {
                 renderScores(data.scores);
@@ -500,10 +669,17 @@
 
         socket.on("game_over", (data) => {
             phaseText.textContent = "Game Over";
+            mainInstruction.textContent = "The game has ended. Final scores are now shown.";
+
             hide(phraseInputArea);
+            hide(roleBox);
+            hide(phraseBox);
             show(votingBox);
+            hide(continueBtn);
 
             votingText.innerHTML = `<strong>Final Leaderboard</strong>`;
+            voteOptions.innerHTML = "";
+
             if (data.scores) {
                 renderScores(data.scores);
             }
