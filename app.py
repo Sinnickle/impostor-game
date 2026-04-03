@@ -29,9 +29,6 @@ app = Flask(__name__)
 # Use eventlet async mode (compatible with Flask-SocketIO and Railway)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Store all games: {code: [player1, player2, ...]}
-games = {}
-
 # -----------------------------
 # Helper function: generate code
 # -----------------------------
