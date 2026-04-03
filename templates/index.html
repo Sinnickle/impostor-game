@@ -17,7 +17,7 @@
 
 <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
 <script>
-    const socket = io();
+    const socket = io(window.location.origin); // ensures it connects to the deployed backend
 
     socket.on("connect", () => {
         console.log("Connected to server");
