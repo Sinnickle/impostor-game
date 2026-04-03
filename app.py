@@ -1,7 +1,9 @@
 from flask import Flask, render_template
+from flask_socketio import SocketIO, emit
 import os
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 
 # Home page route
 @app.route("/")
@@ -18,7 +20,13 @@ def create():
 def join():
     return "<h2>Join Game Page</h2>"
 
+# Example real-time event
+@socketio.on("message")
+def handle_message(data):
+    print("Received:", data)
+    emit("message", data, broadcast=True)
+
 if __name__ == "__main__":
-    print("Flask is starting…")
+    print("Flask-SocketIO is starting…")
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    socketio.run(app, host="0.0.0.0", port=port)

@@ -5,7 +5,34 @@
 </head>
 <body>
     <h1>Welcome to the IMPOSTOR Hackathon Game!</h1>
+
     <button onclick="location.href='/create'">Create Game</button>
     <button onclick="location.href='/join'">Join Game</button>
+
+    <hr>
+
+    <h3>Test Real-Time Connection</h3>
+    <button onclick="sendMessage()">Send Test Message</button>
+
+    <p id="output"></p>
+
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+
+    <script>
+        const socket = io();
+
+        socket.on("connect", () => {
+            console.log("Connected!");
+        });
+
+        socket.on("message", (data) => {
+            document.getElementById("output").innerText = "Received: " + data;
+        });
+
+        function sendMessage() {
+            socket.emit("message", "Hello from a player!");
+        }
+    </script>
 </body>
 </html>
