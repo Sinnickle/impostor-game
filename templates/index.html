@@ -4,35 +4,57 @@
     <title>Impostor Game</title>
 </head>
 <body>
-    <h1>Welcome to the IMPOSTOR Hackathon Game!</h1>
 
-    <button onclick="location.href='/create'">Create Game</button>
-    <button onclick="location.href='/join'">Join Game</button>
+<h1>IMPOSTOR Hackathon Game</h1>
 
-    <hr>
+<button onclick="createGame()">Create Game</button>
 
-    <h3>Test Real-Time Connection</h3>
-    <button onclick="sendMessage()">Send Test Message</button>
+<br><br>
 
-    <p id="output"></p>
+<input id="code" placeholder="Enter Code">
+<input id="team" placeholder="Team Name">
+<button onclick="joinGame()">Join Game</button>
 
-    <!-- Socket.IO -->
-    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+<h2 id="gameCode"></h2>
 
-    <script>
-        const socket = io();
+<h3>Teams:</h3>
+<ul id="teamsList"></ul>
 
-        socket.on("connect", () => {
-            console.log("Connected!");
+<script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+
+<script>
+    const socket = io();
+
+    function createGame() {
+        socket.emit("create_game");
+    }
+
+    function joinGame() {
+        const code = document.getElementById("code").value;
+        const team = document.getElementById("team").value;
+
+        socket.emit("join_game", { code: code, team: team });
+    }
+
+    socket.on("game_created", (code) => {
+        document.getElementById("gameCode").innerText = "Game Code: " + code;
+    });
+
+    socket.on("update_teams", (teams) => {
+        const list = document.getElementById("teamsList");
+        list.innerHTML = "";
+
+        teams.forEach(team => {
+            const li = document.createElement("li");
+            li.innerText = team;
+            list.appendChild(li);
         });
+    });
 
-        socket.on("message", (data) => {
-            document.getElementById("output").innerText = "Received: " + data;
-        });
+    socket.on("error", (msg) => {
+        alert(msg);
+    });
+</script>
 
-        function sendMessage() {
-            socket.emit("message", "Hello from a player!");
-        }
-    </script>
 </body>
 </html>
