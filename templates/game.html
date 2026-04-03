@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Game Room</title>
+</head>
+<body>
+
+<h1>Game Room</h1>
+<h2>Code: {{ code }}</h2>
+
+<h3>Teams:</h3>
+<ul id="teamsList"></ul>
+
+<script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+
+<script>
+    const socket = io();
+    const code = "{{ code }}";
+
+    // Join room when page loads
+    socket.emit("join_game", { code: code, team: "Player" + Math.floor(Math.random()*1000) });
+
+    socket.on("update_teams", (teams) => {
+        const list = document.getElementById("teamsList");
+        list.innerHTML = "";
+
+        teams.forEach(team => {
+            const li = document.createElement("li");
+            li.innerText = team;
+            list.appendChild(li);
+        });
+    });
+</script>
+
+</body>
+</html>

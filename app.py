@@ -1,5 +1,5 @@
 from flask import Flask, render_template
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room
 import os
 import random
 import string
@@ -7,10 +7,8 @@ import string
 app = Flask(__name__)
 socketio = SocketIO(app)
 
-# Store games
 games = {}
 
-# Generate random game code
 def generate_code():
     return ''.join(random.choices(string.ascii_uppercase, k=4))
 
@@ -18,12 +16,16 @@ def generate_code():
 def home():
     return render_template("index.html")
 
+@app.route("/game/<code>")
+def game(code):
+    return render_template("game.html", code=code)
+
 # Create game
 @socketio.on("create_game")
 def create_game():
     code = generate_code()
     games[code] = []
-    emit("game_created", code)
+    emit("redirect", code)
 
 # Join game
 @socketio.on("join_game")
@@ -32,8 +34,11 @@ def join_game(data):
     team = data["team"]
 
     if code in games:
+        join_room(code)
         games[code].append(team)
-        emit("update_teams", games[code], broadcast=True)
+
+        # ONLY send updates to that room
+        emit("update_teams", games[code], room=code)
     else:
         emit("error", "Game not found")
 

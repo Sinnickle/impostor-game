@@ -15,11 +15,6 @@
 <input id="team" placeholder="Team Name">
 <button onclick="joinGame()">Join Game</button>
 
-<h2 id="gameCode"></h2>
-
-<h3>Teams:</h3>
-<ul id="teamsList"></ul>
-
 <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
 
 <script>
@@ -34,21 +29,13 @@
         const team = document.getElementById("team").value;
 
         socket.emit("join_game", { code: code, team: team });
+
+        // Redirect to game page
+        window.location.href = "/game/" + code;
     }
 
-    socket.on("game_created", (code) => {
-        document.getElementById("gameCode").innerText = "Game Code: " + code;
-    });
-
-    socket.on("update_teams", (teams) => {
-        const list = document.getElementById("teamsList");
-        list.innerHTML = "";
-
-        teams.forEach(team => {
-            const li = document.createElement("li");
-            li.innerText = team;
-            list.appendChild(li);
-        });
+    socket.on("redirect", (code) => {
+        window.location.href = "/game/" + code;
     });
 
     socket.on("error", (msg) => {
