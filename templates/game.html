@@ -20,8 +20,13 @@
     // Get team name from previous page
     const team = localStorage.getItem("teamName");
 
-    socket.emit("join_game", { code: code, team: team });
-
+    if (!team || team.trim() === "") {
+        alert("Please enter a team name before joining the game!");
+        // Optionally redirect back to join page:
+        window.location.href = "/";
+    } else {
+     socket.emit("join_game", { code: code, team: team });
+    }
     socket.on("update_teams", (teams) => {
         const list = document.getElementById("teamsList");
         list.innerHTML = "";
