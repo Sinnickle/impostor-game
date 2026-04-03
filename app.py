@@ -1,47 +1,66 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for
 from flask_socketio import SocketIO, emit, join_room
-import os
 import random
 import string
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
+# Stores all games: { code: [player1, player2, ...] }
 games = {}
 
-def generate_code():
-    return ''.join(random.choices(string.ascii_uppercase, k=4))
+# -----------------------------
+# Helper function: generate code
+# -----------------------------
+def generate_code(length=4):
+    return ''.join(random.choices(string.ascii_uppercase, k=length))
 
+# -----------------------------
+# Routes
+# -----------------------------
 @app.route("/")
 def home():
     return render_template("index.html")
 
 @app.route("/game/<code>")
-def game(code):
+def game_room(code):
     return render_template("game.html", code=code)
 
-# Create game
+# -----------------------------
+# SocketIO Events
+# -----------------------------
 @socketio.on("create_game")
 def create_game():
     code = generate_code()
-    games[code] = []
+    # Create game with Host
+    games[code] = ["Host"]
+    print(f"Game created: {code}")
     emit("redirect", code)
 
-# Join game
 @socketio.on("join_game")
 def join_game(data):
-    code = data["code"]
-    team = data["team"]
+    code = data.get("code")
+    team = data.get("team")
 
-    if code in games:
-        join_room(code)
+    if not team or team.strip() == "":
+        emit("error", "Invalid team name!")
+        return
+
+    if code not in games:
+        emit("error", "Game code not found!")
+        return
+
+    # Add player to the game
+    if team not in games[code]:
         games[code].append(team)
 
-        # ONLY send updates to that room
-        emit("update_teams", games[code], room=code)
-    else:
-        emit("error", "Game not found")
+    join_room(code)
+    emit("update_teams", games[code], room=code)
+    print(f"{team} joined game {code}")
 
+# -----------------------------
+# Run the app
+# -----------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    socketio.run(app, host="0.0.0.0", port=port)
+    port = 5000
+    socketio.run(app, host="0.0.0.0", port=port, debug=True)

@@ -16,7 +16,6 @@
 <button onclick="joinGame()">Join Game</button>
 
 <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
-
 <script>
     const socket = io();
 
@@ -25,7 +24,7 @@
     });
 
     function createGame() {
-        console.log("Creating game...");
+        localStorage.setItem("isHost", "true");
         socket.emit("create_game");
     }
 
@@ -33,17 +32,18 @@
         const code = document.getElementById("code").value;
         const team = document.getElementById("team").value;
 
-        if (!team) {
+        if (!team || team.trim() === "") {
             alert("Enter a team name!");
             return;
         }
 
         localStorage.setItem("teamName", team);
+        localStorage.setItem("isHost", "false");
+
         window.location.href = "/game/" + code;
     }
 
     socket.on("redirect", (code) => {
-        console.log("Redirecting to:", code);
         window.location.href = "/game/" + code;
     });
 

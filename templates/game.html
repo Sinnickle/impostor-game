@@ -12,30 +12,38 @@
 <ul id="teamsList"></ul>
 
 <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
-
 <script>
     const socket = io();
     const code = "{{ code }}";
+    const isHost = localStorage.getItem("isHost");
+    const teamName = localStorage.getItem("teamName");
 
-    // Get team name from previous page
-    const team = localStorage.getItem("teamName");
-
-    if (!team || team.trim() === "") {
-        alert("Please enter a team name before joining the game!");
-        // Optionally redirect back to join page:
-        window.location.href = "/";
+    // Only emit join if player has a team or is host
+    if (isHost === "true") {
+        socket.emit("join_game", { code: code, team: "Host" });
     } else {
-     socket.emit("join_game", { code: code, team: team });
+        if (!teamName || teamName.trim() === "") {
+            alert("Please enter a team name before joining!");
+            window.location.href = "/";
+        } else {
+            socket.emit("join_game", { code: code, team: teamName });
+        }
     }
+
     socket.on("update_teams", (teams) => {
         const list = document.getElementById("teamsList");
         list.innerHTML = "";
-
         teams.forEach(team => {
-            const li = document.createElement("li");
-            li.innerText = team;
-            list.appendChild(li);
+            if (team && team.trim() !== "") {
+                const li = document.createElement("li");
+                li.innerText = team;
+                list.appendChild(li);
+            }
         });
+    });
+
+    socket.on("error", (msg) => {
+        alert(msg);
     });
 </script>
 
