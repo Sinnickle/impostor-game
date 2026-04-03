@@ -62,5 +62,8 @@ def join_game(data):
 # Run the app
 # -----------------------------
 if __name__ == "__main__":
-    port = 5000
-    socketio.run(app, host="0.0.0.0", port=port, debug=True)
+    import eventlet
+    import eventlet.wsgi
+
+    port = int(os.environ.get("PORT", 5000))  # Railway sets PORT dynamically
+    socketio.run(app, host="0.0.0.0", port=port, debug=True, server='eventlet')
