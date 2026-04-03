@@ -13,12 +13,12 @@
 
 <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
 <script>
-    const socket = io(window.location.origin); // ensures it connects to the deployed backend
+    const socket = io(window.location.origin);
     const code = "{{ code }}";
     const isHost = localStorage.getItem("isHost");
     const teamName = localStorage.getItem("teamName");
 
-    // Only emit join if player has a team or is host
+    // Emit join_game event
     if (isHost === "true") {
         socket.emit("join_game", { code: code, team: "Host" });
     } else {

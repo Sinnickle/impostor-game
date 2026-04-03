@@ -8,7 +8,6 @@
 <h1>IMPOSTOR Hackathon Game</h1>
 
 <button onclick="createGame()">Create Game</button>
-
 <br><br>
 
 <input id="code" placeholder="Enter Code">
@@ -17,7 +16,7 @@
 
 <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
 <script>
-    const socket = io(window.location.origin); // ensures it connects to the deployed backend
+    const socket = io(window.location.origin);
 
     socket.on("connect", () => {
         console.log("Connected to server");
