@@ -2,47 +2,93 @@
 <html>
 <head>
     <title>Game Room</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 
 <h1>Game Room</h1>
-<h2>Code: {{ code }}</h2>
+<h2>Code: <span id="displayCode">{{ code }}</span></h2>
 
-<h3>Teams:</h3>
+<div id="statusMessage">Connecting...</div>
+
+<h3>Teams Joined:</h3>
 <ul id="teamsList"></ul>
+
+<!-- Only the host should see the "Start Game" button -->
+<div id="hostControls" style="display: none;">
+    <button id="startGameBtn">Start Game</button>
+</div>
 
 <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
 <script>
-const socket = io();
-const code = "{{ code }}";
-const isHost = localStorage.getItem("isHost");
-const teamName = localStorage.getItem("teamName");
+// 1. Configuration & Setup
+const socket = io({
+    reconnection: true,
+    reconnectionAttempts: 5
+});
 
-if (isHost === "true") {
-    socket.emit("join_game", { code: code, team: "Host" });
+const code = "{{ code }}";
+const isHost = localStorage.getItem("isHost") === "true";
+const teamName = localStorage.getItem("teamName");
+const statusDiv = document.getElementById("statusMessage");
+
+// 2. Validation Logic
+if (!isHost && (!teamName || teamName.trim() === "")) {
+    alert("Session expired or invalid team name. Returning to home.");
+    window.location.href = "/";
 } else {
-    if (!teamName || teamName.trim() === "") {
-        alert("Please enter a team name before joining!");
-        window.location.href = "/";
-    } else {
-        socket.emit("join_game", { code: code, team: teamName });
-    }
+    // 3. Emit Join Event inside a connection listener to ensure socket is ready
+    socket.on("connect", () => {
+        statusDiv.innerText = "Connected! Waiting for players...";
+        socket.emit("join_game", { 
+            code: code, 
+            team: isHost ? null : teamName, 
+            isHost: isHost 
+        });
+    });
 }
 
+// 4. Host-Specific UI logic
+if (isHost) {
+    const controls = document.getElementById("hostControls");
+    controls.style.display = "block";
+    document.getElementById("startGameBtn").onclick = () => {
+        socket.emit("start_game_request", { code: code });
+    };
+}
+
+// 5. Update Teams (with deduplication check)
 socket.on("update_teams", (teams) => {
     const list = document.getElementById("teamsList");
     list.innerHTML = "";
-    teams.forEach(team => {
-        if (team && team.trim() !== "") {
-            const li = document.createElement("li");
-            li.innerText = team;
-            list.appendChild(li);
-        }
+    
+    // Convert to Set and back to Array to ensure unique names if server lags
+    const uniqueTeams = [...new Set(teams)].filter(t => t && t.trim() !== "");
+    
+    if (uniqueTeams.length === 0) {
+        list.innerHTML = "<li>No teams joined yet.</li>";
+    }
+
+    uniqueTeams.forEach(team => {
+        const li = document.createElement("li");
+        li.innerText = team;
+        list.appendChild(li);
     });
 });
 
+// 6. Handle Critical Events
 socket.on("error", (msg) => {
+    statusDiv.innerText = "Error: " + msg;
     alert(msg);
+});
+
+socket.on("redirect", (targetCode) => {
+    // Safety: ensure we redirect to the correct path
+    window.location.href = "/game/" + targetCode;
+});
+
+socket.on("disconnect", () => {
+    statusDiv.innerText = "Connection lost. Reconnecting...";
 });
 </script>
 

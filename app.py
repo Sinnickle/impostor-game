@@ -52,23 +52,35 @@ def create_game():
 def join_game(data):
     code = data.get("code")
     team = data.get("team")
-
-    if not team or team.strip() == "":
-        emit("error", "Invalid team name!")
-        return
+    is_host = data.get("isHost", False)
 
     if code not in games:
         emit("error", "Game code not found!")
         return
 
     game = games[code]
-    sid = request.sid  # unique socket ID
+    sid = request.sid
 
-    # Prevent duplicate teams
+    # 🟢 Handle host separately
+    if is_host:
+        game["players"][sid] = "HOST"
+        join_room(code)
+        print(f"Host joined game {code}")
+        
+        # Still send team list (unchanged)
+        emit("update_teams", game["teams"], room=code)
+        return
+
+    # 🔴 Normal player validation
+    if not team or team.strip() == "":
+        emit("error", "Invalid team name!")
+        return
+
+    team = team.strip()
+
     if team not in game["teams"]:
         game["teams"].append(team)
 
-    # Track player
     game["players"][sid] = team
 
     join_room(code)
@@ -83,6 +95,11 @@ def handle_disconnect():
     for code, game in list(games.items()):
         if sid in game["players"]:
             team = game["players"].pop(sid)
+
+            # Ignore host
+            if team == "HOST":
+                print(f"Host disconnected from {code}")
+                return
 
             # Remove team if no one else is using it
             if team not in game["players"].values():
