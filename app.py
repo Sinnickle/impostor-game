@@ -10,16 +10,35 @@ import logging
 games = {}
 
 WORD_LIST = [
-    "Algorithm",
-    "Pathfinding",
-    "Recursion",
-    "Stack",
-    "Queue",
-    "Variable",
-    "Function",
-    "Loop",
-    "Array",
-    "Boolean"
+    "Sky", "Banana", "Castle", "Ocean", "Pillow",
+    "Dragon", "Mirror", "Thunder", "Feather", "Cactus",
+    "Rainbow", "Shadow", "Lantern", "Mountain", "Coffee",
+
+    "Butterfly", "Galaxy", "Notebook", "Iceberg", "Fireworks",
+    "Compass", "Jungle", "Sunglasses", "Treasure", "Whistle",
+
+    "Backpack", "Volcano", "Lighthouse", "Bubble", "Tornado",
+    "Camera", "Bridge", "Snowflake", "Helmet", "Rocket",
+
+    "Clock", "River", "Balloon", "Skateboard", "Candle",
+    "Forest", "Shell", "Anchor", "Drum", "Parachute",
+
+    "Sofa", "Helmet", "Dolphin", "Key", "Tunnel",
+    "Suitcase", "Island", "Paintbrush", "Scarf", "Glove",
+
+    "Helmet", "Spoon", "Bottle", "Curtain", "Desk",
+    "Window", "Carpet", "Chandelier", "Fence", "Gate",
+
+    "Helmet", "Shoelace", "Cookie", "Cupcake", "Pizza",
+    "Sandwich", "Pancake", "Waffle", "Milkshake", "Popcorn",
+
+    "Helmet", "Tiger", "Elephant", "Penguin", "Giraffe",
+    "Zebra", "Kangaroo", "Panda", "Koala", "Octopus",
+
+    "Helmet", "Violin", "Guitar", "Piano", "Trumpet",
+    "Flute", "Drums", "Microphone", "Speaker", "Headphones",
+
+    "Helmet", "Spaceship", "Meteor", "Planet", "Comet"
 ]
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s] %(message)s")
