@@ -317,6 +317,7 @@ def calculate_round_result(code):
     }
 
     additional_round_count = len(game["additional_round_voters"])
+    additional_round_triggered = additional_round_count > (len(game["teams"]) / 2)
 
     vote_counts = Counter(accusation_votes.values())
     majority_team = None
@@ -334,13 +335,31 @@ def calculate_round_result(code):
         if voted_for == actual_impostor
     ])
 
-    # Individual rewards: +1 if a team personally guessed correctly
+    # IMPORTANT: if additional round wins, do NOT reveal impostor and do NOT score
+    if additional_round_triggered:
+        game["state"] = "paused_after_result"
+        emit_roster_update(code)
+
+        socketio.emit("round_result", {
+            "majority_team": None,
+            "actual_impostor": None,
+            "majority_correct": False,
+            "individual_correct_teams": [],
+            "result_text": "Additional round approved. No roles were revealed and no points were awarded.",
+            "scores": game["scores"],
+            "responses": game["responses"],
+            "votes": game["votes"],
+            "additional_round_votes": additional_round_count,
+            "additional_round_triggered": True,
+        }, room=code)
+        return
+
+    # Only score if NO additional round was triggered
     for team_name in individual_correct_teams:
         game["scores"][team_name] += 1
 
     result_text = ""
     if majority_correct:
-        # Every human team gets +2
         for team_name in game["teams"]:
             if team_name != actual_impostor:
                 game["scores"][team_name] += 2
@@ -351,8 +370,6 @@ def calculate_round_result(code):
             result_text = "No clear majority formed. The impostor survives and gains +4."
         else:
             result_text = "The majority accused the wrong team. The impostor survives and gains +4."
-
-    additional_round_triggered = additional_round_count > (len(game["teams"]) / 2)
 
     game["state"] = "paused_after_result"
     emit_roster_update(code)
@@ -367,9 +384,8 @@ def calculate_round_result(code):
         "responses": game["responses"],
         "votes": game["votes"],
         "additional_round_votes": additional_round_count,
-        "additional_round_triggered": additional_round_triggered,
+        "additional_round_triggered": False,
     }, room=code)
-
 
 def advance_after_result(code):
     game = games[code]

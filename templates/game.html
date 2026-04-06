@@ -941,25 +941,34 @@
             renderResponses(data.responses || {});
             setCurrentTurn("--");
 
-            const majorityText = data.majority_team ? data.majority_team : "No clear majority";
-            const individualText = (data.individual_correct_teams && data.individual_correct_teams.length)
-                ? data.individual_correct_teams.join(", ")
-                : "None";
-
             const extraRoundText = data.additional_round_triggered
-                ? `YES (${data.additional_round_votes} teams voted for it)`
-                : `NO (${data.additional_round_votes} teams voted for it)`;
+    ? `YES (${data.additional_round_votes} teams voted for it)`
+    : `NO (${data.additional_round_votes} teams voted for it)`;
 
-            votingText.innerHTML = `
-                <div class="result-box">
-                    <strong>Majority Choice:</strong> ${majorityText}<br>
-                    <strong>Actual Impostor:</strong> ${data.actual_impostor}<br>
-                    <strong>Majority Correct:</strong> ${data.majority_correct ? "Yes" : "No"}<br>
-                    <strong>Individual Correct Votes (+1):</strong> ${individualText}<br>
-                    <strong>Additional Round:</strong> ${extraRoundText}<br>
-                    <strong>Result:</strong> ${data.result_text}
-                </div>
-            `;
+if (data.additional_round_triggered) {
+    votingText.innerHTML = `
+        <div class="result-box">
+            <strong>Additional Round:</strong> ${extraRoundText}<br>
+            <strong>Result:</strong> ${data.result_text}
+        </div>
+    `;
+} else {
+    const majorityText = data.majority_team ? data.majority_team : "No clear majority";
+    const individualText = (data.individual_correct_teams && data.individual_correct_teams.length)
+        ? data.individual_correct_teams.join(", ")
+        : "None";
+
+    votingText.innerHTML = `
+        <div class="result-box">
+            <strong>Majority Choice:</strong> ${majorityText}<br>
+            <strong>Actual Impostor:</strong> ${data.actual_impostor}<br>
+            <strong>Majority Correct:</strong> ${data.majority_correct ? "Yes" : "No"}<br>
+            <strong>Individual Correct Votes (+1):</strong> ${individualText}<br>
+            <strong>Additional Round:</strong> ${extraRoundText}<br>
+            <strong>Result:</strong> ${data.result_text}
+        </div>
+    `;
+        }
 
             voteOptions.innerHTML = "";
 
