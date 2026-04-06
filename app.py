@@ -10,35 +10,33 @@ import logging
 games = {}
 
 WORD_LIST = [
-    "Sky", "Banana", "Castle", "Ocean", "Pillow",
-    "Dragon", "Mirror", "Thunder", "Feather", "Cactus",
-    "Rainbow", "Shadow", "Lantern", "Mountain", "Coffee",
+    # --- Computer Science (50) ---
+    "Algorithm", "Array", "Function", "Variable", "Loop",
+    "Stack", "Queue", "Tree", "Graph", "HashMap",
+    "Binary", "Pointer", "Object", "Class", "Method",
+    "Runtime", "Compiler", "Syntax", "Bug", "Debugging",
+    "Exception", "Optimization", "Search", "Sort", "Traversal",
+    "Database", "Query", "Table", "API", "Request",
+    "Response", "Server", "Client", "Protocol", "Cache",
+    "Latency", "Thread", "Memory", "Storage", "Encryption",
+    "Hashing", "Authentication", "Token", "Security", "Frontend",
+    "Backend", "Framework", "Library", "Deployment", "Cloud",
 
-    "Butterfly", "Galaxy", "Notebook", "Iceberg", "Fireworks",
-    "Compass", "Jungle", "Sunglasses", "Treasure", "Whistle",
+    # --- General Words (50) ---
+    "Sky", "Ocean", "Mountain", "River", "Forest",
+    "Desert", "Island", "Volcano", "Storm", "Rainbow",
 
-    "Backpack", "Volcano", "Lighthouse", "Bubble", "Tornado",
-    "Camera", "Bridge", "Snowflake", "Helmet", "Rocket",
+    "Dragon", "Castle", "Knight", "Treasure", "Sword",
+    "Shield", "Wizard", "Potion", "Crown", "Throne",
 
-    "Clock", "River", "Balloon", "Skateboard", "Candle",
-    "Forest", "Shell", "Anchor", "Drum", "Parachute",
+    "Banana", "Pizza", "Burger", "Pancake", "Cookie",
+    "Cupcake", "Popcorn", "Milkshake", "Sandwich", "Waffle",
 
-    "Sofa", "Helmet", "Dolphin", "Key", "Tunnel",
-    "Suitcase", "Island", "Paintbrush", "Scarf", "Glove",
+    "Guitar", "Piano", "Drum", "Violin", "Microphone",
+    "Speaker", "Headphones", "Camera", "Painting", "Dance",
 
-    "Helmet", "Spoon", "Bottle", "Curtain", "Desk",
-    "Window", "Carpet", "Chandelier", "Fence", "Gate",
-
-    "Helmet", "Shoelace", "Cookie", "Cupcake", "Pizza",
-    "Sandwich", "Pancake", "Waffle", "Milkshake", "Popcorn",
-
-    "Helmet", "Tiger", "Elephant", "Penguin", "Giraffe",
-    "Zebra", "Kangaroo", "Panda", "Koala", "Octopus",
-
-    "Helmet", "Violin", "Guitar", "Piano", "Trumpet",
-    "Flute", "Drums", "Microphone", "Speaker", "Headphones",
-
-    "Helmet", "Spaceship", "Meteor", "Planet", "Comet"
+    "Tiger", "Elephant", "Penguin", "Giraffe", "Dolphin",
+    "Panda", "Kangaroo", "Zebra", "Owl", "Octopus"
 ]
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -70,8 +68,12 @@ def setup_round(code):
     game["word"] = random.choice(WORD_LIST)
     game["order"] = random.sample(game["teams"], len(game["teams"]))
     game["current_turn"] = 0
+
     game["responses"] = {}
     game["votes"] = {}
+    game["ready_teams"] = set()
+
+    game["turn_token"] += 1
 
 
 def send_role_info(code):
@@ -101,10 +103,31 @@ def send_role_info(code):
                 "word": game["word"]
             }, to=sid)
 
+    emit_ready_status(code)
+
+
+def emit_ready_status(code):
+    game = games[code]
+    socketio.emit("ready_status", {
+        "ready_teams": sorted(list(game["ready_teams"])),
+        "total_teams": len(game["teams"]),
+        "all_ready": len(game["ready_teams"]) == len(game["teams"])
+    }, room=code)
+
 
 def start_phrase_phase(code):
+    if code not in games:
+        return
+
     game = games[code]
+
+    if game["current_turn"] >= len(game["order"]):
+        go_to_next_team_or_pause_before_voting(code)
+        return
+
     game["state"] = "phrase"
+    game["turn_token"] += 1
+    turn_token = game["turn_token"]
 
     current_team = game["order"][game["current_turn"]]
 
@@ -112,11 +135,80 @@ def start_phrase_phase(code):
         "current_team": current_team,
         "current_index": game["current_turn"] + 1,
         "total_teams": len(game["order"]),
-        "responses": game["responses"]
+        "responses": game["responses"],
+        "time_limit": 30
     }, room=code)
+
+    socketio.start_background_task(run_phrase_timer, code, current_team, turn_token, 30)
+
+
+def run_phrase_timer(code, current_team, turn_token, seconds):
+    for remaining in range(seconds, 0, -1):
+        if code not in games:
+            return
+
+        game = games[code]
+
+        if game["state"] != "phrase":
+            return
+
+        if game["turn_token"] != turn_token:
+            return
+
+        current_index = game["current_turn"]
+        if current_index >= len(game["order"]):
+            return
+
+        if game["order"][current_index] != current_team:
+            return
+
+        if current_team in game["responses"]:
+            return
+
+        socketio.emit("phrase_timer_update", {
+            "current_team": current_team,
+            "seconds_left": remaining
+        }, room=code)
+
+        socketio.sleep(1)
+
+    if code not in games:
+        return
+
+    game = games[code]
+
+    if game["state"] != "phrase":
+        return
+
+    if game["turn_token"] != turn_token:
+        return
+
+    current_index = game["current_turn"]
+    if current_index >= len(game["order"]):
+        return
+
+    if game["order"][current_index] != current_team:
+        return
+
+    if current_team in game["responses"]:
+        return
+
+    game["responses"][current_team] = "[No Response]"
+
+    socketio.emit("phrase_submitted", {
+        "team": current_team,
+        "phrase": "[No Response]",
+        "responses": game["responses"],
+        "auto_submitted": True
+    }, room=code)
+
+    go_to_next_team_or_pause_before_voting(code)
 
 
 def go_to_next_team_or_pause_before_voting(code):
+    if code not in games:
+        return
+
     game = games[code]
     game["current_turn"] += 1
 
@@ -146,33 +238,59 @@ def begin_voting_phase(code):
 
 def calculate_round_result(code):
     game = games[code]
-
+    actual_impostor = game["impostor"]
     vote_counts = Counter(game["votes"].values())
 
-    if not vote_counts:
-        voted_team = "No team"
-        actual_impostor = game["impostor"]
-        result_text = f"No votes were submitted. {actual_impostor} survives and gets +4 points."
-        game["scores"][actual_impostor] += 4
-    else:
+    individual_correct_teams = sorted(
+        [team for team, voted_for in game["votes"].items() if voted_for == actual_impostor]
+    )
+
+    majority_team = None
+    majority_correct = False
+
+    if vote_counts:
         max_votes = max(vote_counts.values())
-        tied_teams = [team for team, count in vote_counts.items() if count == max_votes]
+        top_teams = [team for team, count in vote_counts.items() if count == max_votes]
 
-        voted_team = random.choice(tied_teams)
-        actual_impostor = game["impostor"]
+        if len(top_teams) == 1:
+            majority_team = top_teams[0]
+            majority_correct = (majority_team == actual_impostor)
 
-        if voted_team == actual_impostor:
-            result_text = f"{actual_impostor} was caught. All HUMAN teams get +2 points."
-            for team in game["teams"]:
-                if team != actual_impostor:
-                    game["scores"][team] += 2
+    if majority_correct:
+        for team in game["teams"]:
+            if team != actual_impostor:
+                game["scores"][team] += 2
+
+        for team in individual_correct_teams:
+            game["scores"][team] += 1
+
+        result_text = (
+            f"Majority caught the impostor. All HUMAN teams get +2. "
+            f"Teams that individually voted correctly also get +1."
+        )
+    else:
+        game["scores"][actual_impostor] += 4
+
+        for team in individual_correct_teams:
+            game["scores"][team] += 1
+
+        if majority_team is None:
+            result_text = (
+                f"No majority choice was reached. {actual_impostor} survives and gets +4. "
+                f"Any teams that individually voted for the real impostor still get +1."
+            )
         else:
-            result_text = f"{actual_impostor} was not caught. The impostor gets +4 points."
-            game["scores"][actual_impostor] += 4
+            result_text = (
+                f"Majority voted for {majority_team}, not the real impostor. "
+                f"{actual_impostor} survives and gets +4. "
+                f"Any teams that individually voted for the real impostor still get +1."
+            )
 
     socketio.emit("round_result", {
-        "voted_team": voted_team,
+        "majority_team": majority_team,
         "actual_impostor": actual_impostor,
+        "majority_correct": majority_correct,
+        "individual_correct_teams": individual_correct_teams,
         "result_text": result_text,
         "scores": game["scores"]
     }, room=code)
@@ -201,10 +319,10 @@ def start_next_round_or_end(code):
     setup_round(code)
     send_role_info(code)
 
-    game["state"] = "paused_after_role"
+    game["state"] = "waiting_ready"
 
-    socketio.emit("show_continue", {
-        "message": "New round roles revealed. Host, press Continue to begin phrase submission."
+    socketio.emit("role_ready_required", {
+        "message": "All teams must press READY before phrase submission can begin."
     }, room=code)
 
 
@@ -249,7 +367,9 @@ def create_game():
 
         "responses": {},
         "votes": {},
-        "scores": {}
+        "scores": {},
+        "ready_teams": set(),
+        "turn_token": 0
     }
 
     emit("redirect", code)
@@ -274,6 +394,7 @@ def join_game(data):
         join_room(code)
 
         emit_team_and_score_updates(code)
+        emit_ready_status(code)
 
         logging.info(f"Host joined game {code}")
         return
@@ -299,6 +420,7 @@ def join_game(data):
     join_room(code)
 
     emit_team_and_score_updates(code)
+    emit_ready_status(code)
     logging.info(f"{team} joined game {code}")
 
 
@@ -325,11 +447,49 @@ def start_game_request(data):
     emit_team_and_score_updates(code)
     send_role_info(code)
 
-    game["state"] = "paused_after_role"
+    game["state"] = "waiting_ready"
 
-    socketio.emit("show_continue", {
-        "message": "Roles revealed. Host, press Continue to begin phrase submission."
+    socketio.emit("role_ready_required", {
+        "message": "All teams must press READY before phrase submission can begin."
     }, room=code)
+
+
+@socketio.on("team_ready")
+def team_ready(data):
+    code = data.get("code")
+    sid = request.sid
+
+    if code not in games:
+        emit("error", "Game code not found!")
+        return
+
+    game = games[code]
+
+    if sid not in game["players"]:
+        emit("error", "You are not part of this game.")
+        return
+
+    team_name = game["players"][sid]
+
+    if team_name == "HOST":
+        emit("error", "Host does not use the READY button.")
+        return
+
+    if game["state"] != "waiting_ready":
+        emit("error", "READY is not needed right now.")
+        return
+
+    game["ready_teams"].add(team_name)
+    emit_ready_status(code)
+
+    emit("ready_confirmed", {
+        "message": "Your team is marked READY."
+    }, to=sid)
+
+    if len(game["ready_teams"]) == len(game["teams"]):
+        socketio.emit("show_continue", {
+            "message": "All teams are READY. Host, press Continue to begin phrase submission."
+        }, room=code)
 
 
 @socketio.on("host_continue")
@@ -347,9 +507,14 @@ def host_continue(data):
         emit("error", "Only the host can continue.")
         return
 
+    if game["state"] == "waiting_ready":
+        if len(game["ready_teams"]) < len(game["teams"]):
+            emit("error", "Not all teams are READY yet.")
+            return
+
     socketio.emit("hide_continue", {}, room=code)
 
-    if game["state"] == "paused_after_role":
+    if game["state"] == "waiting_ready":
         start_phrase_phase(code)
 
     elif game["state"] == "paused_before_voting":
@@ -412,11 +577,13 @@ def submit_phrase(data):
         return
 
     game["responses"][team_name] = phrase
+    game["turn_token"] += 1
 
     socketio.emit("phrase_submitted", {
         "team": team_name,
         "phrase": phrase,
-        "responses": game["responses"]
+        "responses": game["responses"],
+        "auto_submitted": False
     }, room=code)
 
     go_to_next_team_or_pause_before_voting(code)
@@ -491,12 +658,15 @@ def handle_disconnect():
                 if team in game["teams"]:
                     game["teams"].remove(team)
 
+            game["ready_teams"].discard(team)
+
         if not game["players"]:
             del games[code]
             logging.info(f"Game {code} deleted (empty)")
             break
 
         emit_team_and_score_updates(code)
+        emit_ready_status(code)
         break
 
 

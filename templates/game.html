@@ -167,6 +167,18 @@
             font-size: 0.92rem;
         }
 
+        .timer {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #fde68a;
+            margin-bottom: 12px;
+        }
+
+        .ready-list {
+            margin-top: 12px;
+            padding-left: 18px;
+        }
+
         @media (max-width: 1100px) {
             .app-shell {
                 grid-template-columns: 1fr;
@@ -221,6 +233,12 @@
                 <h3>Your Role</h3>
                 <p id="roleText" class="big"></p>
                 <p id="wordText"></p>
+
+                <div id="readyArea" class="hidden">
+                    <button id="readyBtn">READY</button>
+                    <p id="readyText" class="muted">Press READY once your team is prepared.</p>
+                    <ul id="readyList" class="ready-list"></ul>
+                </div>
             </div>
 
             <div id="roundBox" class="card hidden">
@@ -232,6 +250,7 @@
             <div id="phraseBox" class="card hidden main-stage">
                 <h3>Phrase Phase</h3>
                 <p id="turnText">Waiting for phrase phase...</p>
+                <p id="timerText" class="timer hidden">Time left: --</p>
 
                 <div id="phraseInputArea" class="hidden">
                     <input
@@ -291,12 +310,18 @@
         const roleText = document.getElementById("roleText");
         const wordText = document.getElementById("wordText");
 
+        const readyArea = document.getElementById("readyArea");
+        const readyBtn = document.getElementById("readyBtn");
+        const readyText = document.getElementById("readyText");
+        const readyList = document.getElementById("readyList");
+
         const roundBox = document.getElementById("roundBox");
         const roundText = document.getElementById("roundText");
         const orderText = document.getElementById("orderText");
 
         const phraseBox = document.getElementById("phraseBox");
         const turnText = document.getElementById("turnText");
+        const timerText = document.getElementById("timerText");
         const phraseInputArea = document.getElementById("phraseInputArea");
         const phraseInput = document.getElementById("phraseInput");
         const submitPhraseBtn = document.getElementById("submitPhraseBtn");
@@ -312,6 +337,7 @@
 
         let currentTeams = [];
         let currentScores = {};
+        let alreadyReady = false;
 
         function show(el) {
             el.classList.remove("hidden");
@@ -375,6 +401,27 @@
                 li.textContent = `${team}: ${phrase}`;
                 responsesList.appendChild(li);
             });
+        }
+
+        function renderReadyStatus(data) {
+            readyList.innerHTML = "";
+
+            const readyTeams = data.ready_teams || [];
+            if (readyTeams.length === 0) {
+                readyList.innerHTML = "<li>No teams ready yet.</li>";
+            } else {
+                readyTeams.forEach(team => {
+                    const li = document.createElement("li");
+                    li.textContent = `${team} is READY`;
+                    readyList.appendChild(li);
+                });
+            }
+
+            if (data.all_ready) {
+                readyText.textContent = "All teams are READY.";
+            } else {
+                readyText.textContent = `${readyTeams.length}/${data.total_teams} teams are READY.`;
+            }
         }
 
         function renderVoteOptions(teams) {
@@ -468,6 +515,10 @@
             renderScores(scores);
         });
 
+        socket.on("ready_status", (data) => {
+            renderReadyStatus(data);
+        });
+
         startGameBtn.onclick = () => {
             socket.emit("start_game_request", {
                 code: code
@@ -476,6 +527,13 @@
 
         continueBtn.onclick = () => {
             socket.emit("host_continue", {
+                code: code
+            });
+        };
+
+        readyBtn.onclick = () => {
+            readyBtn.disabled = true;
+            socket.emit("team_ready", {
                 code: code
             });
         };
@@ -518,31 +576,55 @@
             roundText.textContent = `Round ${data.round}`;
             orderText.textContent = `Order: ${data.order.join(" → ")}`;
             statusDiv.textContent = "The game has started.";
+            alreadyReady = false;
+            readyBtn.disabled = false;
         });
 
         socket.on("role_info", (data) => {
             phaseText.textContent = "Role Reveal";
-            mainInstruction.textContent = "Your role has been revealed. Wait for the host to continue.";
+            mainInstruction.textContent = "Read your role, then press READY.";
 
             hide(phraseBox);
             hide(votingBox);
             show(roleBox);
+            show(readyArea);
 
             if (data.role === "HOST") {
                 roleText.textContent = "You are the HOST";
                 wordText.textContent = `Secret word: ${data.word} | Impostor: ${data.impostor}`;
+                hide(readyArea);
             } else if (data.role === "IMPOSTOR") {
                 roleText.textContent = "You are the IMPOSTOR";
                 wordText.textContent = "You do not get the secret word.";
+                readyBtn.disabled = false;
             } else if (data.role === "HUMAN") {
                 roleText.textContent = "You are HUMAN";
                 wordText.textContent = `Secret word: ${data.word}`;
+                readyBtn.disabled = false;
             } else {
                 roleText.textContent = "Unknown role";
                 wordText.textContent = "";
             }
 
             statusDiv.textContent = "Role received.";
+        });
+
+        socket.on("role_ready_required", (data) => {
+            phaseText.textContent = "Role Reveal";
+            mainInstruction.textContent = data.message || "All teams must press READY.";
+            statusDiv.textContent = data.message || "Waiting for teams to press READY.";
+
+            if (!isHost) {
+                show(readyArea);
+                readyBtn.disabled = false;
+            }
+        });
+
+        socket.on("ready_confirmed", (data) => {
+            alreadyReady = true;
+            readyBtn.disabled = true;
+            statusDiv.textContent = data.message || "READY confirmed.";
+            mainInstruction.textContent = "Waiting for the other teams to get ready.";
         });
 
         socket.on("phrase_phase_started", (data) => {
@@ -553,8 +635,10 @@
             show(phraseBox);
             hide(votingBox);
             hide(continueBtn);
+            show(timerText);
 
             turnText.textContent = `Turn ${data.current_index}/${data.total_teams}: ${data.current_team}`;
+            timerText.textContent = `Time left: ${data.time_limit}s`;
             renderResponses(data.responses);
             submitPhraseBtn.disabled = false;
 
@@ -569,10 +653,20 @@
             }
         });
 
+        socket.on("phrase_timer_update", (data) => {
+            timerText.textContent = `Time left for ${data.current_team}: ${data.seconds_left}s`;
+        });
+
         socket.on("phrase_submitted", (data) => {
             renderResponses(data.responses);
             hide(phraseInputArea);
-            statusDiv.textContent = `${data.team} submitted: ${data.phrase}`;
+            hide(timerText);
+
+            if (data.auto_submitted) {
+                statusDiv.textContent = `${data.team} ran out of time.`;
+            } else {
+                statusDiv.textContent = `${data.team} submitted: ${data.phrase}`;
+            }
         });
 
         socket.on("all_phrases_complete", (data) => {
@@ -584,6 +678,7 @@
 
             renderResponses(data.responses);
             hide(phraseInputArea);
+            hide(timerText);
             turnText.textContent = "All teams have submitted their phrases.";
             statusDiv.textContent = "All teams have submitted. Waiting for host to begin voting.";
         });
@@ -610,6 +705,7 @@
             hideMainBoxes();
             show(votingBox);
             hide(phraseInputArea);
+            hide(timerText);
 
             votingText.textContent = "Choose the team you believe is the impostor.";
             renderResponses(data.responses);
@@ -634,10 +730,16 @@
             hideMainBoxes();
             show(votingBox);
 
+            const majorityText = data.majority_team ? data.majority_team : "No majority";
+            const individualText = (data.individual_correct_teams && data.individual_correct_teams.length > 0)
+                ? data.individual_correct_teams.join(", ")
+                : "None";
+
             votingText.innerHTML = `
                 <div class="result-box">
-                    <strong>Voted Team:</strong> ${data.voted_team}<br>
+                    <strong>Majority Choice:</strong> ${majorityText}<br>
                     <strong>Actual Impostor:</strong> ${data.actual_impostor}<br>
+                    <strong>Individual Correct Votes (+1):</strong> ${individualText}<br>
                     <strong>Result:</strong> ${data.result_text}
                 </div>
             `;
@@ -658,6 +760,7 @@
             hide(phraseInputArea);
             hide(roleBox);
             hide(phraseBox);
+            hide(timerText);
             show(votingBox);
             hide(continueBtn);
 
