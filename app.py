@@ -919,7 +919,7 @@ def submit_phrase(data):
     game = games[code]
 
     if game["state"] != "phrase":
-        emit("error", "Phrase submission is not active.")
+        emit("error", "Phrase submission is inactive.")
         return
 
     team_name = game["players_by_sid"].get(sid)
