@@ -1,290 +1,361 @@
-from flask import Flask, render_template, redirect, request
-from flask_socketio import SocketIO, emit, join_room
-from collections import Counter
-
+import os
 import random
 import string
-import os
-import logging
+from collections import Counter
 
-games = {}
-
-WORD_LIST = [
-    # --- Computer Science (50) ---
-    "Algorithm", "Array", "Function", "Variable", "Loop",
-    "Stack", "Queue", "Tree", "Graph", "HashMap",
-    "Binary", "Pointer", "Object", "Class", "Method",
-    "Runtime", "Compiler", "Syntax", "Bug", "Debugging",
-    "Exception", "Optimization", "Search", "Sort", "Traversal",
-    "Database", "Query", "Table", "API", "Request",
-    "Response", "Server", "Client", "Protocol", "Cache",
-    "Latency", "Thread", "Memory", "Storage", "Encryption",
-    "Hashing", "Authentication", "Token", "Security", "Frontend",
-    "Backend", "Framework", "Library", "Deployment", "Cloud",
-
-    # --- General Words (50) ---
-    "Sky", "Ocean", "Mountain", "River", "Forest",
-    "Desert", "Island", "Volcano", "Storm", "Rainbow",
-
-    "Dragon", "Castle", "Knight", "Treasure", "Sword",
-    "Shield", "Wizard", "Potion", "Crown", "Throne",
-
-    "Banana", "Pizza", "Burger", "Pancake", "Cookie",
-    "Cupcake", "Popcorn", "Milkshake", "Sandwich", "Waffle",
-
-    "Guitar", "Piano", "Drum", "Violin", "Microphone",
-    "Speaker", "Headphones", "Camera", "Painting", "Dance",
-
-    "Tiger", "Elephant", "Penguin", "Giraffe", "Dolphin",
-    "Panda", "Kangaroo", "Zebra", "Owl", "Octopus"
-]
-
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s [%(levelname)s] %(message)s")
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO, emit, join_room
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "impostor-secret-key"
 
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+
+WORD_LIST = [
+    "Algorithm", "Binary", "Compiler", "Database", "Encryption",
+    "Function", "Interface", "Kernel", "Loop", "Memory",
+    "Network", "Object", "Packet", "Queue", "Recursion",
+    "Server", "Stack", "Syntax", "Thread", "Variable",
+    "Array", "Boolean", "Cache", "Class", "Cloud",
+    "Debugging", "Framework", "Frontend", "Backend", "Hash",
+    "Integer", "Iteration", "Library", "Machine Learning", "Pointer",
+    "Runtime", "Script", "Search", "Sorting", "Terminal"
+]
+
+games = {}
 
 
-# -----------------------------
-# Helper functions
-# -----------------------------
-def generate_code(length=4):
-    return "".join(random.choices(string.ascii_uppercase, k=length))
+def make_code(length=5):
+    while True:
+        code = "".join(random.choices(string.ascii_uppercase + string.digits, k=length))
+        if code not in games:
+            return code
 
 
-def emit_team_and_score_updates(code):
+def create_game_state():
+    return {
+        "host_sid": None,
+        "host_connected": False,
+
+        "teams": [],
+        "team_sids": {},          # team_name -> sid
+        "players_by_sid": {},     # sid -> team_name or HOST
+
+        "state": "lobby",         # lobby, agreement, role, phrase, voting, paused_after_result, game_over
+        "round": 1,
+        "max_rounds": 3,
+
+        "impostor": None,
+        "word": None,
+        "order": [],
+        "current_turn_index": 0,
+
+        "responses": {},
+        "votes": {},
+        "scores": {},
+
+        "agreement_ready": set(),
+        "additional_round_voters": set(),
+
+        "phrase_time_limit": 30,
+        "vote_time_limit": 120,
+
+        "turn_token": 0,
+        "vote_token": 0,
+    }
+
+
+def get_game(code):
+    return games.get(code)
+
+
+def non_host_team_count(game):
+    return len(game["teams"])
+
+
+def all_teams_agreed(game):
+    return len(game["agreement_ready"]) == len(game["teams"]) and len(game["teams"]) >= 3
+
+
+def sanitize_phrase(phrase):
+    if phrase is None:
+        return ""
+    return " ".join(str(phrase).strip().split())
+
+
+def emit_roster_update(code):
     game = games[code]
-    socketio.emit("update_teams", game["teams"], room=code)
-    socketio.emit("update_scores", game["scores"], room=code)
+    socketio.emit("roster_update", {
+        "code": code,
+        "teams": game["teams"],
+        "scores": game["scores"],
+        "state": game["state"],
+        "round": game["round"],
+        "max_rounds": game["max_rounds"],
+        "agreement_ready": sorted(list(game["agreement_ready"])),
+    }, room=code)
 
 
-def setup_round(code):
+def emit_status(code, message):
+    socketio.emit("status_message", {"message": message}, room=code)
+
+
+def send_private_role_info(code):
+    game = games[code]
+
+    for team in game["teams"]:
+        sid = game["team_sids"].get(team)
+        if not sid:
+            continue
+
+        if team == game["impostor"]:
+            socketio.emit("role_assignment", {
+                "role": "IMPOSTOR",
+                "word": None,
+                "round": game["round"],
+                "max_rounds": game["max_rounds"],
+                "order": game["order"],
+                "phrase_time_limit": game["phrase_time_limit"],
+            }, to=sid)
+        else:
+            socketio.emit("role_assignment", {
+                "role": "HUMAN",
+                "word": game["word"],
+                "round": game["round"],
+                "max_rounds": game["max_rounds"],
+                "order": game["order"],
+                "phrase_time_limit": game["phrase_time_limit"],
+            }, to=sid)
+
+    if game["host_sid"]:
+        socketio.emit("host_role_overview", {
+            "round": game["round"],
+            "max_rounds": game["max_rounds"],
+            "word": game["word"],
+            "impostor": game["impostor"],
+            "order": game["order"],
+            "scores": game["scores"],
+        }, to=game["host_sid"])
+
+
+def emit_round_header(code, preserved=False):
+    game = games[code]
+    socketio.emit("round_started", {
+        "round": game["round"],
+        "max_rounds": game["max_rounds"],
+        "order": game["order"],
+        "preserved": preserved,
+        "role_screen_seconds": 60
+    }, room=code)
+
+
+def begin_round(code, preserve_roles=False):
     game = games[code]
 
     game["state"] = "role"
-    game["impostor"] = random.choice(game["teams"])
-    game["word"] = random.choice(WORD_LIST)
-    game["order"] = random.sample(game["teams"], len(game["teams"]))
-    game["current_turn"] = 0
-
     game["responses"] = {}
     game["votes"] = {}
-    game["ready_teams"] = set()
+    game["additional_round_voters"] = set()
+    game["current_turn_index"] = 0
 
     game["turn_token"] += 1
+    game["vote_token"] += 1
 
+    if not preserve_roles:
+        game["impostor"] = random.choice(game["teams"])
+        game["word"] = random.choice(WORD_LIST)
 
-def send_role_info(code):
-    game = games[code]
+    game["order"] = random.sample(game["teams"], len(game["teams"]))
 
-    socketio.emit("game_started", {
-        "round": game["round"],
-        "order": game["order"]
-    }, room=code)
+    emit_roster_update(code)
+    emit_round_header(code, preserved=preserve_roles)
+    send_private_role_info(code)
 
-    for sid, team_name in game["players"].items():
-        if team_name == "HOST":
-            socketio.emit("role_info", {
-                "role": "HOST",
-                "word": game["word"],
-                "impostor": game["impostor"]
-            }, to=sid)
-
-        elif team_name == game["impostor"]:
-            socketio.emit("role_info", {
-                "role": "IMPOSTOR"
-            }, to=sid)
-
-        else:
-            socketio.emit("role_info", {
-                "role": "HUMAN",
-                "word": game["word"]
-            }, to=sid)
-
-    emit_ready_status(code)
-
-
-def emit_ready_status(code):
-    game = games[code]
-    socketio.emit("ready_status", {
-        "ready_teams": sorted(list(game["ready_teams"])),
-        "total_teams": len(game["teams"]),
-        "all_ready": len(game["ready_teams"]) == len(game["teams"])
-    }, room=code)
+    if preserve_roles:
+        emit_status(code, "Additional round approved. Same roles, same word, same impostor.")
+    else:
+        emit_status(code, f"Round {game['round']} is ready. Roles have been assigned.")
 
 
 def start_phrase_phase(code):
-    if code not in games:
-        return
+    game = games[code]
+    game["state"] = "phrase"
+    emit_roster_update(code)
+    start_next_turn(code)
 
+
+def start_next_turn(code):
     game = games[code]
 
-    if game["current_turn"] >= len(game["order"]):
-        go_to_next_team_or_pause_before_voting(code)
+    if game["current_turn_index"] >= len(game["order"]):
+        begin_voting_phase(code)
         return
 
-    game["state"] = "phrase"
+    current_team = game["order"][game["current_turn_index"]]
     game["turn_token"] += 1
-    turn_token = game["turn_token"]
+    token = game["turn_token"]
 
-    current_team = game["order"][game["current_turn"]]
-
-    socketio.emit("phrase_phase_started", {
+    socketio.emit("start_turn", {
         "current_team": current_team,
-        "current_index": game["current_turn"] + 1,
-        "total_teams": len(game["order"]),
+        "turn_index": game["current_turn_index"] + 1,
+        "total_turns": len(game["order"]),
+        "seconds": game["phrase_time_limit"],
         "responses": game["responses"],
-        "time_limit": 30
     }, room=code)
 
-    socketio.start_background_task(run_phrase_timer, code, current_team, turn_token, 30)
+    socketio.start_background_task(run_phrase_timer, code, current_team, token, game["phrase_time_limit"])
 
 
-def run_phrase_timer(code, current_team, turn_token, seconds):
+def run_phrase_timer(code, team_name, token, seconds):
     for remaining in range(seconds, 0, -1):
-        if code not in games:
+        game = games.get(code)
+        if not game:
             return
-
-        game = games[code]
 
         if game["state"] != "phrase":
             return
 
-        if game["turn_token"] != turn_token:
+        if game["turn_token"] != token:
             return
 
-        current_index = game["current_turn"]
-        if current_index >= len(game["order"]):
-            return
-
-        if game["order"][current_index] != current_team:
-            return
-
-        if current_team in game["responses"]:
+        current_team = game["order"][game["current_turn_index"]]
+        if current_team != team_name:
             return
 
         socketio.emit("phrase_timer_update", {
-            "current_team": current_team,
+            "current_team": team_name,
             "seconds_left": remaining
         }, room=code)
 
         socketio.sleep(1)
 
-    if code not in games:
+    game = games.get(code)
+    if not game:
         return
-
-    game = games[code]
 
     if game["state"] != "phrase":
         return
 
-    if game["turn_token"] != turn_token:
+    if game["turn_token"] != token:
         return
 
-    current_index = game["current_turn"]
-    if current_index >= len(game["order"]):
+    current_team = game["order"][game["current_turn_index"]]
+    if current_team != team_name:
         return
 
-    if game["order"][current_index] != current_team:
-        return
-
-    if current_team in game["responses"]:
-        return
-
-    game["responses"][current_team] = "[No Response]"
-
-    socketio.emit("phrase_submitted", {
-        "team": current_team,
-        "phrase": "[No Response]",
-        "responses": game["responses"],
-        "auto_submitted": True
-    }, room=code)
-
-    go_to_next_team_or_pause_before_voting(code)
-
-
-def go_to_next_team_or_pause_before_voting(code):
-    if code not in games:
-        return
-
-    game = games[code]
-    game["current_turn"] += 1
-
-    if game["current_turn"] >= len(game["order"]):
-        game["state"] = "paused_before_voting"
-
-        socketio.emit("all_phrases_complete", {
-            "responses": game["responses"]
+    if team_name not in game["responses"]:
+        game["responses"][team_name] = "(No phrase submitted)"
+        socketio.emit("phrase_locked", {
+            "team": team_name,
+            "phrase": game["responses"][team_name],
+            "auto_submitted": True
         }, room=code)
 
-        socketio.emit("show_continue", {
-            "message": "All phrases are in. Host, press Continue to begin voting."
-        }, room=code)
-    else:
-        start_phrase_phase(code)
+        game["current_turn_index"] += 1
+        socketio.sleep(1)
+        start_next_turn(code)
 
 
 def begin_voting_phase(code):
     game = games[code]
     game["state"] = "voting"
+    game["votes"] = {}
+    game["additional_round_voters"] = set()
+    game["vote_token"] += 1
+    token = game["vote_token"]
+
+    emit_roster_update(code)
 
     socketio.emit("start_voting", {
         "teams": game["teams"],
-        "responses": game["responses"]
+        "responses": game["responses"],
+        "time_limit": game["vote_time_limit"],
     }, room=code)
+
+    socketio.start_background_task(run_vote_timer, code, token, game["vote_time_limit"])
+
+
+def run_vote_timer(code, token, seconds):
+    for remaining in range(seconds, 0, -1):
+        game = games.get(code)
+        if not game:
+            return
+
+        if game["state"] != "voting":
+            return
+
+        if game["vote_token"] != token:
+            return
+
+        socketio.emit("vote_timer_update", {
+            "seconds_left": remaining
+        }, room=code)
+
+        socketio.sleep(1)
+
+    game = games.get(code)
+    if not game:
+        return
+
+    if game["state"] != "voting":
+        return
+
+    if game["vote_token"] != token:
+        return
+
+    calculate_round_result(code)
 
 
 def calculate_round_result(code):
     game = games[code]
     actual_impostor = game["impostor"]
-    vote_counts = Counter(game["votes"].values())
 
-    individual_correct_teams = sorted(
-        [team for team, voted_for in game["votes"].items() if voted_for == actual_impostor]
-    )
+    accusation_votes = {
+        voter: vote
+        for voter, vote in game["votes"].items()
+        if vote != "ADDITIONAL_ROUND"
+    }
 
+    additional_round_count = len(game["additional_round_voters"])
+
+    vote_counts = Counter(accusation_votes.values())
     majority_team = None
     majority_correct = False
 
     if vote_counts:
         max_votes = max(vote_counts.values())
-        top_teams = [team for team, count in vote_counts.items() if count == max_votes]
-
-        if len(top_teams) == 1:
-            majority_team = top_teams[0]
+        top_choices = [team for team, count in vote_counts.items() if count == max_votes]
+        if len(top_choices) == 1:
+            majority_team = top_choices[0]
             majority_correct = (majority_team == actual_impostor)
 
+    individual_correct_teams = sorted([
+        team_name for team_name, voted_for in accusation_votes.items()
+        if voted_for == actual_impostor
+    ])
+
+    # Individual rewards: +1 if a team personally guessed correctly
+    for team_name in individual_correct_teams:
+        game["scores"][team_name] += 1
+
+    result_text = ""
     if majority_correct:
-        for team in game["teams"]:
-            if team != actual_impostor:
-                game["scores"][team] += 2
-
-        for team in individual_correct_teams:
-            game["scores"][team] += 1
-
-        result_text = (
-            f"Majority caught the impostor. All HUMAN teams get +2. "
-            f"Teams that individually voted correctly also get +1."
-        )
+        # Every human team gets +2
+        for team_name in game["teams"]:
+            if team_name != actual_impostor:
+                game["scores"][team_name] += 2
+        result_text = "The majority caught the impostor. All HUMAN teams gain +2."
     else:
         game["scores"][actual_impostor] += 4
-
-        for team in individual_correct_teams:
-            game["scores"][team] += 1
-
         if majority_team is None:
-            result_text = (
-                f"No majority choice was reached. {actual_impostor} survives and gets +4. "
-                f"Any teams that individually voted for the real impostor still get +1."
-            )
+            result_text = "No clear majority formed. The impostor survives and gains +4."
         else:
-            result_text = (
-                f"Majority voted for {majority_team}, not the real impostor. "
-                f"{actual_impostor} survives and gets +4. "
-                f"Any teams that individually voted for the real impostor still get +1."
-            )
+            result_text = "The majority accused the wrong team. The impostor survives and gains +4."
+
+    additional_round_triggered = additional_round_count > (len(game["teams"]) / 2)
+
+    game["state"] = "paused_after_result"
+    emit_roster_update(code)
 
     socketio.emit("round_result", {
         "majority_team": majority_team,
@@ -292,145 +363,264 @@ def calculate_round_result(code):
         "majority_correct": majority_correct,
         "individual_correct_teams": individual_correct_teams,
         "result_text": result_text,
-        "scores": game["scores"]
-    }, room=code)
-
-    socketio.emit("update_scores", game["scores"], room=code)
-
-    game["state"] = "paused_after_result"
-
-    socketio.emit("show_continue", {
-        "message": "Round result shown. Host, press Continue when everyone is ready."
+        "scores": game["scores"],
+        "responses": game["responses"],
+        "votes": game["votes"],
+        "additional_round_votes": additional_round_count,
+        "additional_round_triggered": additional_round_triggered,
     }, room=code)
 
 
-def start_next_round_or_end(code):
+def advance_after_result(code):
     game = games[code]
 
-    if game["round"] >= game["max_rounds"]:
-        game["state"] = "game_over"
+    additional_round_triggered = len(game["additional_round_voters"]) > (len(game["teams"]) / 2)
 
-        socketio.emit("game_over", {
-            "scores": game["scores"]
-        }, room=code)
+    if additional_round_triggered:
+        begin_round(code, preserve_roles=True)
+        return
+
+    if game["round"] >= game["max_rounds"]:
+        end_game(code)
         return
 
     game["round"] += 1
-    setup_round(code)
-    send_role_info(code)
+    begin_round(code, preserve_roles=False)
 
-    game["state"] = "waiting_ready"
 
-    socketio.emit("role_ready_required", {
-        "message": "All teams must press READY before phrase submission can begin."
+def end_game(code):
+    game = games[code]
+    game["state"] = "game_over"
+
+    sorted_scores = sorted(
+        game["scores"].items(),
+        key=lambda item: (-item[1], item[0].lower())
+    )
+
+    top_three = sorted_scores[:3]
+
+    emit_roster_update(code)
+    socketio.emit("game_over", {
+        "scores": game["scores"],
+        "sorted_scores": sorted_scores,
+        "top_three": top_three,
+        "winner": top_three[0] if top_three else None
     }, room=code)
 
 
-# -----------------------------
-# Routes
-# -----------------------------
+def reset_to_agreement(code):
+    game = games[code]
+
+    game["state"] = "agreement"
+    game["round"] = 1
+    game["impostor"] = None
+    game["word"] = None
+    game["order"] = []
+    game["current_turn_index"] = 0
+    game["responses"] = {}
+    game["votes"] = {}
+    game["agreement_ready"] = set()
+    game["additional_round_voters"] = set()
+    game["turn_token"] += 1
+    game["vote_token"] += 1
+
+    for team in game["teams"]:
+        game["scores"][team] = 0
+
+    emit_roster_update(code)
+    socketio.emit("agreement_phase", {
+        "message": "Game restarted. All teams must agree/ready again before Round 1."
+    }, room=code)
+
+
 @app.route("/")
-def home():
+def index():
     return render_template("index.html")
 
 
-@app.route("/game/<code>")
-def game_room(code):
-    if code not in games:
-        return redirect("/")
-    return render_template("game.html", code=code)
+@app.route("/game")
+def game():
+    return render_template("game.html")
 
 
-# -----------------------------
-# SocketIO events
-# -----------------------------
 @socketio.on("create_game")
 def create_game():
-    code = generate_code()
-
-    while code in games:
-        code = generate_code()
-
-    games[code] = {
-        "teams": [],
-        "players": {},
-        "host_sid": None,
-
-        "state": "lobby",
-        "round": 1,
-        "max_rounds": 3,
-
-        "impostor": None,
-        "word": None,
-        "order": [],
-        "current_turn": 0,
-
-        "responses": {},
-        "votes": {},
-        "scores": {},
-        "ready_teams": set(),
-        "turn_token": 0
-    }
-
-    emit("redirect", code)
+    code = make_code()
+    games[code] = create_game_state()
+    emit("game_created", {"code": code})
 
 
 @socketio.on("join_game")
 def join_game(data):
-    code = data.get("code")
-    team = data.get("team")
-    is_host = data.get("isHost", False)
-    sid = request.sid
+    code = str(data.get("code", "")).strip().upper()
+    team_name = str(data.get("team_name", "")).strip()
 
     if code not in games:
-        emit("error", "Game code not found!")
+        emit("error", "Game code not found.")
+        return
+
+    if not team_name:
+        emit("error", "Please enter a team name.")
         return
 
     game = games[code]
 
-    if is_host:
-        game["players"][sid] = "HOST"
-        game["host_sid"] = sid
-        join_room(code)
-
-        emit_team_and_score_updates(code)
-        emit_ready_status(code)
-
-        logging.info(f"Host joined game {code}")
+    if game["state"] not in ("lobby", "agreement"):
+        emit("error", "The game has already started.")
         return
 
-    if not team or not str(team).strip():
-        emit("error", "Invalid team name!")
+    if team_name in game["teams"]:
+        emit("joined_game", {"code": code, "team_name": team_name})
         return
 
-    team = str(team).strip()
+    emit("joined_game", {"code": code, "team_name": team_name})
 
-    active_non_host_teams = [name for name in game["players"].values() if name != "HOST"]
-    if team in active_non_host_teams:
-        emit("error", "That team name is already taken!")
+
+@socketio.on("register_view")
+def register_view(data):
+    code = str(data.get("code", "")).strip().upper()
+    is_host = bool(data.get("is_host", False))
+    team_name = str(data.get("team_name", "")).strip()
+    sid = request.sid
+
+    if code not in games:
+        emit("error", "Game code not found.")
         return
 
-    if team not in game["teams"]:
-        game["teams"].append(team)
-
-    if team not in game["scores"]:
-        game["scores"][team] = 0
-
-    game["players"][sid] = team
+    game = games[code]
     join_room(code)
 
-    emit_team_and_score_updates(code)
-    emit_ready_status(code)
-    logging.info(f"{team} joined game {code}")
+    # Clear any stale sid mapping for this sid first
+    old_identity = game["players_by_sid"].get(sid)
+    if old_identity and old_identity != "HOST":
+        if game["team_sids"].get(old_identity) == sid:
+            game["team_sids"].pop(old_identity, None)
+    game["players_by_sid"].pop(sid, None)
+
+    if is_host:
+        if game["host_sid"] and game["host_sid"] != sid:
+            game["players_by_sid"].pop(game["host_sid"], None)
+
+        game["host_sid"] = sid
+        game["host_connected"] = True
+        game["players_by_sid"][sid] = "HOST"
+
+        emit("registered", {
+            "role_type": "HOST",
+            "code": code,
+            "state": game["state"]
+        }, to=sid)
+
+    else:
+        if not team_name:
+            emit("error", "Missing team name.")
+            return
+
+        if team_name not in game["teams"]:
+            if game["state"] not in ("lobby", "agreement"):
+                emit("error", "You cannot join after the competition has started.")
+                return
+            game["teams"].append(team_name)
+            game["scores"][team_name] = 0
+
+        old_sid = game["team_sids"].get(team_name)
+        if old_sid and old_sid != sid:
+            game["players_by_sid"].pop(old_sid, None)
+
+        game["team_sids"][team_name] = sid
+        game["players_by_sid"][sid] = team_name
+
+        emit("registered", {
+            "role_type": "TEAM",
+            "code": code,
+            "team_name": team_name,
+            "state": game["state"]
+        }, to=sid)
+
+    emit_roster_update(code)
+
+    # Sync the current view for late refreshes/rejoins
+    if game["state"] == "agreement":
+        emit("agreement_phase", {
+            "message": "All teams must agree/ready before the game begins."
+        }, to=sid)
+    elif game["state"] == "role":
+        emit_round_header(code)
+        send_private_role_info(code)
+    elif game["state"] == "phrase":
+        emit_round_header(code)
+        send_private_role_info(code)
+        current_team = game["order"][game["current_turn_index"]] if game["current_turn_index"] < len(game["order"]) else None
+        emit("start_turn", {
+            "current_team": current_team,
+            "turn_index": game["current_turn_index"] + 1,
+            "total_turns": len(game["order"]),
+            "seconds": game["phrase_time_limit"],
+            "responses": game["responses"],
+        }, to=sid)
+    elif game["state"] == "voting":
+        emit("start_voting", {
+            "teams": game["teams"],
+            "responses": game["responses"],
+            "time_limit": game["vote_time_limit"],
+        }, to=sid)
+    elif game["state"] == "paused_after_result":
+        emit("status_message", {
+            "message": "Round results are being shown. Waiting for host to continue."
+        }, to=sid)
+    elif game["state"] == "game_over":
+        sorted_scores = sorted(
+            game["scores"].items(),
+            key=lambda item: (-item[1], item[0].lower())
+        )
+        emit("game_over", {
+            "scores": game["scores"],
+            "sorted_scores": sorted_scores,
+            "top_three": sorted_scores[:3],
+            "winner": sorted_scores[0] if sorted_scores else None
+        }, to=sid)
+
+
+@socketio.on("set_round_count")
+def set_round_count(data):
+    code = str(data.get("code", "")).strip().upper()
+    sid = request.sid
+
+    if code not in games:
+        emit("error", "Game code not found.")
+        return
+
+    game = games[code]
+    if sid != game["host_sid"]:
+        emit("error", "Only the host can change the round count.")
+        return
+
+    if game["state"] not in ("lobby", "agreement"):
+        emit("error", "Rounds can only be changed before gameplay starts.")
+        return
+
+    try:
+        rounds = int(data.get("rounds", 3))
+    except Exception:
+        emit("error", "Round count must be a number.")
+        return
+
+    if rounds < 1 or rounds > 20:
+        emit("error", "Round count must be between 1 and 20.")
+        return
+
+    game["max_rounds"] = rounds
+    emit_roster_update(code)
+    socketio.emit("round_count_updated", {"max_rounds": rounds}, room=code)
 
 
 @socketio.on("start_game_request")
 def start_game_request(data):
-    code = data.get("code")
+    code = str(data.get("code", "")).strip().upper()
     sid = request.sid
 
     if code not in games:
-        emit("error", "Game code not found!")
+        emit("error", "Game code not found.")
         return
 
     game = games[code]
@@ -440,239 +630,222 @@ def start_game_request(data):
         return
 
     if len(game["teams"]) < 3:
-        emit("error", "You need at least 3 teams to start the game.")
+        emit("error", "You need at least 3 teams to start.")
         return
 
-    setup_round(code)
-    emit_team_and_score_updates(code)
-    send_role_info(code)
+    game["state"] = "agreement"
+    game["round"] = 1
+    game["impostor"] = None
+    game["word"] = None
+    game["order"] = []
+    game["responses"] = {}
+    game["votes"] = {}
+    game["agreement_ready"] = set()
+    game["additional_round_voters"] = set()
+    game["turn_token"] += 1
+    game["vote_token"] += 1
 
-    game["state"] = "waiting_ready"
+    for team in game["teams"]:
+        game["scores"][team] = 0
 
-    socketio.emit("role_ready_required", {
-        "message": "All teams must press READY before phrase submission can begin."
+    emit_roster_update(code)
+    socketio.emit("agreement_phase", {
+        "message": "Agreement phase started. Every team must press READY / AGREE."
     }, room=code)
 
 
-@socketio.on("team_ready")
-def team_ready(data):
-    code = data.get("code")
+@socketio.on("agree_ready")
+def agree_ready(data):
+    code = str(data.get("code", "")).strip().upper()
     sid = request.sid
 
     if code not in games:
-        emit("error", "Game code not found!")
+        emit("error", "Game code not found.")
         return
 
     game = games[code]
-
-    if sid not in game["players"]:
-        emit("error", "You are not part of this game.")
+    if game["state"] != "agreement":
+        emit("error", "Agreement phase is not active.")
         return
 
-    team_name = game["players"][sid]
-
-    if team_name == "HOST":
-        emit("error", "Host does not use the READY button.")
+    team_name = game["players_by_sid"].get(sid)
+    if not team_name or team_name == "HOST":
+        emit("error", "Only teams can ready up here.")
         return
 
-    if game["state"] != "waiting_ready":
-        emit("error", "READY is not needed right now.")
-        return
+    game["agreement_ready"].add(team_name)
+    emit_roster_update(code)
+    socketio.emit("agreement_update", {
+        "ready_teams": sorted(list(game["agreement_ready"])),
+        "total_teams": len(game["teams"]),
+    }, room=code)
 
-    game["ready_teams"].add(team_name)
-    emit_ready_status(code)
-
-    emit("ready_confirmed", {
-        "message": "Your team is marked READY."
-    }, to=sid)
-
-    if len(game["ready_teams"]) == len(game["teams"]):
-        socketio.emit("show_continue", {
-            "message": "All teams are READY. Host, press Continue to begin phrase submission."
-        }, room=code)
+    if all_teams_agreed(game):
+        begin_round(code, preserve_roles=False)
 
 
 @socketio.on("host_continue")
 def host_continue(data):
-    code = data.get("code")
+    code = str(data.get("code", "")).strip().upper()
     sid = request.sid
 
     if code not in games:
-        emit("error", "Game code not found!")
+        emit("error", "Game code not found.")
         return
 
     game = games[code]
-
     if sid != game["host_sid"]:
         emit("error", "Only the host can continue.")
         return
 
-    if game["state"] == "waiting_ready":
-        if len(game["ready_teams"]) < len(game["teams"]):
-            emit("error", "Not all teams are READY yet.")
-            return
-
-    socketio.emit("hide_continue", {}, room=code)
-
-    if game["state"] == "waiting_ready":
+    if game["state"] == "role":
         start_phrase_phase(code)
+        return
 
-    elif game["state"] == "paused_before_voting":
-        begin_voting_phase(code)
+    if game["state"] == "paused_after_result":
+        advance_after_result(code)
+        return
 
-    elif game["state"] == "paused_after_result":
-        start_next_round_or_end(code)
-
-    else:
-        emit("error", "There is nothing to continue right now.")
+    emit("error", "There is no host-controlled continue action right now.")
 
 
 @socketio.on("submit_phrase")
 def submit_phrase(data):
-    code = data.get("code")
-    phrase = (data.get("phrase") or "").strip()
+    code = str(data.get("code", "")).strip().upper()
+    phrase = sanitize_phrase(data.get("phrase"))
     sid = request.sid
 
     if code not in games:
-        emit("error", "Game code not found!")
+        emit("error", "Game code not found.")
         return
 
     game = games[code]
 
     if game["state"] != "phrase":
-        emit("error", "It is not the phrase phase right now.")
+        emit("error", "Phrase submission is not active.")
         return
 
-    if sid not in game["players"]:
-        emit("error", "You are not part of this game.")
+    team_name = game["players_by_sid"].get(sid)
+    if not team_name or team_name == "HOST":
+        emit("error", "Only teams can submit phrases.")
         return
 
-    team_name = game["players"][sid]
-
-    if team_name == "HOST":
-        emit("error", "Host cannot submit a phrase.")
-        return
-
-    current_team = game["order"][game["current_turn"]]
-
+    current_team = game["order"][game["current_turn_index"]]
     if team_name != current_team:
-        emit("error", f"It is currently {current_team}'s turn.")
+        emit("error", "It is not your turn.")
         return
 
     if not phrase:
-        emit("error", "Phrase cannot be empty.")
+        emit("error", "Please enter a phrase.")
         return
 
-    words = phrase.split()
-    if len(words) > 3:
-        emit("error", "Phrase must be no longer than 3 words.")
+    word_count = len(phrase.split())
+    if word_count > 3:
+        emit("error", "Your phrase must be no longer than 3 words.")
         return
 
-    if team_name in game["responses"]:
-        emit("error", "Your team already submitted a phrase.")
-        return
-
-    if team_name != game["impostor"] and phrase.lower() == game["word"].lower():
-        emit("error", "You cannot directly submit the secret word.")
+    if game["word"] and phrase.lower() == game["word"].lower():
+        emit("error", "You cannot directly say the given word.")
         return
 
     game["responses"][team_name] = phrase
     game["turn_token"] += 1
 
-    socketio.emit("phrase_submitted", {
+    socketio.emit("phrase_locked", {
         "team": team_name,
         "phrase": phrase,
-        "responses": game["responses"],
         "auto_submitted": False
     }, room=code)
 
-    go_to_next_team_or_pause_before_voting(code)
+    game["current_turn_index"] += 1
+    socketio.sleep(1)
+    start_next_turn(code)
 
 
 @socketio.on("submit_vote")
 def submit_vote(data):
-    code = data.get("code")
-    voted_team = data.get("voted_team")
+    code = str(data.get("code", "")).strip().upper()
+    voted_team = str(data.get("voted_team", "")).strip()
     sid = request.sid
 
     if code not in games:
-        emit("error", "Game code not found!")
+        emit("error", "Game code not found.")
         return
 
     game = games[code]
 
     if game["state"] != "voting":
-        emit("error", "It is not the voting phase right now.")
+        emit("error", "Voting is not active.")
         return
 
-    if sid not in game["players"]:
-        emit("error", "You are not part of this game.")
-        return
-
-    voter_team = game["players"][sid]
-
-    if voter_team == "HOST":
-        emit("error", "Host cannot vote.")
-        return
-
-    if voted_team not in game["teams"]:
-        emit("error", "Invalid team selected.")
-        return
-
-    if voted_team == voter_team:
-        emit("error", "You cannot vote for your own team.")
+    voter_team = game["players_by_sid"].get(sid)
+    if not voter_team or voter_team == "HOST":
+        emit("error", "Only teams can vote.")
         return
 
     if voter_team in game["votes"]:
-        emit("error", "Your team already voted.")
+        emit("error", "Your team has already voted.")
         return
 
-    game["votes"][voter_team] = voted_team
+    if voted_team == "ADDITIONAL_ROUND":
+        game["votes"][voter_team] = "ADDITIONAL_ROUND"
+        game["additional_round_voters"].add(voter_team)
+        emit("vote_received", {"message": "You voted for an additional round."}, to=sid)
+    else:
+        if voted_team not in game["teams"]:
+            emit("error", "Invalid team selected.")
+            return
 
-    emit("vote_received", {
-        "message": f"You voted for {voted_team}."
-    }, to=sid)
+        if voted_team == voter_team:
+            emit("error", "You cannot vote for your own team.")
+            return
+
+        game["votes"][voter_team] = voted_team
+        emit("vote_received", {"message": f"You voted for {voted_team}."}, to=sid)
 
     if len(game["votes"]) >= len(game["teams"]):
+        game["vote_token"] += 1
         calculate_round_result(code)
 
 
-@socketio.on("disconnect")
-def handle_disconnect():
+@socketio.on("restart_game")
+def restart_game(data):
+    code = str(data.get("code", "")).strip().upper()
     sid = request.sid
 
-    for code, game in list(games.items()):
-        if sid not in game["players"]:
+    if code not in games:
+        emit("error", "Game code not found.")
+        return
+
+    game = games[code]
+    if sid != game["host_sid"]:
+        emit("error", "Only the host can restart the game.")
+        return
+
+    reset_to_agreement(code)
+
+
+@socketio.on("disconnect")
+def on_disconnect():
+    sid = request.sid
+
+    for code, game in games.items():
+        identity = game["players_by_sid"].pop(sid, None)
+
+        if identity == "HOST":
+            if game["host_sid"] == sid:
+                game["host_connected"] = False
             continue
 
-        team = game["players"].pop(sid)
+        if identity and identity != "HOST":
+            if game["team_sids"].get(identity) == sid:
+                game["team_sids"].pop(identity, None)
 
-        if team == "HOST":
-            logging.info(f"Host disconnected from {code}")
-            game["host_sid"] = None
-        else:
-            logging.info(f"{team} disconnected from {code}")
-
-            remaining_teams = [name for name in game["players"].values() if name != "HOST"]
-            if team not in remaining_teams:
-                if team in game["teams"]:
-                    game["teams"].remove(team)
-
-            game["ready_teams"].discard(team)
-
-        if not game["players"]:
-            del games[code]
-            logging.info(f"Game {code} deleted (empty)")
-            break
-
-        emit_team_and_score_updates(code)
-        emit_ready_status(code)
-        break
+        # Teams remain registered even if they disconnect.
+        # That way refreshes/rejoins do not erase the lobby.
+        emit_roster_update(code)
 
 
-# -----------------------------
-# Run app
-# -----------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     socketio.run(app, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
