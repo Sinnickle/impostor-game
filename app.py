@@ -553,29 +553,33 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
             "sorted_scores": sorted_scores
         }, to=sid)
 
-
-def reset_to_agreement_new_game(code):
+def reset_to_round_one_new_game(code):
     game = games[code]
-    game["state"] = "agreement"
+
     game["round"] = 1
+    game["state"] = "role"
+
     game["impostor"] = None
     game["word"] = None
     game["order"] = []
     game["current_turn_index"] = 0
+
     game["responses"] = {}
     game["votes"] = {}
+    game["additional_round_voters"] = set()
+
+    # restart the whole game scoreboard
+    game["scores"] = {team: 0 for team in game["teams"]}
+
+    # keep these cleared so old intro/agreement data does not leak into a new game
     game["agreement_ready"] = set()
     game["intro_ready"] = set()
     game["intro_finished"] = set()
-    game["additional_round_voters"] = set()
-    game["scores"] = {team: 0 for team in game["teams"]}
+
     game["turn_token"] += 1
     game["vote_token"] += 1
-    emit_roster_update(code)
-    socketio.emit("agreement_phase", {
-        "message": "All teams must agree/ready before Round 1 begins."
-    }, room=code)
 
+    begin_round(code, preserved=False, preserve_order=False)
 
 @app.route("/")
 def index():
@@ -890,6 +894,7 @@ def restart_game(data):
         return
 
     game = games[code]
+
     if sid != game["host_sid"]:
         emit("error", "Only the host can restart the game.")
         return
@@ -898,9 +903,8 @@ def restart_game(data):
         emit("error", "Restart Game is only available after the game ends.")
         return
 
-    reset_to_agreement_new_game(code)
-    emit_status(code, "Game reset. Back to agreement phase at Round 1.")
-
+    reset_to_round_one_new_game(code)
+    emit_status(code, "Game restarted. Starting again from Round 1.")
 
 @socketio.on("submit_phrase")
 def submit_phrase(data):

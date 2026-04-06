@@ -308,7 +308,8 @@
 
         .bridge-center {
             text-align: center;
-            max-width: 900px;
+            max-width: 980px;
+            width: 100%;
         }
 
         .bridge-title {
@@ -337,6 +338,46 @@
             background: black;
             color: white;
             letter-spacing: 0.08em;
+        }
+
+        .bridge-wait-card {
+            margin: 22px auto 0 auto;
+            max-width: 860px;
+            background: #111827;
+            color: white;
+            border-radius: 22px;
+            padding: 24px;
+            text-align: left;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        .bridge-wait-badge {
+            display: inline-block;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #2563eb, #9333ea);
+            color: white;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .bridge-rules-box {
+            margin-top: 16px;
+            max-height: 340px;
+            overflow-y: auto;
+            border-radius: 16px;
+            padding: 16px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            line-height: 1.6;
+        }
+
+        .bridge-rules-box p {
+            margin: 0 0 10px 0;
+        }
+
+        .bridge-rules-box p:last-child {
+            margin-bottom: 0;
         }
 
         .player-video-layer {
@@ -564,6 +605,31 @@
         // EASY TO CHANGE:
         const AUDIO_START_DELAY_SECONDS = 2;
         const GLITCH_DURATION_SECONDS = 2;
+
+        const INTRO_RULES_HTML = `
+            <p>All teams will be assigned one of two roles: HUMAN... or IMPOSTOR</p>
+            <p>There is only ONE impostor per round</p>
+            <p>A computer science word will be revealed … to all human teams</p>
+            <p>The word will NOT be revealed to the IMPOSTOR team</p>
+            <p>The HUMAN teams must correctly identify the impostor.</p>
+            <p>The IMPOSTOR must conceal their identity and deceive all others.</p>
+            <p>Teams will proceed individually in an assigned order</p>
+            <p>Each team must submit a phrase, no longer than THREE words.</p>
+            <p>The phrase is revealed to all teams.</p>
+            <p>The phrase must be related to the given word. It is strictly prohibited to directly input the given word.</p>
+            <p>Your phrase will be judged, analyzed, and questioned by other teams</p>
+            <p>After all responses have been submitted, all teams must vote for a suspected Impostor</p>
+            <p>Alternatively, teams can vote for an additional round, with the same roles and term</p>
+            <p>The votes are tallied by the game system, and the identities of each player are then revealed to all screens</p>
+            <p>If the IMPOSTOR team is correctly identified, all HUMAN teams are rewarded 2 points for the duration of the game.</p>
+            <p>However, if the IMPOSTOR team survives, the IMPOSTOR team is rewarded 4 points for the duration of the game.</p>
+            <p>The point distribution marks the end of one round, starting a new round with different roles and different words</p>
+            <p>The game will last for 3 rounds.</p>
+            <p>By the end of the 3 rounds, the three team(s) with the highest amount of points receives a GAME CLEAR</p>
+            <p>All other teams will receive a GAME OVER</p>
+            <p>The IMPOSTOR game tests the extent of your Computer Science knowledge, as well as your ability to read or hide from others</p>
+            <p>The game will now begin.</p>
+        `;
 
         let myRole = null;
         let myWord = null;
@@ -860,6 +926,7 @@
             hide(appShell);
             hide(playerVideoLayer);
             show(playerBridge);
+
             bridgeContent.innerHTML = `
                 <div class="bridge-title">Please wait for host...</div>
                 <p class="bridge-subtitle">Your registered team name is:</p>
@@ -874,6 +941,7 @@
             hide(appShell);
             hide(playerVideoLayer);
             show(playerBridge);
+
             bridgeContent.innerHTML = `
                 <div class="bridge-title">READY</div>
                 <p class="bridge-subtitle">Press when your team is ready for the intro.</p>
@@ -899,6 +967,30 @@
 
                 socket.emit("player_intro_ready", { code });
             };
+        }
+
+        function showPostIntroWaitingBridge() {
+            if (isHost) return;
+
+            hide(appShell);
+            hide(playerVideoLayer);
+            show(playerBridge);
+
+            bridgeContent.innerHTML = `
+                <div class="bridge-wait-card">
+                    <div class="bridge-wait-badge">INTRO COMPLETE</div>
+                    <div class="bridge-title" style="font-size: clamp(1.9rem, 4vw, 3.2rem); color: white; margin-bottom: 10px;">
+                        Waiting for other players...
+                    </div>
+                    <p class="bridge-subtitle" style="color: #d1d5db;">
+                        Your intro is finished. Please remain on this screen while the other teams finish.
+                    </p>
+                    <span class="team-big-name" style="color: #fde68a;">${teamName || "TEAM"}</span>
+                    <div class="bridge-rules-box">
+                        ${INTRO_RULES_HTML}
+                    </div>
+                </div>
+            `;
         }
 
         async function playPlayerIntroSequence() {
@@ -939,7 +1031,7 @@
 
             introFinishedOnClient = true;
             hide(playerVideoLayer);
-            show(appShell);
+            showPostIntroWaitingBridge();
 
             socket.emit("player_intro_finished", { code });
         }
@@ -1314,29 +1406,17 @@
         };
 
         agreeBtn.onclick = () => {
-            if (alreadyAgreed) return;
-            alreadyAgreed = true;
-            agreeBtn.disabled = true;
-
-            socket.emit("agree_ready", { code: code });
+            if (isHost) return;
+            socket.emit("agree_ready", { code });
         };
 
         submitPhraseBtn.onclick = () => {
             const phrase = phraseInput.value.trim();
             socket.emit("submit_phrase", {
-                code: code,
-                phrase: phrase
+                code,
+                phrase
             });
         };
-
-        phraseInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                submitPhraseBtn.click();
-            }
-        });
-
-        updateIdentityText();
     </script>
 </body>
 </html>
