@@ -107,13 +107,17 @@
             }
 
             localStorage.setItem("teamName", teamInput);
+            localStorage.setItem("code", codeInput);
             localStorage.setItem("isHost", "false");
 
-            window.location.href = "/game/" + codeInput;
+            window.location.href = `/game?code=${encodeURIComponent(codeInput)}&team=${encodeURIComponent(teamInput)}`;
         }
 
-        socket.on("redirect", (code) => {
-            window.location.href = "/game/" + code;
+       socket.on("game_created", (data) => {
+            const code = data.code;
+            localStorage.setItem("code", code);
+            localStorage.setItem("isHost", "true");
+            window.location.href = `/game?code=${encodeURIComponent(code)}&host=1`;
         });
 
         socket.on("error", (msg) => {
