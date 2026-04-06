@@ -9,16 +9,25 @@
             box-sizing: border-box;
         }
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            color: white;
-            background:
+        :root {
+            --casino-bg:
                 radial-gradient(circle at top left, #4f46e5 0%, transparent 24%),
                 radial-gradient(circle at top right, #db2777 0%, transparent 24%),
                 radial-gradient(circle at bottom left, #0ea5e9 0%, transparent 24%),
                 linear-gradient(135deg, #0f172a, #111827, #1e1b4b);
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: white;
+            background: var(--casino-bg);
             min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .hidden {
+            display: none !important;
         }
 
         .app-shell {
@@ -83,10 +92,6 @@
 
         .muted {
             color: #d1d5db;
-        }
-
-        .hidden {
-            display: none !important;
         }
 
         .row {
@@ -289,9 +294,100 @@
             font-size: 0.92rem;
         }
 
-        .warning {
-            color: #fca5a5;
-            font-weight: bold;
+        .player-bridge {
+            position: fixed;
+            inset: 0;
+            z-index: 5000;
+            background: white;
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .bridge-center {
+            text-align: center;
+            max-width: 900px;
+        }
+
+        .bridge-title {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 900;
+            margin: 0 0 14px 0;
+        }
+
+        .bridge-subtitle {
+            font-size: clamp(1.2rem, 2vw, 1.8rem);
+            margin: 0;
+        }
+
+        .team-big-name {
+            display: block;
+            margin-top: 18px;
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            font-weight: 900;
+        }
+
+        .ready-big-btn {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 900;
+            padding: 22px 44px;
+            border-radius: 18px;
+            background: black;
+            color: white;
+            letter-spacing: 0.08em;
+        }
+
+        .player-video-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 6000;
+            background: black;
+        }
+
+        .player-video-layer video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: black;
+        }
+
+        .glitch-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 7000;
+            pointer-events: none;
+            opacity: 0;
+            background:
+                linear-gradient(0deg, rgba(255,0,0,0.15), rgba(255,0,255,0.05)),
+                repeating-linear-gradient(
+                    to bottom,
+                    rgba(255,255,255,0.12) 0px,
+                    rgba(255,255,255,0.12) 2px,
+                    rgba(0,0,0,0.08) 2px,
+                    rgba(0,0,0,0.08) 4px
+                ),
+                black;
+            mix-blend-mode: screen;
+        }
+
+        .glitch-layer.active {
+            animation: glitchFlash 2s linear forwards;
+        }
+
+        @keyframes glitchFlash {
+            0%   { opacity: 0.95; transform: translate(0, 0); }
+            10%  { opacity: 0.65; transform: translate(4px, -2px); }
+            20%  { opacity: 0.90; transform: translate(-5px, 3px); }
+            30%  { opacity: 0.45; transform: translate(2px, 2px); }
+            40%  { opacity: 0.88; transform: translate(-3px, -2px); }
+            50%  { opacity: 0.55; transform: translate(5px, 0); }
+            60%  { opacity: 0.82; transform: translate(-4px, 1px); }
+            70%  { opacity: 0.50; transform: translate(3px, -1px); }
+            80%  { opacity: 0.70; transform: translate(-2px, 2px); }
+            90%  { opacity: 0.35; transform: translate(1px, 0); }
+            100% { opacity: 0; transform: translate(0, 0); }
         }
 
         @media (max-width: 1100px) {
@@ -302,7 +398,32 @@
     </style>
 </head>
 <body>
-    <div class="app-shell">
+    <div id="playerBridge" class="player-bridge hidden">
+        <div class="bridge-center">
+            <div id="bridgeContent"></div>
+        </div>
+    </div>
+
+    <div id="playerVideoLayer" class="player-video-layer hidden">
+        <video
+            id="introVideo"
+            preload="auto"
+            playsinline
+            webkit-playsinline
+            disablepictureinpicture
+            controlslist="nodownload noplaybackrate noremoteplayback"
+        >
+            <source src="{{ url_for('static', filename='intro.mp4') }}" type="video/mp4">
+        </video>
+    </div>
+
+    <div id="glitchLayer" class="glitch-layer"></div>
+
+    <audio id="bgMusic" loop preload="auto">
+        <source src="{{ url_for('static', filename='bg-music.mp3') }}" type="audio/mpeg">
+    </audio>
+
+    <div id="appShell" class="app-shell">
         <div class="side-panel">
             <div class="card hero">
                 <h1>IMPOSTOR</h1>
@@ -348,7 +469,7 @@
                 <div class="row">
                     <button id="startGameBtn">Start Game</button>
                     <button id="continueBtn" class="hidden">Continue</button>
-                    <button id="restartGameBtn" class="hidden">Restart Entire Game</button>
+                    <button id="restartActionBtn" class="hidden">Restart Round</button>
                 </div>
             </div>
 
@@ -358,9 +479,9 @@
                     Confirm that your team understands the rules and will play fairly.
                 </p>
                 <p class="muted">
-                    Every team must press READY / AGREE before Round 1 begins.
+                    Every team must press READY / AGREE before the round begins.
                 </p>
-                <button id="agreeBtn">READY / AGREE</button>
+                <button id="agreeBtn">READY TO START GAME</button>
                 <div id="agreementStatus" style="margin-top: 14px;" class="muted"></div>
             </div>
 
@@ -440,12 +561,27 @@
         if (teamName) localStorage.setItem("teamName", teamName);
         localStorage.setItem("isHost", isHost ? "true" : "false");
 
+        // EASY TO CHANGE:
+        const AUDIO_START_DELAY_SECONDS = 2;
+        const GLITCH_DURATION_SECONDS = 2;
+
         let myRole = null;
         let myWord = null;
         let currentState = "lobby";
         let currentTurnTeam = null;
         let currentOrder = [];
         let alreadyAgreed = false;
+        let roundResponses = {};
+        let currentRestartMode = null;
+        let introFinishedOnClient = false;
+
+        const appShell = document.getElementById("appShell");
+        const playerBridge = document.getElementById("playerBridge");
+        const bridgeContent = document.getElementById("bridgeContent");
+        const playerVideoLayer = document.getElementById("playerVideoLayer");
+        const introVideo = document.getElementById("introVideo");
+        const bgMusic = document.getElementById("bgMusic");
+        const glitchLayer = document.getElementById("glitchLayer");
 
         const roomCodeText = document.getElementById("roomCodeText");
         const phaseText = document.getElementById("phaseText");
@@ -464,7 +600,7 @@
         const saveRoundsBtn = document.getElementById("saveRoundsBtn");
         const startGameBtn = document.getElementById("startGameBtn");
         const continueBtn = document.getElementById("continueBtn");
-        const restartGameBtn = document.getElementById("restartGameBtn");
+        const restartActionBtn = document.getElementById("restartActionBtn");
 
         const agreementBox = document.getElementById("agreementBox");
         const agreeBtn = document.getElementById("agreeBtn");
@@ -503,6 +639,10 @@
             hide(phraseBox);
             hide(votingBox);
             hide(finalLeaderboardBox);
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
 
         function setPhase(title, instruction) {
@@ -552,7 +692,9 @@
         }
 
         function renderResponses(responses) {
-            const entries = Object.entries(responses || {});
+            roundResponses = { ...(responses || {}) };
+            const entries = Object.entries(roundResponses);
+
             if (!entries.length) {
                 responsesList.innerHTML = "<li>No phrases yet.</li>";
                 return;
@@ -685,11 +827,138 @@
             currentTurnText.textContent = currentTurnTeam || "--";
         }
 
+        function setHostActionMode(mode) {
+            currentRestartMode = mode;
+
+            hide(startGameBtn);
+            hide(restartActionBtn);
+
+            if (!isHost) return;
+
+            if (mode === "start") {
+                show(startGameBtn);
+            } else if (mode === "restart_round") {
+                restartActionBtn.textContent = "Restart Round";
+                show(restartActionBtn);
+            } else if (mode === "restart_game") {
+                restartActionBtn.textContent = "Restart Game";
+                show(restartActionBtn);
+            }
+        }
+
+        function stopIntroVideo() {
+            try {
+                introVideo.pause();
+                introVideo.currentTime = 0;
+            } catch (err) {}
+        }
+
+        function showPlayerBridgeWait() {
+            if (isHost) return;
+            if (introFinishedOnClient) return;
+
+            hide(appShell);
+            hide(playerVideoLayer);
+            show(playerBridge);
+            bridgeContent.innerHTML = `
+                <div class="bridge-title">Please wait for host...</div>
+                <p class="bridge-subtitle">Your registered team name is:</p>
+                <span class="team-big-name">${teamName || "TEAM"}</span>
+            `;
+        }
+
+        function showPlayerReadyBridge() {
+            if (isHost) return;
+            if (introFinishedOnClient) return;
+
+            hide(appShell);
+            hide(playerVideoLayer);
+            show(playerBridge);
+            bridgeContent.innerHTML = `
+                <div class="bridge-title">READY</div>
+                <p class="bridge-subtitle">Press when your team is ready for the intro.</p>
+                <div style="margin-top: 28px;">
+                    <button id="playerReadyBtn" class="ready-big-btn">READY</button>
+                </div>
+                <span class="team-big-name">${teamName || "TEAM"}</span>
+            `;
+
+            const btn = document.getElementById("playerReadyBtn");
+            btn.onclick = async () => {
+                btn.disabled = true;
+
+                try {
+                    bgMusic.volume = 0;
+                    const playPromise = bgMusic.play();
+                    if (playPromise) await playPromise;
+                    bgMusic.pause();
+                    bgMusic.currentTime = 0;
+                    bgMusic.volume = 1;
+                } catch (err) {
+                }
+
+                socket.emit("player_intro_ready", { code });
+            };
+        }
+
+        async function playPlayerIntroSequence() {
+            if (isHost) return;
+            if (introFinishedOnClient) return;
+
+            hide(appShell);
+            hide(playerBridge);
+            show(playerVideoLayer);
+
+            stopIntroVideo();
+
+            try {
+                await introVideo.play();
+            } catch (err) {
+                statusDiv.textContent = "Video autoplay was blocked.";
+            }
+        }
+
+        async function handleIntroEnded() {
+            if (isHost) return;
+            if (introFinishedOnClient) return;
+
+            await sleep(AUDIO_START_DELAY_SECONDS * 1000);
+
+            try {
+                bgMusic.currentTime = 0;
+                await bgMusic.play();
+            } catch (err) {
+                statusDiv.textContent = "Background music autoplay was blocked.";
+            }
+
+            glitchLayer.classList.remove("active");
+            void glitchLayer.offsetWidth;
+            glitchLayer.classList.add("active");
+
+            await sleep(GLITCH_DURATION_SECONDS * 1000);
+
+            introFinishedOnClient = true;
+            hide(playerVideoLayer);
+            show(appShell);
+
+            socket.emit("player_intro_finished", { code });
+        }
+
+        function exitPlayerBridgeToMainUI() {
+            if (isHost) return;
+            hide(playerBridge);
+            hide(playerVideoLayer);
+            stopIntroVideo();
+            show(appShell);
+        }
+
         roomCodeText.textContent = `Code: ${code || "----"}`;
 
         if (isHost) {
             show(hostControls);
         }
+
+        introVideo.addEventListener("ended", handleIntroEnded);
 
         socket.on("connect", () => {
             if (!code) {
@@ -715,6 +984,21 @@
             }
         });
 
+        socket.on("player_waiting_screen", () => {
+            if (isHost) return;
+            showPlayerBridgeWait();
+        });
+
+        socket.on("player_ready_prompt", () => {
+            if (isHost) return;
+            showPlayerReadyBridge();
+        });
+
+        socket.on("player_intro_video", async () => {
+            if (isHost) return;
+            await playPlayerIntroSequence();
+        });
+
         socket.on("roster_update", (data) => {
             currentState = data.state || currentState;
 
@@ -723,19 +1007,33 @@
             roundInfoText.textContent = `${data.round || 1} / ${data.max_rounds || 3}`;
 
             if (Array.isArray(data.agreement_ready)) {
-                agreementStatus.textContent = `Ready teams: ${data.agreement_ready.length} / ${data.teams.length}`;
+                agreementStatus.textContent = `Ready teams: ${data.agreement_ready.length} / ${(data.teams || []).length}`;
+                if (!isHost && data.agreement_ready.includes(teamName)) {
+                    alreadyAgreed = true;
+                    agreeBtn.disabled = true;
+                }
             }
 
             if (typeof data.max_rounds === "number") {
                 roundCountInput.value = data.max_rounds;
             }
 
+            setHostActionMode(data.host_button_mode || "none");
+
+            if (isHost) {
+                if (data.host_can_continue) {
+                    show(continueBtn);
+                } else {
+                    hide(continueBtn);
+                }
+            }
+
             if (currentState === "lobby") {
                 setPhase("Lobby", isHost ? "Wait for teams to join, then start the game." : "Waiting for host...");
                 hideMainBoxes();
-                hide(continueBtn);
-                hide(restartGameBtn);
-                if (isHost) show(hostControls);
+                if (!isHost) {
+                    showPlayerBridgeWait();
+                }
             }
         });
 
@@ -746,25 +1044,37 @@
 
         socket.on("agreement_phase", (data) => {
             currentState = "agreement";
-            alreadyAgreed = false;
+
+            if (!isHost) {
+                hide(playerBridge);
+                hide(playerVideoLayer);
+                stopIntroVideo();
+                show(appShell);
+            }
 
             setPhase("Agreement Phase", data.message || "All teams must agree before the game begins.");
             hideMainBoxes();
             show(agreementBox);
-            hide(continueBtn);
-            hide(restartGameBtn);
 
             if (isHost) {
                 show(hostControls);
             }
 
-            agreeBtn.disabled = false;
+            if (!alreadyAgreed) {
+                agreeBtn.disabled = false;
+            }
+
             agreementStatus.textContent = "Waiting for all teams to agree.";
             statusDiv.textContent = data.message || "Agreement phase started.";
         });
 
         socket.on("agreement_update", (data) => {
             agreementStatus.textContent = `Ready teams: ${data.ready_teams.length} / ${data.total_teams}`;
+
+            if (!isHost && data.ready_teams.includes(teamName)) {
+                alreadyAgreed = true;
+                agreeBtn.disabled = true;
+            }
         });
 
         socket.on("round_started", (data) => {
@@ -774,8 +1084,8 @@
             setCurrentTurn("--");
 
             if (data.preserved) {
-                setPhase(`Round ${data.round} - Additional Round`, "Same roles, same word, same impostor. Review your role.");
-                statusDiv.textContent = "Additional round approved.";
+                setPhase(`Round ${data.round} - Restarted`, "Same roles, same word, same turn order. Review your role.");
+                statusDiv.textContent = `Round ${data.round} restarted.`;
             } else {
                 setPhase(`Round ${data.round}`, "Roles have been assigned. Review your role.");
                 statusDiv.textContent = `Round ${data.round} started.`;
@@ -789,7 +1099,8 @@
             if (isHost) {
                 show(hostControls);
                 show(continueBtn);
-                hide(restartGameBtn);
+            } else {
+                exitPlayerBridgeToMainUI();
             }
         });
 
@@ -870,30 +1181,7 @@
         });
 
         socket.on("phrase_locked", (data) => {
-            renderResponses({
-                ...Object.fromEntries(
-                    Array.from(responsesList.querySelectorAll("li")).map(() => [])
-                )
-            });
-
-            const currentEntries = {};
-            const items = responsesList.querySelectorAll("li");
-            items.forEach(() => {});
-
-            // Rebuild from DOM-independent state by reading existing display if needed
-            // Then immediately append/update the new response cleanly below.
-            const existing = {};
-            const currentHtmlRows = responsesList.querySelectorAll(".response-row");
-            currentHtmlRows.forEach(row => {
-                const team = row.querySelector(".response-team")?.textContent;
-                const spans = row.querySelectorAll("span");
-                const phrase = spans[1]?.textContent;
-                if (team && phrase) existing[team] = phrase;
-            });
-
-            existing[data.team] = data.phrase;
-            renderResponses(existing);
-
+            renderResponses(data.responses || {});
             phraseInput.value = "";
             phraseInput.disabled = true;
             submitPhraseBtn.disabled = true;
@@ -907,6 +1195,7 @@
             currentState = "voting";
             hideMainBoxes();
             show(votingBox);
+
             renderResponses(data.responses || {});
             setCurrentTurn("--");
 
@@ -942,36 +1231,35 @@
             setCurrentTurn("--");
 
             const extraRoundText = data.additional_round_triggered
-    ? `YES (${data.additional_round_votes} teams voted for it)`
-    : `NO (${data.additional_round_votes} teams voted for it)`;
+                ? `YES (${data.additional_round_votes} teams voted for it)`
+                : `NO (${data.additional_round_votes} teams voted for it)`;
 
-if (data.additional_round_triggered) {
-    votingText.innerHTML = `
-        <div class="result-box">
-            <strong>Additional Round:</strong> ${extraRoundText}<br>
-            <strong>Result:</strong> ${data.result_text}
-        </div>
-    `;
-} else {
-    const majorityText = data.majority_team ? data.majority_team : "No clear majority";
-    const individualText = (data.individual_correct_teams && data.individual_correct_teams.length)
-        ? data.individual_correct_teams.join(", ")
-        : "None";
+            if (data.additional_round_triggered) {
+                votingText.innerHTML = `
+                    <div class="result-box">
+                        <strong>Additional Round:</strong> ${extraRoundText}<br>
+                        <strong>Result:</strong> ${data.result_text}
+                    </div>
+                `;
+            } else {
+                const majorityText = data.majority_team ? data.majority_team : "No clear majority";
+                const individualText = (data.individual_correct_teams && data.individual_correct_teams.length)
+                    ? data.individual_correct_teams.join(", ")
+                    : "None";
 
-    votingText.innerHTML = `
-        <div class="result-box">
-            <strong>Majority Choice:</strong> ${majorityText}<br>
-            <strong>Actual Impostor:</strong> ${data.actual_impostor}<br>
-            <strong>Majority Correct:</strong> ${data.majority_correct ? "Yes" : "No"}<br>
-            <strong>Individual Correct Votes (+1):</strong> ${individualText}<br>
-            <strong>Additional Round:</strong> ${extraRoundText}<br>
-            <strong>Result:</strong> ${data.result_text}
-        </div>
-    `;
-        }
+                votingText.innerHTML = `
+                    <div class="result-box">
+                        <strong>Majority Choice:</strong> ${majorityText}<br>
+                        <strong>Actual Impostor:</strong> ${data.actual_impostor}<br>
+                        <strong>Majority Correct:</strong> ${data.majority_correct ? "Yes" : "No"}<br>
+                        <strong>Individual Correct Votes (+1):</strong> ${individualText}<br>
+                        <strong>Additional Round:</strong> ${extraRoundText}<br>
+                        <strong>Result:</strong> ${data.result_text}
+                    </div>
+                `;
+            }
 
             voteOptions.innerHTML = "";
-
             setPhase("Round Result", "Results have been revealed.");
             statusDiv.textContent = "Round results displayed.";
 
@@ -987,10 +1275,6 @@ if (data.additional_round_triggered) {
             hideMainBoxes();
             show(finalLeaderboardBox);
             hide(continueBtn);
-
-            if (isHost) {
-                show(restartGameBtn);
-            }
 
             renderScores(data.scores || {});
             renderFinalLeaderboard(data.sorted_scores || []);
@@ -1014,21 +1298,19 @@ if (data.additional_round_triggered) {
         };
 
         startGameBtn.onclick = () => {
-            socket.emit("start_game_request", {
-                code: code
-            });
+            socket.emit("start_game_request", { code: code });
         };
 
         continueBtn.onclick = () => {
-            socket.emit("host_continue", {
-                code: code
-            });
+            socket.emit("host_continue", { code: code });
         };
 
-        restartGameBtn.onclick = () => {
-            socket.emit("restart_game", {
-                code: code
-            });
+        restartActionBtn.onclick = () => {
+            if (currentRestartMode === "restart_round") {
+                socket.emit("restart_round", { code });
+            } else if (currentRestartMode === "restart_game") {
+                socket.emit("restart_game", { code });
+            }
         };
 
         agreeBtn.onclick = () => {
@@ -1036,9 +1318,7 @@ if (data.additional_round_triggered) {
             alreadyAgreed = true;
             agreeBtn.disabled = true;
 
-            socket.emit("agree_ready", {
-                code: code
-            });
+            socket.emit("agree_ready", { code: code });
         };
 
         submitPhraseBtn.onclick = () => {
