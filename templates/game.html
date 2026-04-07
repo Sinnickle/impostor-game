@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Impostor Game Room</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         :root {
             --casino-bg:
@@ -26,9 +24,7 @@
             overflow-x: hidden;
         }
 
-        .hidden {
-            display: none !important;
-        }
+        .hidden { display: none !important; }
 
         .app-shell {
             display: grid;
@@ -38,8 +34,7 @@
             min-height: 100vh;
         }
 
-        .side-panel,
-        .main-panel {
+        .side-panel, .main-panel {
             display: flex;
             flex-direction: column;
             gap: 16px;
@@ -47,31 +42,23 @@
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.10);
-            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.18);
             border-radius: 18px;
             padding: 18px;
-            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.28);
             backdrop-filter: blur(10px);
         }
 
         .hero {
             text-align: center;
             background:
-                linear-gradient(135deg, rgba(244, 114, 182, 0.24), rgba(59, 130, 246, 0.24)),
-                rgba(255, 255, 255, 0.08);
+                linear-gradient(135deg, rgba(244,114,182,0.24), rgba(59,130,246,0.24)),
+                rgba(255,255,255,0.08);
         }
 
-        .hero h1 {
-            margin: 0 0 8px 0;
-            font-size: 2rem;
-        }
-
-        .hero h2 {
-            margin: 0 0 10px 0;
-            font-size: 1.1rem;
-            color: #fde68a;
-        }
+        .hero h1 { margin: 0 0 8px 0; font-size: 2rem; }
+        .hero h2 { margin: 0 0 10px 0; font-size: 1.1rem; color: #fde68a; }
 
         .phase-banner {
             margin: 0 0 10px 0;
@@ -80,19 +67,10 @@
             color: #fef08a;
         }
 
-        .instruction {
-            margin: 0;
-            color: #e5e7eb;
-            line-height: 1.5;
-        }
-
-        h3, h4 {
-            margin-top: 0;
-        }
-
-        .muted {
-            color: #d1d5db;
-        }
+        .instruction { margin: 0; color: #e5e7eb; line-height: 1.5; }
+        h3, h4 { margin-top: 0; }
+        .muted { color: #d1d5db; }
+        .small-note { font-size: 0.92rem; }
 
         .row {
             display: flex;
@@ -112,15 +90,8 @@
             transition: transform 0.15s ease, opacity 0.15s ease;
         }
 
-        button:hover {
-            transform: translateY(-1px);
-        }
-
-        button:disabled {
-            opacity: 0.55;
-            cursor: not-allowed;
-            transform: none;
-        }
+        button:hover { transform: translateY(-1px); }
+        button:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
         input, textarea {
             width: 100%;
@@ -132,14 +103,9 @@
             outline: none;
         }
 
-        input::placeholder,
-        textarea::placeholder {
-            color: #d1d5db;
-        }
+        input::placeholder, textarea::placeholder { color: #d1d5db; }
 
-        .main-stage {
-            min-height: 240px;
-        }
+        .main-stage { min-height: 240px; }
 
         .big-role {
             font-size: 2rem;
@@ -147,13 +113,8 @@
             margin-bottom: 10px;
         }
 
-        .human-role {
-            color: #93c5fd;
-        }
-
-        .impostor-role {
-            color: #fca5a5;
-        }
+        .human-role { color: #93c5fd; }
+        .impostor-role { color: #fca5a5; }
 
         .word-box {
             background: rgba(255,255,255,0.08);
@@ -190,9 +151,7 @@
             align-items: center;
         }
 
-        .response-team {
-            font-weight: bold;
-        }
+        .response-team { font-weight: bold; }
 
         .status-pill {
             display: inline-block;
@@ -211,7 +170,8 @@
             border: 1px solid rgba(255,255,255,0.12);
         }
 
-        .big-score-list .score-row {
+        .big-score-list .score-row,
+        .full-leaderboard-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -231,16 +191,8 @@
             margin-bottom: 18px;
         }
 
-        .champion-banner h2 {
-            margin: 0 0 8px 0;
-            font-size: 2rem;
-        }
-
-        .champion-banner p {
-            margin: 0;
-            font-size: 1.1rem;
-            font-weight: bold;
-        }
+        .champion-banner h2 { margin: 0 0 8px 0; font-size: 2rem; }
+        .champion-banner p { margin: 0; font-size: 1.1rem; font-weight: bold; }
 
         .top-three-grid {
             display: grid;
@@ -269,30 +221,22 @@
             margin-bottom: 6px;
         }
 
-        .podium-team {
-            font-size: 1.25rem;
-            font-weight: bold;
-        }
+        .podium-team { font-size: 1.25rem; font-weight: bold; }
+        .podium-score { font-size: 1rem; color: #e5e7eb; margin-top: 6px; }
 
-        .podium-score {
-            font-size: 1rem;
-            color: #e5e7eb;
-            margin-top: 6px;
-        }
-
-        .full-leaderboard-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 12px;
-            margin-bottom: 8px;
-            border-radius: 12px;
+        .agreement-rules-panel {
+            max-height: 360px;
+            overflow-y: auto;
+            border-radius: 16px;
+            padding: 16px;
             background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            line-height: 1.6;
+            margin-top: 14px;
         }
 
-        .small-note {
-            font-size: 0.92rem;
-        }
+        .agreement-rules-panel p { margin: 0 0 10px 0; }
+        .agreement-rules-panel p:last-child { margin-bottom: 0; }
 
         .player-bridge {
             position: fixed;
@@ -348,7 +292,7 @@
             border-radius: 22px;
             padding: 24px;
             text-align: left;
-            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 18px 40px rgba(0,0,0,0.25);
         }
 
         .bridge-wait-badge {
@@ -372,13 +316,8 @@
             line-height: 1.6;
         }
 
-        .bridge-rules-box p {
-            margin: 0 0 10px 0;
-        }
-
-        .bridge-rules-box p:last-child {
-            margin-bottom: 0;
-        }
+        .bridge-rules-box p { margin: 0 0 10px 0; }
+        .bridge-rules-box p:last-child { margin-bottom: 0; }
 
         .player-video-layer {
             position: fixed;
@@ -432,9 +371,7 @@
         }
 
         @media (max-width: 1100px) {
-            .app-shell {
-                grid-template-columns: 1fr;
-            }
+            .app-shell { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -515,15 +452,12 @@
             </div>
 
             <div id="agreementBox" class="card main-stage hidden">
-                <h3>Agreement Phase</h3>
+                <h3>Waiting for other players</h3>
                 <p class="instruction">
-                    Confirm that your team understands the rules and will play fairly.
+                    Your intro is complete. Please stay on this screen while the remaining teams finish.
                 </p>
-                <p class="muted">
-                    Every team must press READY / AGREE before the round begins.
-                </p>
-                <button id="agreeBtn">READY TO START GAME</button>
                 <div id="agreementStatus" style="margin-top: 14px;" class="muted"></div>
+                <div class="agreement-rules-panel" id="agreementRulesPanel"></div>
             </div>
 
             <div id="roleBox" class="card main-stage hidden">
@@ -602,7 +536,6 @@
         if (teamName) localStorage.setItem("teamName", teamName);
         localStorage.setItem("isHost", isHost ? "true" : "false");
 
-        // EASY TO CHANGE:
         const AUDIO_START_DELAY_SECONDS = 2;
         const GLITCH_DURATION_SECONDS = 2;
 
@@ -636,7 +569,6 @@
         let currentState = "lobby";
         let currentTurnTeam = null;
         let currentOrder = [];
-        let alreadyAgreed = false;
         let roundResponses = {};
         let currentRestartMode = null;
         let introFinishedOnClient = false;
@@ -669,8 +601,8 @@
         const restartActionBtn = document.getElementById("restartActionBtn");
 
         const agreementBox = document.getElementById("agreementBox");
-        const agreeBtn = document.getElementById("agreeBtn");
         const agreementStatus = document.getElementById("agreementStatus");
+        const agreementRulesPanel = document.getElementById("agreementRulesPanel");
 
         const roleBox = document.getElementById("roleBox");
         const roleText = document.getElementById("roleText");
@@ -690,6 +622,8 @@
         const championBanner = document.getElementById("championBanner");
         const topThreeList = document.getElementById("topThreeList");
         const fullLeaderboardList = document.getElementById("fullLeaderboardList");
+
+        agreementRulesPanel.innerHTML = INTRO_RULES_HTML;
 
         function show(el) {
             el.classList.remove("hidden");
@@ -962,8 +896,7 @@
                     bgMusic.pause();
                     bgMusic.currentTime = 0;
                     bgMusic.volume = 1;
-                } catch (err) {
-                }
+                } catch (err) {}
 
                 socket.emit("player_intro_ready", { code });
             };
@@ -1098,16 +1031,12 @@
             renderScores(data.scores || {});
             roundInfoText.textContent = `${data.round || 1} / ${data.max_rounds || 3}`;
 
-            if (Array.isArray(data.agreement_ready)) {
-                agreementStatus.textContent = `Ready teams: ${data.agreement_ready.length} / ${(data.teams || []).length}`;
-                if (!isHost && data.agreement_ready.includes(teamName)) {
-                    alreadyAgreed = true;
-                    agreeBtn.disabled = true;
-                }
-            }
-
             if (typeof data.max_rounds === "number") {
                 roundCountInput.value = data.max_rounds;
+            }
+
+            if (typeof data.intro_finished_count === "number" && typeof data.total_teams === "number") {
+                agreementStatus.textContent = `Finished intro: ${data.intro_finished_count} / ${data.total_teams}`;
             }
 
             setHostActionMode(data.host_button_mode || "none");
@@ -1118,6 +1047,10 @@
                 } else {
                     hide(continueBtn);
                 }
+            }
+
+            if (!isHost && currentState === "agreement" && introFinishedOnClient) {
+                showPostIntroWaitingBridge();
             }
 
             if (currentState === "lobby") {
@@ -1137,35 +1070,22 @@
         socket.on("agreement_phase", (data) => {
             currentState = "agreement";
 
-            if (!isHost) {
+            setPhase("Waiting for other players", data.message || "Waiting for intro completion.");
+
+            if (isHost) {
+                hideMainBoxes();
+                show(agreementBox);
+                show(appShell);
                 hide(playerBridge);
                 hide(playerVideoLayer);
                 stopIntroVideo();
-                show(appShell);
-            }
-
-            setPhase("Agreement Phase", data.message || "All teams must agree before the game begins.");
-            hideMainBoxes();
-            show(agreementBox);
-
-            if (isHost) {
-                show(hostControls);
-            }
-
-            if (!alreadyAgreed) {
-                agreeBtn.disabled = false;
-            }
-
-            agreementStatus.textContent = "Waiting for all teams to agree.";
-            statusDiv.textContent = data.message || "Agreement phase started.";
-        });
-
-        socket.on("agreement_update", (data) => {
-            agreementStatus.textContent = `Ready teams: ${data.ready_teams.length} / ${data.total_teams}`;
-
-            if (!isHost && data.ready_teams.includes(teamName)) {
-                alreadyAgreed = true;
-                agreeBtn.disabled = true;
+                agreementStatus.textContent = data.message || "Waiting for all teams to finish the intro.";
+                statusDiv.textContent = data.message || "Waiting on intro completion.";
+            } else {
+                if (introFinishedOnClient) {
+                    showPostIntroWaitingBridge();
+                }
+                statusDiv.textContent = data.message || "Waiting on intro completion.";
             }
         });
 
@@ -1403,11 +1323,6 @@
             } else if (currentRestartMode === "restart_game") {
                 socket.emit("restart_game", { code });
             }
-        };
-
-        agreeBtn.onclick = () => {
-            if (isHost) return;
-            socket.emit("agree_ready", { code });
         };
 
         submitPhraseBtn.onclick = () => {

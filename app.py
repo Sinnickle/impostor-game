@@ -63,6 +63,7 @@ def create_game_state():
         "votes": {},
         "scores": {},
 
+        # legacy-safe, but no longer used for gating
         "agreement_ready": set(),
         "intro_ready": set(),
         "intro_finished": set(),
@@ -75,10 +76,6 @@ def create_game_state():
 
 def all_teams_intro_finished(game):
     return len(game["teams"]) > 0 and len(game["intro_finished"]) == len(game["teams"])
-
-
-def all_teams_agreed(game):
-    return len(game["teams"]) >= 3 and len(game["agreement_ready"]) == len(game["teams"])
 
 
 def emit_status(code, message):
@@ -104,12 +101,13 @@ def emit_roster_update(code):
         "state": game["state"],
         "round": game["round"],
         "max_rounds": game["max_rounds"],
-        "agreement_ready": sorted(list(game["agreement_ready"])),
         "intro_ready": sorted(list(game["intro_ready"])),
         "intro_finished": sorted(list(game["intro_finished"])),
+        "intro_finished_count": len(game["intro_finished"]),
+        "total_teams": len(game["teams"]),
         "host_button_mode": get_host_button_mode(game),
         "host_can_continue": (
-            (game["state"] == "agreement" and all_teams_agreed(game)) or
+            (game["state"] == "agreement" and all_teams_intro_finished(game)) or
             (game["state"] == "role") or
             (game["state"] == "paused_after_result")
         ),
@@ -128,19 +126,11 @@ def emit_intro_video_to_player(sid, team_name):
     socketio.emit("player_intro_video", {"team_name": team_name}, to=sid)
 
 
-def emit_individual_agreement_to_player(code, sid):
+def emit_individual_post_intro_waiting_to_player(code, sid):
     game = games[code]
     socketio.emit("agreement_phase", {
-        "message": f"All teams must agree/ready before Round {game['round']} begins."
+        "message": f"Waiting for all teams to finish the intro before Round {game['round']} begins."
     }, to=sid)
-
-
-def move_all_players_to_waiting(code):
-    game = games[code]
-    for team in game["teams"]:
-        sid = game["team_sids"].get(team)
-        if sid:
-            emit_waiting_screen_to_player(sid, team)
 
 
 def move_all_players_to_ready(code):
@@ -202,7 +192,7 @@ def move_to_agreement(code, message=None):
     game["state"] = "agreement"
     emit_roster_update(code)
     socketio.emit("agreement_phase", {
-        "message": message or f"All teams must agree/ready before Round {game['round']} begins."
+        "message": message or f"Waiting for all teams to finish the intro before Round {game['round']} begins."
     }, room=code)
 
 
@@ -448,12 +438,13 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
         "state": game["state"],
         "round": game["round"],
         "max_rounds": game["max_rounds"],
-        "agreement_ready": sorted(list(game["agreement_ready"])),
         "intro_ready": sorted(list(game["intro_ready"])),
         "intro_finished": sorted(list(game["intro_finished"])),
+        "intro_finished_count": len(game["intro_finished"]),
+        "total_teams": len(game["teams"]),
         "host_button_mode": get_host_button_mode(game),
         "host_can_continue": (
-            (game["state"] == "agreement" and all_teams_agreed(game)) or
+            (game["state"] == "agreement" and all_teams_intro_finished(game)) or
             (game["state"] == "role") or
             (game["state"] == "paused_after_result")
         ),
@@ -462,7 +453,7 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
     if is_host:
         if game["state"] == "agreement":
             emit("agreement_phase", {
-                "message": f"All teams must agree/ready before Round {game['round']} begins."
+                "message": f"Waiting for all teams to finish the intro before Round {game['round']} begins."
             }, to=sid)
         elif game["state"] == "role":
             emit_round_started(code)
@@ -504,16 +495,14 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
 
     elif game["state"] in {"intro_wait", "intro_playing"}:
         if team_name in game["intro_finished"]:
-            emit_individual_agreement_to_player(code, sid)
+            emit_individual_post_intro_waiting_to_player(code, sid)
         elif team_name in game["intro_ready"]:
             emit_intro_video_to_player(sid, team_name)
         else:
             emit_ready_screen_to_player(sid, team_name)
 
     elif game["state"] == "agreement":
-        emit("agreement_phase", {
-            "message": f"All teams must agree/ready before Round {game['round']} begins."
-        }, to=sid)
+        emit_individual_post_intro_waiting_to_player(code, sid)
 
     elif game["state"] == "role":
         emit_round_started(code)
@@ -553,6 +542,7 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
             "sorted_scores": sorted_scores
         }, to=sid)
 
+
 def reset_to_round_one_new_game(code):
     game = games[code]
 
@@ -568,10 +558,8 @@ def reset_to_round_one_new_game(code):
     game["votes"] = {}
     game["additional_round_voters"] = set()
 
-    # restart the whole game scoreboard
     game["scores"] = {team: 0 for team in game["teams"]}
 
-    # keep these cleared so old intro/agreement data does not leak into a new game
     game["agreement_ready"] = set()
     game["intro_ready"] = set()
     game["intro_finished"] = set()
@@ -580,6 +568,7 @@ def reset_to_round_one_new_game(code):
     game["vote_token"] += 1
 
     begin_round(code, preserved=False, preserve_order=False)
+
 
 @app.route("/")
 def index():
@@ -698,7 +687,7 @@ def start_game_request(data):
 
     emit_roster_update(code)
     move_all_players_to_ready(code)
-    emit_status(code, "Players are now being shown the READY button.")
+    emit_status(code, "Players are now being shown the READY button for the intro.")
 
 
 @socketio.on("player_intro_ready")
@@ -744,7 +733,7 @@ def player_intro_finished(data):
         return
 
     game = games[code]
-    if game["state"] not in {"intro_wait", "intro_playing"}:
+    if game["state"] not in {"intro_wait", "intro_playing", "agreement"}:
         emit("error", "Intro completion is not valid right now.")
         return
 
@@ -753,61 +742,32 @@ def player_intro_finished(data):
         emit("error", "Only players can do that.")
         return
 
-    # finishing intro also auto-counts as agreement ready
+    if team_name in game["intro_finished"]:
+        emit_roster_update(code)
+        emit_individual_post_intro_waiting_to_player(code, sid)
+        return
+
     game["intro_finished"].add(team_name)
-    game["agreement_ready"].add(team_name)
+    game["state"] = "agreement"
 
     emit_roster_update(code)
-    emit_status(code, f"{team_name} finished the intro and is ready.")
+    emit_status(code, f"{team_name} finished the intro.")
 
-    emit_individual_agreement_to_player(code, sid)
+    emit_individual_post_intro_waiting_to_player(code, sid)
 
     if all_teams_intro_finished(game):
-        move_to_agreement(code, message="All teams are ready. Host can press Continue to begin Round 1.")
+        socketio.emit("agreement_phase", {
+            "message": "All teams finished the intro. Host can press Continue to begin Round 1."
+        }, room=code)
+    else:
+        socketio.emit("agreement_phase", {
+            "message": "Waiting for all teams to finish the intro."
+        }, room=code)
 
 
 @socketio.on("agree_ready")
 def agree_ready(data):
-    code = str(data.get("code", "")).strip().upper()
-    sid = request.sid
-
-    if code not in games:
-        emit("error", "Game code not found.")
-        return
-
-    game = games[code]
-    if game["state"] not in {"intro_wait", "intro_playing", "agreement"}:
-        emit("error", "Agreement phase is not active.")
-        return
-
-    team_name = game["players_by_sid"].get(sid)
-    if not team_name or team_name == "HOST":
-        emit("error", "Only players can agree.")
-        return
-
-    if team_name not in game["intro_finished"]:
-        emit("error", "You must finish the intro before agreeing.")
-        return
-
-    if team_name in game["agreement_ready"]:
-        emit("agreement_update", {
-            "ready_teams": sorted(list(game["agreement_ready"])),
-            "total_teams": len(game["teams"])
-        }, to=sid)
-        return
-
-    game["agreement_ready"].add(team_name)
-    emit_roster_update(code)
-
-    socketio.emit("agreement_update", {
-        "ready_teams": sorted(list(game["agreement_ready"])),
-        "total_teams": len(game["teams"])
-    }, room=code)
-
-    if all_teams_agreed(game):
-        emit_status(code, "All teams are ready. Host can continue to begin the round.")
-    else:
-        emit_status(code, f"{team_name} is ready.")
+    emit("status_message", {"message": "Extra ready click is no longer used."}, to=request.sid)
 
 
 @socketio.on("host_continue")
@@ -825,8 +785,8 @@ def host_continue(data):
         return
 
     if game["state"] == "agreement":
-        if not all_teams_agreed(game):
-            emit("error", "Not all teams are ready yet.")
+        if not all_teams_intro_finished(game):
+            emit("error", "Not all teams have finished the intro yet.")
             return
         begin_round(code, preserved=False, preserve_order=False)
         return
@@ -855,7 +815,6 @@ def host_continue(data):
             emit_status(code, "Game over.")
             return
 
-        # IMPORTANT: go directly to next round, no more agreement phase
         game["round"] += 1
         begin_round(code, preserved=False, preserve_order=False)
         return
@@ -905,6 +864,7 @@ def restart_game(data):
 
     reset_to_round_one_new_game(code)
     emit_status(code, "Game restarted. Starting again from Round 1.")
+
 
 @socketio.on("submit_phrase")
 def submit_phrase(data):
