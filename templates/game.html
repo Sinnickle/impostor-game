@@ -17,6 +17,7 @@
             --line: rgba(255,255,255,0.18);
             --gold: #facc15;
             --soft: rgba(255,255,255,0.75);
+            --impostor-red: #ef4444;
         }
 
         body {
@@ -170,6 +171,10 @@
             font-weight: 900;
             letter-spacing: 1px;
             margin-bottom: 8px;
+        }
+
+        .impostor-role {
+            color: var(--impostor-red);
         }
 
         .instruction {
@@ -344,7 +349,8 @@
         }
 
         #playerVideoLayer,
-        #glitchLayer {
+        #glitchLayer,
+        #playerWhiteScreen {
             position: fixed;
             inset: 0;
         }
@@ -383,6 +389,58 @@
             animation: glitchFlash 0.9s linear forwards;
         }
 
+        #playerWhiteScreen {
+            background: white;
+            color: black;
+            z-index: 80;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .white-screen-inner {
+            max-width: 760px;
+            width: 100%;
+        }
+
+        .white-screen-title {
+            font-size: clamp(2rem, 5vw, 3.8rem);
+            font-weight: 900;
+            margin: 0 0 18px 0;
+            line-height: 1.05;
+        }
+
+        .white-screen-name {
+            font-size: clamp(1.3rem, 3vw, 2.2rem);
+            font-weight: 900;
+            margin: 0 0 26px 0;
+        }
+
+        .white-screen-subtext {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #333;
+            margin: 0 auto;
+            max-width: 560px;
+            line-height: 1.5;
+        }
+
+        .white-screen-button-wrap {
+            margin-top: 30px;
+        }
+
+        .white-screen-big-button {
+            font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+            font-weight: 900;
+            padding: 22px 42px;
+            border-radius: 18px;
+            background: black;
+            color: white;
+            box-shadow: none;
+        }
+
         @keyframes glitchFlash {
             0% { opacity: 0; transform: translate(0, 0); }
             10% { opacity: 1; transform: translate(-4px, 2px); }
@@ -411,6 +469,17 @@
     </div>
 
     <div id="glitchLayer"></div>
+
+    <div id="playerWhiteScreen">
+        <div class="white-screen-inner">
+            <div id="playerWhiteScreenTitle" class="white-screen-title">Waiting for host...</div>
+            <div id="playerWhiteScreenName" class="white-screen-name"></div>
+            <div id="playerWhiteScreenSubtext" class="white-screen-subtext"></div>
+            <div id="playerWhiteScreenButtonWrap" class="white-screen-button-wrap hidden">
+                <button id="playerReadyBigBtn" class="white-screen-big-button">READY</button>
+            </div>
+        </div>
+    </div>
 
     <div id="appShell" class="app-shell">
         <div class="side-panel">
@@ -589,6 +658,13 @@
         const bgMusic = document.getElementById("bgMusic");
         const glitchLayer = document.getElementById("glitchLayer");
 
+        const playerWhiteScreen = document.getElementById("playerWhiteScreen");
+        const playerWhiteScreenTitle = document.getElementById("playerWhiteScreenTitle");
+        const playerWhiteScreenName = document.getElementById("playerWhiteScreenName");
+        const playerWhiteScreenSubtext = document.getElementById("playerWhiteScreenSubtext");
+        const playerWhiteScreenButtonWrap = document.getElementById("playerWhiteScreenButtonWrap");
+        const playerReadyBigBtn = document.getElementById("playerReadyBigBtn");
+
         const roomCodeText = document.getElementById("roomCodeText");
         const phaseText = document.getElementById("phaseText");
         const mainInstruction = document.getElementById("mainInstruction");
@@ -764,6 +840,32 @@
             hide(finalLeaderboardBox);
         }
 
+        function hidePlayerWhiteScreen() {
+            playerWhiteScreen.style.display = "none";
+        }
+
+        function showPlayerWhiteScreen({ title, subtext = "", showReadyButton = false }) {
+            if (isHost) return;
+
+            playerWhiteScreenTitle.textContent = title;
+            playerWhiteScreenName.textContent = teamName || "";
+            playerWhiteScreenSubtext.textContent = subtext;
+
+            if (showReadyButton) {
+                playerWhiteScreenButtonWrap.classList.remove("hidden");
+            } else {
+                playerWhiteScreenButtonWrap.classList.add("hidden");
+            }
+
+            appShell.classList.add("hidden");
+            playerWhiteScreen.style.display = "flex";
+        }
+
+        function showNormalApp() {
+            hidePlayerWhiteScreen();
+            appShell.classList.remove("hidden");
+        }
+
         function setHostActionMode(mode) {
             currentRestartMode = mode;
 
@@ -794,21 +896,36 @@
 
         function setIntroProgress(message, finishedCount, totalTeams) {
             introWaitMessage.textContent = message || "Waiting for all teams to finish the intro.";
-            introProgressCount.textContent = `${finishedCount || 0} / ${totalTeams || 0} teams finished`;
+
+            if (
+                typeof finishedCount === "number" &&
+                typeof totalTeams === "number"
+            ) {
+                introProgressCount.textContent = `${finishedCount} / ${totalTeams} teams finished`;
+            } else {
+                introProgressCount.textContent = "--";
+            }
         }
 
         function resetIntroClientFlagsForNewGame() {
             introFinishedOnClient = false;
             hasVotedThisRound = false;
             hostControlsLockedAfterStart = false;
+
             if (isHost) {
                 skipIntroCheckbox.checked = false;
                 skipIntroChosen = false;
                 show(skipIntroOptionWrap);
             }
+
+            playerReadyBigBtn.disabled = false;
             stopIntroVideo();
             hide(playerVideoLayer);
             glitchLayer.classList.remove("active");
+
+            if (!isHost) {
+                hidePlayerWhiteScreen();
+            }
         }
 
         function stopIntroVideo() {
@@ -834,16 +951,21 @@
             if (isHost) return;
             if (introFinishedOnClient) return;
 
+            hidePlayerWhiteScreen();
             stopIntroVideo();
             await playGlitchOnly();
 
             introFinishedOnClient = true;
             socket.emit("player_skip_intro_finished", { code });
+            showInlineIntroWaiting({
+                message: "Waiting for others to watch the intro."
+            });
         }
 
         async function handleIntroVideoStart() {
             if (isHost) return;
 
+            hidePlayerWhiteScreen();
             hideMainBoxes();
             setPhase("Introduction", "Watch the intro video. After it ends, your team will be marked finished.");
             show(playerVideoLayer);
@@ -858,23 +980,34 @@
 
         function showInlineIntroWaiting(data = {}) {
             currentState = "agreement";
+
+            if (!isHost) {
+                showNormalApp();
+            }
+
             hideMainBoxes();
             show(agreementBox);
             show(introWaitInlineBox);
             show(agreementRulesPanel);
 
-            const msg = data.message || "Waiting for all teams to finish the intro.";
+            const msg = data.message || "Waiting for others to watch the intro.";
+
             setPhase(
                 "Agreement / Transition",
                 isHost ? "Wait for all teams to finish the intro, then press Continue." : msg
             );
-            agreementStatus.textContent = msg;
+
+            agreementStatus.innerHTML = `
+                <div><strong>WAITING FOR OTHERS TO WATCH THE INTRO</strong></div>
+                <p class="muted" style="margin-top: 8px;">${msg}</p>
+            `;
+
             statusDiv.textContent = msg;
 
             setIntroProgress(
                 msg,
-                data.intro_finished_count || 0,
-                data.total_teams || 0
+                typeof data.intro_finished_count === "number" ? data.intro_finished_count : null,
+                typeof data.total_teams === "number" ? data.total_teams : null
             );
 
             if (!isHost) {
@@ -882,31 +1015,20 @@
             }
         }
 
-        function showReadyPromptInMainUI() {
+        function showReadyPromptOnWhiteScreen() {
             if (isHost) return;
 
             currentState = "intro_wait";
             hideMainBoxes();
-            show(agreementBox);
-            show(introWaitInlineBox);
-            show(agreementRulesPanel);
+            showPlayerWhiteScreen({
+                title: "Waiting for host...",
+                subtext: "The host started the game. Press READY when your team is prepared to watch the intro.",
+                showReadyButton: true
+            });
 
             setPhase("Introduction", "Press Ready when your team is prepared to watch the intro sequence.");
-            agreementStatus.innerHTML = `
-                <div><strong>Introduction Ready</strong></div>
-                <p class="muted" style="margin-top: 8px;">Press Ready when your team is prepared to watch the intro sequence.</p>
-                <div class="row" style="margin-top: 12px;">
-                    <button id="introReadyBtn">Ready</button>
-                </div>
-            `;
-            introWaitMessage.textContent = "Teams will be marked finished after they complete the intro.";
-            introProgressCount.textContent = "--";
-
-            const introReadyBtn = document.getElementById("introReadyBtn");
-            introReadyBtn.onclick = () => {
-                introReadyBtn.disabled = true;
-                socket.emit("player_intro_ready", { code });
-            };
+            statusDiv.textContent = "Waiting for your team to press READY.";
+            playerReadyBigBtn.disabled = false;
         }
 
         saveRoundsBtn.onclick = () => {
@@ -943,6 +1065,11 @@
         submitPhraseBtn.onclick = () => {
             const phrase = phraseInput.value.trim();
             socket.emit("submit_phrase", { code, phrase });
+        };
+
+        playerReadyBigBtn.onclick = () => {
+            playerReadyBigBtn.disabled = true;
+            socket.emit("player_intro_ready", { code });
         };
 
         phraseInput.addEventListener("keydown", (e) => {
@@ -1017,11 +1144,29 @@
 
             if (currentState === "lobby") {
                 resetIntroClientFlagsForNewGame();
-                hideMainBoxes();
-                setPhase("Lobby", isHost ? "Wait for teams to join, then start the game." : "Waiting for host...");
-                if (!isHost) {
+
+                if (isHost) {
+                    showNormalApp();
+                    hideMainBoxes();
+                    setPhase("Lobby", "Wait for teams to join, then start the game.");
+                } else {
+                    hideMainBoxes();
+                    showPlayerWhiteScreen({
+                        title: "Waiting for host...",
+                        subtext: "Stay on this screen until the host starts the game.",
+                        showReadyButton: false
+                    });
+                    setPhase("Lobby", "Waiting for host...");
                     agreementStatus.textContent = "Waiting for host...";
                 }
+            }
+
+            if (currentState === "intro_wait" && !isHost && !introFinishedOnClient) {
+                showReadyPromptOnWhiteScreen();
+            }
+
+            if (currentState === "intro_playing" && !isHost && !introFinishedOnClient) {
+                showReadyPromptOnWhiteScreen();
             }
 
             if (currentState === "agreement") {
@@ -1031,16 +1176,20 @@
 
         socket.on("player_waiting_screen", () => {
             if (isHost) return;
+
+            currentState = "lobby";
             hideMainBoxes();
+            showPlayerWhiteScreen({
+                title: "Waiting for host...",
+                subtext: "Stay on this screen until the host starts the game.",
+                showReadyButton: false
+            });
             setPhase("Lobby", "Waiting for host...");
-            show(agreementBox);
-            agreementStatus.textContent = "Waiting for host...";
-            hide(introWaitInlineBox);
         });
 
         socket.on("player_ready_prompt", () => {
             if (isHost) return;
-            showReadyPromptInMainUI();
+            showReadyPromptOnWhiteScreen();
         });
 
         socket.on("player_intro_video", async () => {
@@ -1056,9 +1205,9 @@
         socket.on("agreement_phase", (data) => {
             currentState = "agreement";
             showInlineIntroWaiting({
-                message: data.message || "Waiting...",
-                intro_finished_count: null,
-                total_teams: null
+                message: data.message || "Waiting for others to watch the intro.",
+                intro_finished_count: typeof data.intro_finished_count === "number" ? data.intro_finished_count : null,
+                total_teams: typeof data.total_teams === "number" ? data.total_teams : null
             });
             updateIdentityText();
         });
@@ -1066,6 +1215,9 @@
         socket.on("round_started", (data) => {
             currentState = "role";
             hasVotedThisRound = false;
+
+            hidePlayerWhiteScreen();
+            showNormalApp();
             hide(playerVideoLayer);
             hideMainBoxes();
             show(roleBox);
@@ -1097,7 +1249,7 @@
 
             if (data.role === "IMPOSTOR") {
                 roleText.innerHTML = `
-                    <div class="big-role">IMPOSTOR</div>
+                    <div class="big-role impostor-role">IMPOSTOR</div>
                     <p class="instruction">Blend in. You do not know the word.</p>
                 `;
             } else {
@@ -1133,6 +1285,9 @@
 
         socket.on("start_turn", (data) => {
             currentState = "phrase";
+
+            hidePlayerWhiteScreen();
+            showNormalApp();
             hideMainBoxes();
             show(phraseBox);
             show(responsesCenterBox);
@@ -1181,6 +1336,9 @@
         socket.on("start_voting", (data) => {
             currentState = "voting";
             hasVotedThisRound = false;
+
+            hidePlayerWhiteScreen();
+            showNormalApp();
             hideMainBoxes();
             show(votingBox);
             show(responsesCenterBox);
@@ -1226,6 +1384,9 @@
 
         socket.on("round_result", (data) => {
             currentState = "paused_after_result";
+
+            hidePlayerWhiteScreen();
+            showNormalApp();
             hideMainBoxes();
             show(roundResultBox);
             show(responsesCenterBox);
@@ -1253,6 +1414,9 @@
 
         socket.on("game_over", (data) => {
             currentState = "game_over";
+
+            hidePlayerWhiteScreen();
+            showNormalApp();
             hideMainBoxes();
             show(finalLeaderboardBox);
 
@@ -1267,6 +1431,7 @@
                 : "";
 
             const topThree = sorted.slice(0, 3);
+
             topThreeList.innerHTML = topThree.map((entry, index) => `
                 <div class="leaderboard-item">
                     <span><span class="place-badge">#${index + 1}</span> ${entry[0]}</span>
@@ -1295,6 +1460,9 @@
             await playGlitchOnly();
 
             introFinishedOnClient = true;
+            showInlineIntroWaiting({
+                message: "Waiting for others to watch the intro."
+            });
             socket.emit("player_intro_finished", { code });
         });
 
