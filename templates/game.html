@@ -13,6 +13,13 @@
                 radial-gradient(circle at top right, #db2777 0%, transparent 24%),
                 radial-gradient(circle at bottom left, #0ea5e9 0%, transparent 24%),
                 linear-gradient(135deg, #0f172a, #111827, #1e1b4b);
+            --glass: rgba(255,255,255,0.10);
+            --glass-strong: rgba(255,255,255,0.16);
+            --line: rgba(255,255,255,0.18);
+            --gold: #facc15;
+            --soft: rgba(255,255,255,0.75);
+            --danger: #fb7185;
+            --ok: #22c55e;
         }
 
         body {
@@ -42,8 +49,8 @@
         }
 
         .card {
-            background: rgba(255,255,255,0.10);
-            border: 1px solid rgba(255,255,255,0.18);
+            background: var(--glass);
+            border: 1px solid var(--line);
             border-radius: 18px;
             padding: 18px;
             box-shadow: 0 10px 28px rgba(0,0,0,0.28);
@@ -58,360 +65,376 @@
         }
 
         .hero h1 { margin: 0 0 8px 0; font-size: 2rem; }
-        .hero h2 { margin: 0 0 10px 0; font-size: 1.1rem; color: #fde68a; }
+        .hero p { margin: 0; color: var(--soft); }
 
-        .phase-banner {
-            margin: 0 0 10px 0;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #fef08a;
+        .main-stage {
+            min-height: 180px;
         }
 
-        .instruction { margin: 0; color: #e5e7eb; line-height: 1.5; }
-        h3, h4 { margin-top: 0; }
-        .muted { color: #d1d5db; }
-        .small-note { font-size: 0.92rem; }
+        h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+
+        p {
+            line-height: 1.45;
+        }
+
+        .muted {
+            color: var(--soft);
+        }
+
+        .small-note {
+            font-size: 0.94rem;
+        }
 
         .row {
             display: flex;
             gap: 10px;
-            align-items: center;
             flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button, input, textarea {
+            font: inherit;
         }
 
         button {
-            background: linear-gradient(135deg, #60a5fa, #a855f7);
-            color: white;
             border: none;
             border-radius: 12px;
             padding: 12px 16px;
-            font-weight: bold;
+            font-weight: 700;
             cursor: pointer;
-            transition: transform 0.15s ease, opacity 0.15s ease;
+            background: linear-gradient(135deg, #facc15, #f59e0b);
+            color: #111827;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.20);
         }
 
-        button:hover { transform: translateY(-1px); }
-        button:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+        }
 
         input, textarea {
             width: 100%;
-            padding: 12px;
-            border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 12px;
+            padding: 12px;
             background: rgba(255,255,255,0.08);
             color: white;
             outline: none;
         }
 
-        input::placeholder, textarea::placeholder { color: #d1d5db; }
+        textarea {
+            resize: vertical;
+        }
 
-        .main-stage { min-height: 240px; }
+        .pill {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.16);
+            font-size: 0.92rem;
+            color: var(--soft);
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(250,204,21,0.15);
+            border: 1px solid rgba(250,204,21,0.26);
+            color: #fde68a;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .result-box, .word-box {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .word-box {
+            margin-top: 12px;
+            background: rgba(250,204,21,0.12);
+            border-color: rgba(250,204,21,0.20);
+        }
 
         .big-role {
             font-size: 2rem;
-            font-weight: bold;
-            margin-bottom: 10px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
         }
 
-        .human-role { color: #93c5fd; }
-        .impostor-role { color: #fca5a5; }
-
-        .word-box {
-            background: rgba(255,255,255,0.08);
-            border-radius: 14px;
-            padding: 14px;
-            font-size: 1.2rem;
-            margin-top: 12px;
-            border: 1px solid rgba(255,255,255,0.12);
+        .instruction {
+            color: var(--soft);
         }
 
         .timer {
-            font-size: 1rem;
-            font-weight: bold;
-            color: #fef08a;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #fde68a;
         }
 
-        ul.clean-list {
+        .clean-list {
             list-style: none;
             padding: 0;
             margin: 0;
         }
 
-        ul.clean-list li {
+        .clean-list li {
+            margin-bottom: 10px;
             padding: 10px 12px;
-            background: rgba(255,255,255,0.08);
             border-radius: 12px;
-            margin-bottom: 8px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.10);
         }
 
-        .response-row {
+        .team-card-row {
             display: flex;
             justify-content: space-between;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
         }
 
-        .response-team { font-weight: bold; }
-
-        .status-pill {
-            display: inline-block;
-            padding: 6px 10px;
-            border-radius: 999px;
-            background: rgba(255,255,255,0.12);
-            font-size: 0.9rem;
-            font-weight: bold;
-        }
-
-        .result-box {
-            background: rgba(255,255,255,0.08);
-            border-radius: 14px;
-            padding: 16px;
-            line-height: 1.7;
-            border: 1px solid rgba(255,255,255,0.12);
-        }
-
-        .big-score-list .score-row,
-        .full-leaderboard-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 12px;
-            margin-bottom: 8px;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.08);
-        }
-
-        .champion-banner {
-            background: linear-gradient(135deg, #facc15, #f97316, #ec4899);
-            color: white;
-            border-radius: 20px;
-            padding: 24px;
+        .score-badge {
+            min-width: 40px;
             text-align: center;
-            box-shadow: 0 14px 36px rgba(0,0,0,0.35);
-            margin-bottom: 18px;
-        }
-
-        .champion-banner h2 { margin: 0 0 8px 0; font-size: 2rem; }
-        .champion-banner p { margin: 0; font-size: 1.1rem; font-weight: bold; }
-
-        .top-three-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 14px;
-            margin-bottom: 18px;
-        }
-
-        .podium-card {
-            border-radius: 18px;
-            padding: 16px;
-            background: rgba(255,255,255,0.12);
-            border: 1px solid rgba(255,255,255,0.18);
-        }
-
-        .podium-card.first {
-            background: linear-gradient(135deg, rgba(250,204,21,0.25), rgba(249,115,22,0.25));
-            border: 2px solid #fde68a;
-            transform: scale(1.03);
-        }
-
-        .podium-rank {
-            font-size: 0.9rem;
+            border-radius: 999px;
+            padding: 6px 10px;
+            background: rgba(250,204,21,0.14);
             color: #fde68a;
-            font-weight: bold;
-            margin-bottom: 6px;
+            font-weight: 700;
         }
 
-        .podium-team { font-size: 1.25rem; font-weight: bold; }
-        .podium-score { font-size: 1rem; color: #e5e7eb; margin-top: 6px; }
+        .responses-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
 
-        .agreement-rules-panel {
-            max-height: 360px;
-            overflow-y: auto;
-            border-radius: 16px;
-            padding: 16px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.12);
-            line-height: 1.6;
+        #responsesCenterBox {
+            border: 1px solid rgba(255,255,255,0.24);
+            background:
+                linear-gradient(135deg, rgba(250,204,21,0.10), rgba(168,85,247,0.10)),
+                rgba(255,255,255,0.10);
+        }
+
+        .responses-grid-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
             margin-top: 14px;
         }
 
-        .agreement-rules-panel p { margin: 0 0 10px 0; }
-        .agreement-rules-panel p:last-child { margin-bottom: 0; }
-
-        .player-bridge {
-            position: fixed;
-            inset: 0;
-            z-index: 5000;
-            background: white;
-            color: black;
+        .responses-grid-list li {
+            margin-bottom: 0;
+            min-height: 82px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 24px;
         }
 
-        .bridge-center {
-            text-align: center;
-            max-width: 980px;
+        .response-row {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .response-team {
+            font-size: 1rem;
+            color: #fde68a;
+            font-weight: 700;
+        }
+
+        .response-phrase {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: white;
+            word-break: break-word;
+        }
+
+        .vote-button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .vote-button-grid button {
             width: 100%;
         }
 
-        .bridge-title {
-            font-size: clamp(2rem, 5vw, 4rem);
-            font-weight: 900;
-            margin: 0 0 14px 0;
-        }
-
-        .bridge-subtitle {
-            font-size: clamp(1.2rem, 2vw, 1.8rem);
-            margin: 0;
-        }
-
-        .team-big-name {
-            display: block;
-            margin-top: 18px;
-            font-size: clamp(1.8rem, 4vw, 3rem);
-            font-weight: 900;
-        }
-
-        .ready-big-btn {
-            font-size: clamp(2rem, 5vw, 4rem);
-            font-weight: 900;
-            padding: 22px 44px;
-            border-radius: 18px;
-            background: black;
+        .danger-btn {
+            background: linear-gradient(135deg, #fb7185, #e11d48);
             color: white;
-            letter-spacing: 0.08em;
         }
 
-        .bridge-wait-card {
-            margin: 22px auto 0 auto;
-            max-width: 860px;
-            background: #111827;
-            color: white;
-            border-radius: 22px;
-            padding: 24px;
-            text-align: left;
-            box-shadow: 0 18px 40px rgba(0,0,0,0.25);
+        .neutral-btn {
+            background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+            color: #111827;
         }
 
-        .bridge-wait-badge {
-            display: inline-block;
-            padding: 10px 16px;
-            border-radius: 999px;
-            background: linear-gradient(135deg, #2563eb, #9333ea);
-            color: white;
-            font-weight: 800;
-            margin-bottom: 16px;
-        }
-
-        .bridge-rules-box {
-            margin-top: 16px;
-            max-height: 340px;
-            overflow-y: auto;
-            border-radius: 16px;
-            padding: 16px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.12);
-            line-height: 1.6;
-        }
-
-        .bridge-rules-box p { margin: 0 0 10px 0; }
-        .bridge-rules-box p:last-child { margin-bottom: 0; }
-
-        .player-video-layer {
+        #playerBridge,
+        #playerVideoLayer,
+        #glitchLayer {
             position: fixed;
             inset: 0;
-            z-index: 6000;
-            background: black;
+            z-index: 80;
         }
 
-        .player-video-layer video {
+        #playerBridge {
+            display: none;
+            place-items: center;
+            padding: 24px;
+            background:
+                linear-gradient(135deg, rgba(15,23,42,0.96), rgba(17,24,39,0.96));
+        }
+
+        #bridgeContent {
+            width: min(760px, 100%);
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 20px;
+            padding: 28px;
+            text-align: center;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.35);
+        }
+
+        #bridgeContent h2 {
+            margin-top: 0;
+            font-size: 2rem;
+        }
+
+        #bridgeContent p {
+            color: var(--soft);
+        }
+
+        #playerVideoLayer {
+            display: none;
+            background: black;
+            z-index: 90;
+        }
+
+        #introVideo {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            background: black;
         }
 
-        .glitch-layer {
-            position: fixed;
-            inset: 0;
-            z-index: 7000;
+        #glitchLayer {
             pointer-events: none;
             opacity: 0;
             background:
-                linear-gradient(0deg, rgba(255,0,0,0.15), rgba(255,0,255,0.05)),
                 repeating-linear-gradient(
-                    to bottom,
-                    rgba(255,255,255,0.12) 0px,
-                    rgba(255,255,255,0.12) 2px,
-                    rgba(0,0,0,0.08) 2px,
-                    rgba(0,0,0,0.08) 4px
+                    180deg,
+                    rgba(255,255,255,0.08) 0px,
+                    rgba(255,255,255,0.08) 2px,
+                    rgba(0,0,0,0.2) 2px,
+                    rgba(0,0,0,0.2) 4px
                 ),
-                black;
-            mix-blend-mode: screen;
+                radial-gradient(circle at center, rgba(255,255,255,0.2), transparent 55%),
+                linear-gradient(135deg, rgba(255,0,128,0.18), rgba(0,255,255,0.12), rgba(255,255,255,0.12));
+            transition: opacity 0.15s ease;
+            z-index: 95;
         }
 
-        .glitch-layer.active {
-            animation: glitchFlash 2s linear forwards;
+        #glitchLayer.active {
+            opacity: 1;
+            animation: glitchFlash 0.9s linear forwards;
         }
 
         @keyframes glitchFlash {
-            0%   { opacity: 0.95; transform: translate(0, 0); }
-            10%  { opacity: 0.65; transform: translate(4px, -2px); }
-            20%  { opacity: 0.90; transform: translate(-5px, 3px); }
-            30%  { opacity: 0.45; transform: translate(2px, 2px); }
-            40%  { opacity: 0.88; transform: translate(-3px, -2px); }
-            50%  { opacity: 0.55; transform: translate(5px, 0); }
-            60%  { opacity: 0.82; transform: translate(-4px, 1px); }
-            70%  { opacity: 0.50; transform: translate(3px, -1px); }
-            80%  { opacity: 0.70; transform: translate(-2px, 2px); }
-            90%  { opacity: 0.35; transform: translate(1px, 0); }
+            0% { opacity: 0; transform: translate(0, 0); }
+            10% { opacity: 1; transform: translate(-4px, 2px); }
+            20% { opacity: 0.8; transform: translate(4px, -2px); }
+            30% { opacity: 1; transform: translate(-3px, -1px); }
+            50% { opacity: 0.85; transform: translate(3px, 2px); }
+            70% { opacity: 1; transform: translate(-2px, 1px); }
             100% { opacity: 0; transform: translate(0, 0); }
         }
 
+        .champion-banner {
+            padding: 16px;
+            border-radius: 18px;
+            margin-bottom: 14px;
+            background:
+                linear-gradient(135deg, rgba(250,204,21,0.22), rgba(245,158,11,0.18)),
+                rgba(255,255,255,0.08);
+            border: 1px solid rgba(250,204,21,0.22);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.10);
+        }
+
+        .place-badge {
+            font-weight: 900;
+            color: #fde68a;
+        }
+
         @media (max-width: 1100px) {
-            .app-shell { grid-template-columns: 1fr; }
+            .app-shell {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="playerBridge" class="player-bridge hidden">
-        <div class="bridge-center">
-            <div id="bridgeContent"></div>
+    <div id="playerBridge">
+        <div id="bridgeContent">
+            <h2>Waiting...</h2>
+            <p>Please stay on this page.</p>
         </div>
     </div>
 
-    <div id="playerVideoLayer" class="player-video-layer hidden">
-        <video
-            id="introVideo"
-            preload="auto"
-            playsinline
-            webkit-playsinline
-            disablepictureinpicture
-            controlslist="nodownload noplaybackrate noremoteplayback"
-        >
-            <source src="{{ url_for('static', filename='intro.mp4') }}" type="video/mp4">
+    <div id="playerVideoLayer">
+        <video id="introVideo" playsinline preload="auto">
+            <source src="/static/intro.mp4" type="video/mp4">
         </video>
+        <audio id="bgMusic" preload="auto">
+            <source src="/static/bg-music.mp3" type="audio/mpeg">
+        </audio>
     </div>
 
-    <div id="glitchLayer" class="glitch-layer"></div>
-
-    <audio id="bgMusic" loop preload="auto">
-        <source src="{{ url_for('static', filename='bg-music.mp3') }}" type="audio/mpeg">
-    </audio>
+    <div id="glitchLayer"></div>
 
     <div id="appShell" class="app-shell">
         <div class="side-panel">
             <div class="card hero">
                 <h1>IMPOSTOR</h1>
-                <h2>King of Diamonds</h2>
-                <div id="roomCodeText" class="status-pill">Code: ----</div>
+                <p id="phaseText">Connecting...</p>
             </div>
 
             <div class="card">
-                <h3>Lobby / Teams</h3>
-                <p class="muted small-note">Connected teams in this room:</p>
+                <h3>Room</h3>
+                <p><strong>Code:</strong> <span id="roomCodeText">-----</span></p>
+                <p class="muted">Host sees the whole system. Teams wait for phase changes.</p>
+            </div>
+
+            <div class="card">
+                <h3>Teams</h3>
                 <ul id="teamsList" class="clean-list">
                     <li>No teams yet.</li>
                 </ul>
@@ -419,56 +442,51 @@
 
             <div class="card">
                 <h3>Scoreboard</h3>
-                <div id="scoreboardList" class="big-score-list">
-                    <div class="score-row"><span>No scores yet.</span><strong>0</strong></div>
-                </div>
+                <ul id="scoreboardList" class="clean-list">
+                    <li>No scores yet.</li>
+                </ul>
             </div>
         </div>
 
         <div class="main-panel">
-            <div class="card hero">
-                <div id="phaseText" class="phase-banner">Waiting</div>
-                <p id="mainInstruction" class="instruction">Waiting for the game state to load...</p>
-            </div>
+            <div class="card">
+                <div class="row" style="justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h3 style="margin-bottom: 8px;">Main Instruction</h3>
+                        <div id="mainInstruction" class="muted">Loading...</div>
+                    </div>
 
-            <div id="hostControls" class="card hidden">
-                <h3>Host Controls</h3>
-
-                <div class="row" style="margin-bottom: 10px;">
-                    <label for="roundCountInput" style="font-weight: bold;">Rounds:</label>
-                    <input id="roundCountInput" type="number" min="1" max="20" value="3" style="max-width: 120px; margin-bottom: 0;">
-                    <button id="saveRoundsBtn">Save Rounds</button>
-                </div>
-
-                <p class="muted small-note">
-                    Default is 3 rounds. Change this before gameplay begins.
-                </p>
-
-                <div class="row">
-                    <button id="startGameBtn">Start Game</button>
-                    <button id="continueBtn" class="hidden">Continue</button>
-                    <button id="restartActionBtn" class="hidden">Restart Round</button>
+                    <div id="hostControls" class="row hidden">
+                        <input id="roundCountInput" type="number" min="1" max="20" value="3" style="width: 110px;">
+                        <button id="saveRoundsBtn">Save Rounds</button>
+                        <button id="startGameBtn">Start Game</button>
+                        <button id="skipIntroBtn">Skip Intro Video</button>
+                        <button id="continueBtn" class="hidden">Continue</button>
+                        <button id="restartActionBtn" class="hidden">Restart Round</button>
+                    </div>
                 </div>
             </div>
 
             <div id="agreementBox" class="card main-stage hidden">
-                <h3>Waiting for other players</h3>
-                <p class="instruction">
-                    Your intro is complete. Please stay on this screen while the remaining teams finish.
-                </p>
-                <div id="agreementStatus" style="margin-top: 14px;" class="muted"></div>
-                <div class="agreement-rules-panel" id="agreementRulesPanel"></div>
+                <h3>Agreement / Transition</h3>
+                <div id="agreementStatus" class="result-box">Waiting...</div>
+                <div id="agreementRulesPanel" class="result-box" style="margin-top: 14px;">
+                    <p><strong>Rules Summary</strong></p>
+                    <p>One team is the impostor. Human teams see the word. The impostor does not.</p>
+                    <p>Teams submit one phrase each, max three words, one at a time.</p>
+                    <p>After all phrases are shown, every team votes for the impostor or votes for an additional round.</p>
+                </div>
             </div>
 
             <div id="roleBox" class="card main-stage hidden">
                 <h3>Role Reveal</h3>
-                <div id="roleText"></div>
-                <div id="hostRoleInfo" class="muted" style="margin-top: 14px;"></div>
+                <div id="roleText">Waiting for role reveal.</div>
+                <div id="hostRoleInfo" style="margin-top: 14px;"></div>
             </div>
 
             <div id="phraseBox" class="card main-stage hidden">
                 <h3>Phrase Submission</h3>
-                <p id="turnLabel" class="instruction">Waiting for turn...</p>
+                <p id="turnLabel">Current Team: --</p>
                 <p id="phraseTimerText" class="timer">Timer: --</p>
                 <textarea id="phraseInput" rows="3" maxlength="60" placeholder="Enter a phrase, max 3 words"></textarea>
                 <div class="row" style="margin-top: 12px;">
@@ -479,10 +497,28 @@
                 </p>
             </div>
 
+            <div id="responsesCenterBox" class="card main-stage hidden">
+                <div class="responses-header-row">
+                    <h3>Submitted Phrases</h3>
+                    <span class="status-pill">Live Round Feed</span>
+                </div>
+                <p class="muted small-note">
+                    Every submitted phrase appears here for all teams to review.
+                </p>
+                <ul id="responsesList" class="clean-list responses-grid-list">
+                    <li>No phrases yet.</li>
+                </ul>
+            </div>
+
             <div id="votingBox" class="card main-stage hidden">
                 <h3>Voting Phase</h3>
                 <div id="votingText" class="result-box">Voting has not started yet.</div>
-                <div id="voteOptions" style="margin-top: 14px;"></div>
+                <div id="voteOptions" class="vote-button-grid"></div>
+            </div>
+
+            <div id="roundResultBox" class="card main-stage hidden">
+                <h3>Round Result</h3>
+                <div id="roundResultContent" class="result-box">Round result will appear here.</div>
             </div>
 
             <div id="finalLeaderboardBox" class="card main-stage hidden">
@@ -497,7 +533,7 @@
             <div class="card">
                 <h3>Round Info</h3>
                 <p><strong>Round:</strong> <span id="roundInfoText">1 / 3</span></p>
-                <p><strong>You are:</strong> <span id="identityText">Loading...</span></p>
+                <p><strong>You are:</strong> <span id="identityText">Loading.</span></p>
                 <p><strong>Current Turn:</strong> <span id="currentTurnText">--</span></p>
             </div>
 
@@ -509,15 +545,8 @@
             </div>
 
             <div class="card">
-                <h3>Phrases</h3>
-                <ul id="responsesList" class="clean-list">
-                    <li>No phrases yet.</li>
-                </ul>
-            </div>
-
-            <div class="card">
                 <h3>Status</h3>
-                <div id="statusDiv" class="muted">Connecting...</div>
+                <div id="statusDiv" class="muted">Connecting.</div>
             </div>
         </div>
     </div>
@@ -526,43 +555,14 @@
     <script>
         const socket = io();
 
+        const INTRO_AUDIO_DELAY_MS = 1200;
+        const GLITCH_DURATION_SECONDS = 0.9;
+
         const params = new URLSearchParams(window.location.search);
 
         const code = (params.get("code") || localStorage.getItem("code") || "").trim().toUpperCase();
         const teamName = (params.get("team") || localStorage.getItem("teamName") || "").trim();
         const isHost = (params.get("host") === "1") || localStorage.getItem("isHost") === "true";
-
-        localStorage.setItem("code", code);
-        if (teamName) localStorage.setItem("teamName", teamName);
-        localStorage.setItem("isHost", isHost ? "true" : "false");
-
-        const AUDIO_START_DELAY_SECONDS = 2;
-        const GLITCH_DURATION_SECONDS = 2;
-
-        const INTRO_RULES_HTML = `
-            <p>All teams will be assigned one of two roles: HUMAN... or IMPOSTOR</p>
-            <p>There is only ONE impostor per round</p>
-            <p>A computer science word will be revealed … to all human teams</p>
-            <p>The word will NOT be revealed to the IMPOSTOR team</p>
-            <p>The HUMAN teams must correctly identify the impostor.</p>
-            <p>The IMPOSTOR must conceal their identity and deceive all others.</p>
-            <p>Teams will proceed individually in an assigned order</p>
-            <p>Each team must submit a phrase, no longer than THREE words.</p>
-            <p>The phrase is revealed to all teams.</p>
-            <p>The phrase must be related to the given word. It is strictly prohibited to directly input the given word.</p>
-            <p>Your phrase will be judged, analyzed, and questioned by other teams</p>
-            <p>After all responses have been submitted, all teams must vote for a suspected Impostor</p>
-            <p>Alternatively, teams can vote for an additional round, with the same roles and term</p>
-            <p>The votes are tallied by the game system, and the identities of each player are then revealed to all screens</p>
-            <p>If the IMPOSTOR team is correctly identified, all HUMAN teams are rewarded 2 points for the duration of the game.</p>
-            <p>However, if the IMPOSTOR team survives, the IMPOSTOR team is rewarded 4 points for the duration of the game.</p>
-            <p>The point distribution marks the end of one round, starting a new round with different roles and different words</p>
-            <p>The game will last for 3 rounds.</p>
-            <p>By the end of the 3 rounds, the three team(s) with the highest amount of points receives a GAME CLEAR</p>
-            <p>All other teams will receive a GAME OVER</p>
-            <p>The IMPOSTOR game tests the extent of your Computer Science knowledge, as well as your ability to read or hide from others</p>
-            <p>The game will now begin.</p>
-        `;
 
         let myRole = null;
         let myWord = null;
@@ -572,6 +572,7 @@
         let roundResponses = {};
         let currentRestartMode = null;
         let introFinishedOnClient = false;
+        let hasVotedThisRound = false;
 
         const appShell = document.getElementById("appShell");
         const playerBridge = document.getElementById("playerBridge");
@@ -597,6 +598,7 @@
         const roundCountInput = document.getElementById("roundCountInput");
         const saveRoundsBtn = document.getElementById("saveRoundsBtn");
         const startGameBtn = document.getElementById("startGameBtn");
+        const skipIntroBtn = document.getElementById("skipIntroBtn");
         const continueBtn = document.getElementById("continueBtn");
         const restartActionBtn = document.getElementById("restartActionBtn");
 
@@ -614,68 +616,96 @@
         const phraseInput = document.getElementById("phraseInput");
         const submitPhraseBtn = document.getElementById("submitPhraseBtn");
 
+        const responsesCenterBox = document.getElementById("responsesCenterBox");
+
         const votingBox = document.getElementById("votingBox");
         const votingText = document.getElementById("votingText");
         const voteOptions = document.getElementById("voteOptions");
+
+        const roundResultBox = document.getElementById("roundResultBox");
+        const roundResultContent = document.getElementById("roundResultContent");
 
         const finalLeaderboardBox = document.getElementById("finalLeaderboardBox");
         const championBanner = document.getElementById("championBanner");
         const topThreeList = document.getElementById("topThreeList");
         const fullLeaderboardList = document.getElementById("fullLeaderboardList");
 
-        agreementRulesPanel.innerHTML = INTRO_RULES_HTML;
+        roomCodeText.textContent = code || "-----";
 
         function show(el) {
             el.classList.remove("hidden");
+            if (el === playerBridge) el.style.display = "grid";
+            if (el === playerVideoLayer) el.style.display = "block";
         }
 
         function hide(el) {
             el.classList.add("hidden");
-        }
-
-        function hideMainBoxes() {
-            hide(agreementBox);
-            hide(roleBox);
-            hide(phraseBox);
-            hide(votingBox);
-            hide(finalLeaderboardBox);
+            if (el === playerBridge) el.style.display = "none";
+            if (el === playerVideoLayer) el.style.display = "none";
         }
 
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
-        function setPhase(title, instruction) {
+        function setPhase(title, desc) {
             phaseText.textContent = title;
-            mainInstruction.textContent = instruction;
+            mainInstruction.textContent = desc;
+        }
+
+        function updateIdentityText() {
+            if (isHost) {
+                identityText.textContent = "HOST";
+                return;
+            }
+            if (!myRole) {
+                identityText.textContent = teamName || "TEAM";
+                return;
+            }
+            if (myRole === "HUMAN") {
+                identityText.textContent = `HUMAN${myWord ? " • " + myWord : ""}`;
+                return;
+            }
+            identityText.textContent = myRole;
+        }
+
+        function setCurrentTurn(team) {
+            currentTurnTeam = team || null;
+            currentTurnText.textContent = currentTurnTeam || "--";
         }
 
         function renderTeams(teams) {
-            if (!teams || teams.length === 0) {
+            if (!teams || !teams.length) {
                 teamsList.innerHTML = "<li>No teams yet.</li>";
                 return;
             }
 
-            teamsList.innerHTML = teams.map(team => {
-                const you = (!isHost && team === teamName) ? " (You)" : "";
-                return `<li>${team}${you}</li>`;
-            }).join("");
+            teamsList.innerHTML = teams.map(team => `
+                <li>
+                    <div class="team-card-row">
+                        <span>${team}</span>
+                        <span class="pill">${team === teamName ? "YOU" : "TEAM"}</span>
+                    </div>
+                </li>
+            `).join("");
         }
 
-        function renderScores(scores) {
-            const entries = Object.entries(scores || {});
-            if (entries.length === 0) {
-                scoreboardList.innerHTML = `<div class="score-row"><span>No scores yet.</span><strong>0</strong></div>`;
+        function renderScoreboard(scores) {
+            const entries = Object.entries(scores || {})
+                .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+            if (!entries.length) {
+                scoreboardList.innerHTML = "<li>No scores yet.</li>";
                 return;
             }
 
-            entries.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-
             scoreboardList.innerHTML = entries.map(([team, score]) => `
-                <div class="score-row">
-                    <span>${team}</span>
-                    <strong>${score}</strong>
-                </div>
+                <li>
+                    <div class="team-card-row">
+                        <span>${team}</span>
+                        <span class="score-badge">${score}</span>
+                    </div>
+                </li>
             `).join("");
         }
 
@@ -687,7 +717,12 @@
             }
 
             orderList.innerHTML = currentOrder.map((team, index) => `
-                <li>#${index + 1} - ${team}</li>
+                <li>
+                    <div class="team-card-row">
+                        <span>${index + 1}. ${team}</span>
+                        <span class="pill">${team === currentTurnTeam ? "NOW" : "WAIT"}</span>
+                    </div>
+                </li>
             `).join("");
         }
 
@@ -704,139 +739,34 @@
                 <li>
                     <div class="response-row">
                         <span class="response-team">${team}</span>
-                        <span>${phrase}</span>
+                        <span class="response-phrase">${phrase}</span>
                     </div>
                 </li>
             `).join("");
         }
 
-        function renderVoteOptions(teams) {
-            voteOptions.innerHTML = "";
-
-            if (isHost) {
-                voteOptions.innerHTML = "<p class='muted'>Host does not vote.</p>";
-                return;
-            }
-
-            if (!teams || teams.length === 0) {
-                voteOptions.innerHTML = "<p class='muted'>No teams available to vote for.</p>";
-                return;
-            }
-
-            const extraWrapper = document.createElement("div");
-            extraWrapper.style.marginBottom = "12px";
-
-            const extraBtn = document.createElement("button");
-            extraBtn.textContent = "Vote: Additional Round";
-            extraBtn.onclick = () => {
-                disableVoteButtons();
-                socket.emit("submit_vote", {
-                    code: code,
-                    voted_team: "ADDITIONAL_ROUND"
-                });
-            };
-
-            extraWrapper.appendChild(extraBtn);
-            voteOptions.appendChild(extraWrapper);
-
-            teams.forEach(team => {
-                if (team === teamName) return;
-
-                const wrapper = document.createElement("div");
-                wrapper.style.marginBottom = "8px";
-
-                const btn = document.createElement("button");
-                btn.textContent = `Vote for ${team}`;
-                btn.onclick = () => {
-                    disableVoteButtons();
-                    socket.emit("submit_vote", {
-                        code: code,
-                        voted_team: team
-                    });
-                };
-
-                wrapper.appendChild(btn);
-                voteOptions.appendChild(wrapper);
-            });
-        }
-
-        function disableVoteButtons() {
-            voteOptions.querySelectorAll("button").forEach(btn => {
-                btn.disabled = true;
-            });
-        }
-
-        function renderFinalLeaderboard(sortedScores) {
-            show(finalLeaderboardBox);
+        function hideMainBoxes() {
+            hide(agreementBox);
+            hide(roleBox);
+            hide(phraseBox);
+            hide(responsesCenterBox);
             hide(votingBox);
-
-            if (!sortedScores || sortedScores.length === 0) {
-                championBanner.innerHTML = "<p>No scores available.</p>";
-                topThreeList.innerHTML = "";
-                fullLeaderboardList.innerHTML = "";
-                return;
-            }
-
-            const first = sortedScores[0];
-            const topThree = sortedScores.slice(0, 3);
-
-            championBanner.innerHTML = `
-                <div class="champion-banner">
-                    <h2>🏆 #1 TEAM: ${first[0]}</h2>
-                    <p>${first[1]} points</p>
-                </div>
-            `;
-
-            topThreeList.innerHTML = `
-                <div class="top-three-grid">
-                    ${topThree.map((entry, index) => `
-                        <div class="podium-card ${index === 0 ? "first" : ""}">
-                            <div class="podium-rank">#${index + 1}</div>
-                            <div class="podium-team">${entry[0]}</div>
-                            <div class="podium-score">${entry[1]} points</div>
-                        </div>
-                    `).join("")}
-                </div>
-            `;
-
-            fullLeaderboardList.innerHTML = sortedScores.map((entry, index) => `
-                <div class="full-leaderboard-row">
-                    <span>#${index + 1} - ${entry[0]}</span>
-                    <strong>${entry[1]} pts</strong>
-                </div>
-            `).join("");
-        }
-
-        function updateIdentityText() {
-            if (isHost) {
-                identityText.textContent = "HOST";
-                return;
-            }
-
-            if (myRole === "IMPOSTOR") {
-                identityText.textContent = "IMPOSTOR";
-            } else if (myRole === "HUMAN") {
-                identityText.textContent = `HUMAN${myWord ? " | Word: " + myWord : ""}`;
-            } else {
-                identityText.textContent = teamName || "TEAM";
-            }
-        }
-
-        function setCurrentTurn(team) {
-            currentTurnTeam = team || null;
-            currentTurnText.textContent = currentTurnTeam || "--";
+            hide(roundResultBox);
+            hide(finalLeaderboardBox);
         }
 
         function setHostActionMode(mode) {
             currentRestartMode = mode;
 
             hide(startGameBtn);
+            hide(skipIntroBtn);
             hide(restartActionBtn);
 
             if (!isHost) return;
 
             if (mode === "start") {
                 show(startGameBtn);
+                show(skipIntroBtn);
             } else if (mode === "restart_round") {
                 restartActionBtn.textContent = "Restart Round";
                 show(restartActionBtn);
@@ -846,293 +776,321 @@
             }
         }
 
-        function stopIntroVideo() {
-            try {
-                introVideo.pause();
-                introVideo.currentTime = 0;
-            } catch (err) {}
+        function resetIntroClientFlagsForNewGame() {
+            introFinishedOnClient = false;
+            stopIntroVideo();
+            hide(playerBridge);
+            hide(playerVideoLayer);
+            glitchLayer.classList.remove("active");
         }
 
         function showPlayerBridgeWait() {
             if (isHost) return;
-            if (introFinishedOnClient) return;
-
-            hide(appShell);
-            hide(playerVideoLayer);
-            show(playerBridge);
-
             bridgeContent.innerHTML = `
-                <div class="bridge-title">Please wait for host...</div>
-                <p class="bridge-subtitle">Your registered team name is:</p>
-                <span class="team-big-name">${teamName || "TEAM"}</span>
+                <h2>Waiting for Host</h2>
+                <p>Your team is connected. Stay on this page until the host starts the game.</p>
             `;
+            show(playerBridge);
         }
 
-        function showPlayerReadyBridge() {
+        function showPlayerBridgeReady() {
             if (isHost) return;
-            if (introFinishedOnClient) return;
-
-            hide(appShell);
-            hide(playerVideoLayer);
+            bridgeContent.innerHTML = `
+                <h2>Introduction Ready</h2>
+                <p>Press Ready when your team is prepared to watch the intro sequence.</p>
+                <div class="row" style="justify-content: center; margin-top: 16px;">
+                    <button id="introReadyBtn">Ready</button>
+                </div>
+            `;
             show(playerBridge);
 
-            bridgeContent.innerHTML = `
-                <div class="bridge-title">READY</div>
-                <p class="bridge-subtitle">Press when your team is ready for the intro.</p>
-                <div style="margin-top: 28px;">
-                    <button id="playerReadyBtn" class="ready-big-btn">READY</button>
-                </div>
-                <span class="team-big-name">${teamName || "TEAM"}</span>
-            `;
-
-            const btn = document.getElementById("playerReadyBtn");
-            btn.onclick = async () => {
-                btn.disabled = true;
-
-                try {
-                    bgMusic.volume = 0;
-                    const playPromise = bgMusic.play();
-                    if (playPromise) await playPromise;
-                    bgMusic.pause();
-                    bgMusic.currentTime = 0;
-                    bgMusic.volume = 1;
-                } catch (err) {}
-
+            const introReadyBtn = document.getElementById("introReadyBtn");
+            introReadyBtn.onclick = () => {
+                introReadyBtn.disabled = true;
                 socket.emit("player_intro_ready", { code });
             };
         }
 
-        function showPostIntroWaitingBridge() {
+        function showPostIntroWaitingBridge(message = "Waiting for all teams to finish the intro before Round 1 begins.") {
             if (isHost) return;
-
-            hide(appShell);
-            hide(playerVideoLayer);
-            show(playerBridge);
-
             bridgeContent.innerHTML = `
-                <div class="bridge-wait-card">
-                    <div class="bridge-wait-badge">INTRO COMPLETE</div>
-                    <div class="bridge-title" style="font-size: clamp(1.9rem, 4vw, 3.2rem); color: white; margin-bottom: 10px;">
-                        Waiting for other players...
-                    </div>
-                    <p class="bridge-subtitle" style="color: #d1d5db;">
-                        Your intro is finished. Please remain on this screen while the other teams finish.
-                    </p>
-                    <span class="team-big-name" style="color: #fde68a;">${teamName || "TEAM"}</span>
-                    <div class="bridge-rules-box">
-                        ${INTRO_RULES_HTML}
-                    </div>
-                </div>
+                <h2>Stand By</h2>
+                <p>${message}</p>
             `;
+            show(playerBridge);
         }
 
-        async function playPlayerIntroSequence() {
-            if (isHost) return;
-            if (introFinishedOnClient) return;
-
-            hide(appShell);
-            hide(playerBridge);
-            show(playerVideoLayer);
-
-            stopIntroVideo();
+        function stopIntroVideo() {
+            try {
+                introVideo.pause();
+                introVideo.currentTime = 0;
+            } catch (e) {}
 
             try {
-                await introVideo.play();
-            } catch (err) {
-                statusDiv.textContent = "Video autoplay was blocked.";
-            }
-        }
-
-        async function handleIntroEnded() {
-            if (isHost) return;
-            if (introFinishedOnClient) return;
-
-            await sleep(AUDIO_START_DELAY_SECONDS * 1000);
-
-            try {
+                bgMusic.pause();
                 bgMusic.currentTime = 0;
-                await bgMusic.play();
-            } catch (err) {
-                statusDiv.textContent = "Background music autoplay was blocked.";
-            }
+            } catch (e) {}
+        }
 
+        async function playGlitchOnly() {
             glitchLayer.classList.remove("active");
             void glitchLayer.offsetWidth;
             glitchLayer.classList.add("active");
-
             await sleep(GLITCH_DURATION_SECONDS * 1000);
+        }
+
+        async function playSkipIntroSequence() {
+            if (isHost) return;
+            if (introFinishedOnClient) return;
+
+            hide(appShell);
+            hide(playerBridge);
+            stopIntroVideo();
+
+            await playGlitchOnly();
 
             introFinishedOnClient = true;
-            hide(playerVideoLayer);
-            showPostIntroWaitingBridge();
-
-            socket.emit("player_intro_finished", { code });
-        }
-
-        function exitPlayerBridgeToMainUI() {
-            if (isHost) return;
-            hide(playerBridge);
-            hide(playerVideoLayer);
-            stopIntroVideo();
             show(appShell);
+            showPostIntroWaitingBridge("Intro skipped. Waiting for host to continue.");
+            socket.emit("player_skip_intro_finished", { code });
         }
 
-        roomCodeText.textContent = `Code: ${code || "----"}`;
+        async function handleIntroVideoStart() {
+            if (isHost) return;
 
-        if (isHost) {
-            show(hostControls);
+            hide(playerBridge);
+            hide(appShell);
+            show(playerVideoLayer);
+
+            try {
+                introVideo.currentTime = 0;
+                await introVideo.play();
+            } catch (e) {
+                statusDiv.textContent = "Video autoplay was blocked. Press play manually if needed.";
+            }
         }
 
-        introVideo.addEventListener("ended", handleIntroEnded);
+        introVideo.addEventListener("ended", async () => {
+            try {
+                setTimeout(() => {
+                    bgMusic.play().catch(() => {});
+                }, INTRO_AUDIO_DELAY_MS);
+            } catch (e) {}
+
+            hide(playerVideoLayer);
+            await playGlitchOnly();
+
+            introFinishedOnClient = true;
+            show(appShell);
+            showPostIntroWaitingBridge();
+            socket.emit("player_intro_finished", { code });
+        });
+
+        saveRoundsBtn.onclick = () => {
+            const rounds = parseInt(roundCountInput.value || "3", 10);
+            socket.emit("set_round_count", { code, rounds });
+        };
+
+        startGameBtn.onclick = () => {
+            socket.emit("start_game_request", {
+                code,
+                skip_intro: false
+            });
+        };
+
+        skipIntroBtn.onclick = () => {
+            socket.emit("start_game_request", {
+                code,
+                skip_intro: true
+            });
+        };
+
+        continueBtn.onclick = () => {
+            socket.emit("host_continue", { code });
+        };
+
+        restartActionBtn.onclick = () => {
+            if (currentRestartMode === "restart_game") {
+                socket.emit("restart_game", { code });
+            } else {
+                socket.emit("restart_round", { code });
+            }
+        };
+
+        submitPhraseBtn.onclick = () => {
+            const phrase = phraseInput.value.trim();
+            socket.emit("submit_phrase", { code, phrase });
+        };
+
+        phraseInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                if (!submitPhraseBtn.disabled) {
+                    submitPhraseBtn.click();
+                }
+            }
+        });
 
         socket.on("connect", () => {
             if (!code) {
-                statusDiv.textContent = "Missing room code.";
+                statusDiv.textContent = "Missing game code.";
                 return;
             }
 
+            if (!isHost && !teamName) {
+                statusDiv.textContent = "Missing team name.";
+                return;
+            }
+
+            if (isHost) {
+                show(hostControls);
+            }
+
             socket.emit("register_view", {
-                code: code,
+                code,
                 is_host: isHost,
                 team_name: teamName
             });
-
-            statusDiv.textContent = "Connected.";
         });
 
         socket.on("registered", (data) => {
             currentState = data.state || "lobby";
-            if (data.role_type === "HOST") {
-                identityText.textContent = "HOST";
-            } else {
-                identityText.textContent = data.team_name || "TEAM";
-            }
+            roomCodeText.textContent = data.code || code || "-----";
+            statusDiv.textContent = isHost
+                ? "Host connected."
+                : `Connected as ${data.team_name || teamName}.`;
         });
 
-        socket.on("player_waiting_screen", () => {
-            if (isHost) return;
-            showPlayerBridgeWait();
+        socket.on("error", (message) => {
+            alert(typeof message === "string" ? message : (message?.message || "An error occurred."));
         });
 
-        socket.on("player_ready_prompt", () => {
-            if (isHost) return;
-            showPlayerReadyBridge();
+        socket.on("status_message", (data) => {
+            statusDiv.textContent = data.message || "Status updated.";
         });
 
-        socket.on("player_intro_video", async () => {
-            if (isHost) return;
-            await playPlayerIntroSequence();
+        socket.on("round_count_updated", (data) => {
+            roundCountInput.value = data.max_rounds;
+            statusDiv.textContent = `Round count updated to ${data.max_rounds}.`;
         });
 
         socket.on("roster_update", (data) => {
-            currentState = data.state || currentState;
+            currentState = data.state || "lobby";
 
             renderTeams(data.teams || []);
-            renderScores(data.scores || {});
-            roundInfoText.textContent = `${data.round || 1} / ${data.max_rounds || 3}`;
-
-            if (typeof data.max_rounds === "number") {
-                roundCountInput.value = data.max_rounds;
-            }
-
-            if (typeof data.intro_finished_count === "number" && typeof data.total_teams === "number") {
-                agreementStatus.textContent = `Finished intro: ${data.intro_finished_count} / ${data.total_teams}`;
-            }
+            renderScoreboard(data.scores || {});
+            roundInfoText.textContent = `${data.round} / ${data.max_rounds}`;
+            roundCountInput.value = data.max_rounds;
 
             setHostActionMode(data.host_button_mode || "none");
 
-            if (isHost) {
-                if (data.host_can_continue) {
-                    show(continueBtn);
-                } else {
-                    hide(continueBtn);
-                }
+            if (isHost && data.host_can_continue) {
+                show(continueBtn);
+            } else {
+                hide(continueBtn);
             }
 
-            if (!isHost && currentState === "agreement" && introFinishedOnClient) {
-                showPostIntroWaitingBridge();
-            }
+            updateIdentityText();
 
             if (currentState === "lobby") {
-                setPhase("Lobby", isHost ? "Wait for teams to join, then start the game." : "Waiting for host...");
+                resetIntroClientFlagsForNewGame();
+                show(appShell);
                 hideMainBoxes();
+                setPhase("Lobby", isHost ? "Wait for teams to join, then start the game." : "Waiting for host...");
                 if (!isHost) {
                     showPlayerBridgeWait();
                 }
             }
         });
 
-        socket.on("round_count_updated", (data) => {
-            roundCountInput.value = data.max_rounds;
-            statusDiv.textContent = `Round count set to ${data.max_rounds}.`;
+        socket.on("player_waiting_screen", () => {
+            if (isHost) return;
+            hideMainBoxes();
+            setPhase("Lobby", "Waiting for host...");
+            showPlayerBridgeWait();
+        });
+
+        socket.on("player_ready_prompt", () => {
+            if (isHost) return;
+            hideMainBoxes();
+            setPhase("Introduction", "The host started the intro sequence.");
+            showPlayerBridgeReady();
+        });
+
+        socket.on("player_intro_video", async () => {
+            if (isHost) return;
+            await handleIntroVideoStart();
+        });
+
+        socket.on("skip_intro_sequence", async () => {
+            if (isHost) return;
+            await playSkipIntroSequence();
         });
 
         socket.on("agreement_phase", (data) => {
             currentState = "agreement";
+            show(appShell);
+            hide(playerVideoLayer);
+            hideMainBoxes();
+            show(agreementBox);
 
-            setPhase("Waiting for other players", data.message || "Waiting for intro completion.");
+            setPhase("Agreement / Transition", isHost
+                ? "Press Continue when everyone is ready."
+                : "Waiting for host to continue.");
 
-            if (isHost) {
-                hideMainBoxes();
-                show(agreementBox);
-                show(appShell);
-                hide(playerBridge);
-                hide(playerVideoLayer);
-                stopIntroVideo();
-                agreementStatus.textContent = data.message || "Waiting for all teams to finish the intro.";
-                statusDiv.textContent = data.message || "Waiting on intro completion.";
+            agreementStatus.textContent = data.message || "Waiting...";
+            statusDiv.textContent = data.message || "Waiting...";
+            updateIdentityText();
+
+            if (!isHost) {
+                showPostIntroWaitingBridge(data.message || "Waiting...");
             } else {
-                if (introFinishedOnClient) {
-                    showPostIntroWaitingBridge();
-                }
-                statusDiv.textContent = data.message || "Waiting on intro completion.";
+                hide(playerBridge);
             }
         });
 
         socket.on("round_started", (data) => {
             currentState = "role";
-            roundInfoText.textContent = `${data.round} / ${data.max_rounds}`;
-            renderOrder(data.order || []);
-            setCurrentTurn("--");
-
-            if (data.preserved) {
-                setPhase(`Round ${data.round} - Restarted`, "Same roles, same word, same turn order. Review your role.");
-                statusDiv.textContent = `Round ${data.round} restarted.`;
-            } else {
-                setPhase(`Round ${data.round}`, "Roles have been assigned. Review your role.");
-                statusDiv.textContent = `Round ${data.round} started.`;
-            }
-
+            hasVotedThisRound = false;
+            hide(playerBridge);
+            show(appShell);
             hideMainBoxes();
             show(roleBox);
-            renderResponses({});
-            phraseInput.value = "";
 
-            if (isHost) {
-                show(hostControls);
-                show(continueBtn);
-            } else {
-                exitPlayerBridgeToMainUI();
-            }
+            renderOrder(data.order || []);
+            renderResponses({});
+            setCurrentTurn(null);
+
+            setPhase(
+                `Round ${data.round}`,
+                data.preserved
+                    ? "Same impostor, same word, same order."
+                    : "Roles have been assigned. Review your information."
+            );
+
+            roundInfoText.textContent = `${data.round} / ${data.max_rounds}`;
+            statusDiv.textContent = data.preserved
+                ? "Round restarted with preserved roles and word."
+                : "Round started.";
         });
 
         socket.on("role_assignment", (data) => {
+            if (isHost) return;
+
             myRole = data.role;
-            myWord = data.word || null;
+            myWord = data.word;
             updateIdentityText();
             renderOrder(data.order || []);
 
-            if (isHost) return;
-
             if (data.role === "IMPOSTOR") {
                 roleText.innerHTML = `
-                    <div class="big-role impostor-role">IMPOSTOR</div>
-                    <p class="instruction">You do <strong>not</strong> know the word. Blend in and survive.</p>
+                    <div class="big-role">IMPOSTOR</div>
+                    <p class="instruction">Blend in. You do not know the word.</p>
                 `;
             } else {
                 roleText.innerHTML = `
-                    <div class="big-role human-role">HUMAN</div>
-                    <p class="instruction">Your team knows the hidden word.</p>
+                    <div class="big-role">HUMAN</div>
+                    <p class="instruction">Coordinate around the shared word.</p>
                     <div class="word-box"><strong>Word:</strong> ${data.word}</div>
                 `;
             }
@@ -1142,6 +1100,7 @@
             if (!isHost) return;
 
             myRole = "HOST";
+            myWord = null;
             updateIdentityText();
             renderOrder(data.order || []);
 
@@ -1163,9 +1122,11 @@
             currentState = "phrase";
             hideMainBoxes();
             show(phraseBox);
+            show(responsesCenterBox);
 
             renderResponses(data.responses || {});
             setCurrentTurn(data.current_team);
+            renderOrder(currentOrder);
 
             setPhase("Phrase Submission", "Teams submit phrases one at a time.");
             turnLabel.textContent = `Current Team: ${data.current_team} (${data.turn_index}/${data.total_turns})`;
@@ -1190,6 +1151,7 @@
         socket.on("phrase_timer_update", (data) => {
             phraseTimerText.textContent = `Timer: ${data.seconds_left}s`;
             setCurrentTurn(data.current_team);
+            renderOrder(currentOrder);
         });
 
         socket.on("phrase_locked", (data) => {
@@ -1205,133 +1167,114 @@
 
         socket.on("start_voting", (data) => {
             currentState = "voting";
+            hasVotedThisRound = false;
             hideMainBoxes();
             show(votingBox);
+            show(responsesCenterBox);
 
             renderResponses(data.responses || {});
-            setCurrentTurn("--");
+            setCurrentTurn(null);
 
-            setPhase("Voting Phase", "Vote for the team you believe is the impostor, or choose an additional round.");
-            votingText.innerHTML = `
-                <div class="result-box">
-                    <strong>Choose the team you believe is the impostor.</strong><br>
-                    <span id="voteTimerLine" class="timer">Voting ends in: ${data.time_limit}s</span>
-                </div>
-            `;
-            renderVoteOptions(data.teams || []);
-            statusDiv.textContent = "Voting has started.";
-        });
+            setPhase("Voting Phase", "Vote for the impostor or choose an additional round.");
+            votingText.textContent = `Voting is live. Time limit: ${data.time_limit} seconds.`;
 
-        socket.on("vote_timer_update", (data) => {
-            const voteTimerLine = document.getElementById("voteTimerLine");
-            if (voteTimerLine) {
-                voteTimerLine.textContent = `Voting ends in: ${data.seconds_left}s`;
+            const otherTeams = (data.teams || []).filter(team => team !== teamName);
+
+            voteOptions.innerHTML = "";
+
+            otherTeams.forEach(team => {
+                const btn = document.createElement("button");
+                btn.textContent = `Vote ${team}`;
+                btn.onclick = () => submitVote(team);
+                voteOptions.appendChild(btn);
+            });
+
+            const extraBtn = document.createElement("button");
+            extraBtn.textContent = "Vote Additional Round";
+            extraBtn.className = "neutral-btn";
+            extraBtn.onclick = () => submitVote("ADDITIONAL_ROUND");
+            voteOptions.appendChild(extraBtn);
+
+            if (isHost) {
+                Array.from(voteOptions.querySelectorAll("button")).forEach(btn => btn.disabled = true);
+                votingText.textContent = `Teams are voting. Time limit: ${data.time_limit} seconds.`;
             }
         });
 
+        socket.on("vote_timer_update", (data) => {
+            votingText.textContent = `Voting is live. ${data.seconds_left}s remaining.`;
+        });
+
         socket.on("vote_received", (data) => {
-            statusDiv.textContent = data.message;
+            hasVotedThisRound = true;
+            Array.from(voteOptions.querySelectorAll("button")).forEach(btn => btn.disabled = true);
+            statusDiv.textContent = data.message || "Vote received.";
         });
 
         socket.on("round_result", (data) => {
             currentState = "paused_after_result";
             hideMainBoxes();
-            show(votingBox);
+            show(roundResultBox);
+            show(responsesCenterBox);
 
-            renderScores(data.scores || {});
             renderResponses(data.responses || {});
-            setCurrentTurn("--");
 
-            const extraRoundText = data.additional_round_triggered
-                ? `YES (${data.additional_round_votes} teams voted for it)`
-                : `NO (${data.additional_round_votes} teams voted for it)`;
+            const individualList = (data.individual_correct_teams || []).length
+                ? data.individual_correct_teams.join(", ")
+                : "None";
 
-            if (data.additional_round_triggered) {
-                votingText.innerHTML = `
-                    <div class="result-box">
-                        <strong>Additional Round:</strong> ${extraRoundText}<br>
-                        <strong>Result:</strong> ${data.result_text}
-                    </div>
-                `;
-            } else {
-                const majorityText = data.majority_team ? data.majority_team : "No clear majority";
-                const individualText = (data.individual_correct_teams && data.individual_correct_teams.length)
-                    ? data.individual_correct_teams.join(", ")
-                    : "None";
+            roundResultContent.innerHTML = `
+                <strong>Result:</strong> ${data.result_text}<br><br>
+                <strong>Majority Vote:</strong> ${data.majority_team || "No clear majority"}<br>
+                <strong>Actual Impostor:</strong> ${data.actual_impostor}<br>
+                <strong>Additional Round Votes:</strong> ${data.additional_round_votes}<br>
+                <strong>Individual Correct Teams (+1):</strong> ${individualList}
+            `;
 
-                votingText.innerHTML = `
-                    <div class="result-box">
-                        <strong>Majority Choice:</strong> ${majorityText}<br>
-                        <strong>Actual Impostor:</strong> ${data.actual_impostor}<br>
-                        <strong>Majority Correct:</strong> ${data.majority_correct ? "Yes" : "No"}<br>
-                        <strong>Individual Correct Votes (+1):</strong> ${individualText}<br>
-                        <strong>Additional Round:</strong> ${extraRoundText}<br>
-                        <strong>Result:</strong> ${data.result_text}
-                    </div>
-                `;
-            }
-
-            voteOptions.innerHTML = "";
-            setPhase("Round Result", "Results have been revealed.");
-            statusDiv.textContent = "Round results displayed.";
-
-            if (isHost) {
-                show(continueBtn);
-            }
+            renderScoreboard(data.scores || {});
+            setPhase("Round Result", isHost
+                ? "Review the result, then press Continue."
+                : "Waiting for the host to continue.");
+            statusDiv.textContent = "Round result displayed.";
         });
 
         socket.on("game_over", (data) => {
             currentState = "game_over";
-            setPhase("Game Over", "The game has ended. Final scores are now shown.");
-
             hideMainBoxes();
             show(finalLeaderboardBox);
-            hide(continueBtn);
 
-            renderScores(data.scores || {});
-            renderFinalLeaderboard(data.sorted_scores || []);
-            statusDiv.textContent = "The game has ended.";
+            renderScoreboard(data.scores || {});
+            setPhase("Game Over", "Final standings are now displayed.");
+
+            const sorted = data.sorted_scores || [];
+            const champion = sorted[0];
+
+            championBanner.innerHTML = champion
+                ? `<div class="champion-banner">🏆 Champion: ${champion[0]} with ${champion[1]} point${champion[1] === 1 ? "" : "s"}</div>`
+                : "";
+
+            const topThree = sorted.slice(0, 3);
+            topThreeList.innerHTML = topThree.map((entry, index) => `
+                <div class="leaderboard-item">
+                    <span><span class="place-badge">#${index + 1}</span> ${entry[0]}</span>
+                    <strong>${entry[1]} pts</strong>
+                </div>
+            `).join("");
+
+            fullLeaderboardList.innerHTML = sorted.map((entry, index) => `
+                <div class="leaderboard-item">
+                    <span>${index + 1}. ${entry[0]}</span>
+                    <strong>${entry[1]} pts</strong>
+                </div>
+            `).join("");
+
+            statusDiv.textContent = "Game over.";
         });
 
-        socket.on("status_message", (data) => {
-            statusDiv.textContent = data.message;
-        });
-
-        socket.on("error", (message) => {
-            statusDiv.textContent = message;
-        });
-
-        saveRoundsBtn.onclick = () => {
-            const rounds = parseInt(roundCountInput.value, 10);
-            socket.emit("set_round_count", {
-                code: code,
-                rounds: rounds
-            });
-        };
-
-        startGameBtn.onclick = () => {
-            socket.emit("start_game_request", { code: code });
-        };
-
-        continueBtn.onclick = () => {
-            socket.emit("host_continue", { code: code });
-        };
-
-        restartActionBtn.onclick = () => {
-            if (currentRestartMode === "restart_round") {
-                socket.emit("restart_round", { code });
-            } else if (currentRestartMode === "restart_game") {
-                socket.emit("restart_game", { code });
-            }
-        };
-
-        submitPhraseBtn.onclick = () => {
-            const phrase = phraseInput.value.trim();
-            socket.emit("submit_phrase", {
-                code,
-                phrase
-            });
-        };
+        function submitVote(votedTeam) {
+            if (isHost || hasVotedThisRound) return;
+            socket.emit("submit_vote", { code, voted_team: votedTeam });
+        }
     </script>
 </body>
 </html>

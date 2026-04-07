@@ -50,7 +50,8 @@ def create_game_state():
         "team_sids": {},
         "players_by_sid": {},
 
-        "state": "lobby",  # lobby, intro_wait, intro_playing, agreement, role, phrase, voting, paused_after_result, game_over
+        # lobby, intro_wait, intro_playing, agreement, role, phrase, voting, paused_after_result, game_over
+        "state": "lobby",
         "round": 1,
         "max_rounds": 3,
 
@@ -63,7 +64,7 @@ def create_game_state():
         "votes": {},
         "scores": {},
 
-        # legacy-safe, but no longer used for gating
+        # legacy-safe, but not used for agreement gating anymore
         "agreement_ready": set(),
         "intro_ready": set(),
         "intro_finished": set(),
@@ -661,6 +662,7 @@ def set_round_count(data):
 def start_game_request(data):
     code = str(data.get("code", "")).strip().upper()
     sid = request.sid
+    skip_intro = bool(data.get("skip_intro", False))
 
     if code not in games:
         emit("error", "Game code not found.")
@@ -680,11 +682,24 @@ def start_game_request(data):
         emit("error", "At least 3 teams are required.")
         return
 
-    game["state"] = "intro_wait"
     game["intro_ready"] = set()
     game["intro_finished"] = set()
     game["agreement_ready"] = set()
 
+    if skip_intro:
+        game["state"] = "agreement"
+        game["intro_ready"] = set(game["teams"])
+        game["intro_finished"] = set(game["teams"])
+
+        emit_roster_update(code)
+        socketio.emit("skip_intro_sequence", {}, room=code)
+        socketio.emit("agreement_phase", {
+            "message": "Intro skipped. All teams are ready. Host can press Continue to begin Round 1."
+        }, room=code)
+        emit_status(code, "Host skipped the intro video.")
+        return
+
+    game["state"] = "intro_wait"
     emit_roster_update(code)
     move_all_players_to_ready(code)
     emit_status(code, "Players are now being shown the READY button for the intro.")
@@ -763,6 +778,30 @@ def player_intro_finished(data):
         socketio.emit("agreement_phase", {
             "message": "Waiting for all teams to finish the intro."
         }, room=code)
+
+
+@socketio.on("player_skip_intro_finished")
+def player_skip_intro_finished(data):
+    code = str(data.get("code", "")).strip().upper()
+    sid = request.sid
+
+    if code not in games:
+        emit("error", "Game code not found.")
+        return
+
+    game = games[code]
+    if game["state"] != "agreement":
+        emit("error", "Skip-intro completion is not valid right now.")
+        return
+
+    team_name = game["players_by_sid"].get(sid)
+    if not team_name or team_name == "HOST":
+        emit("error", "Only players can do that.")
+        return
+
+    game["intro_finished"].add(team_name)
+    emit_roster_update(code)
+    emit_individual_post_intro_waiting_to_player(code, sid)
 
 
 @socketio.on("agree_ready")
