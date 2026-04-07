@@ -17,6 +17,8 @@
             --line: rgba(255,255,255,0.18);
             --gold: #facc15;
             --soft: rgba(255,255,255,0.75);
+            --danger: #dc2626;
+            --danger-soft: #fecaca;
         }
 
         body {
@@ -26,6 +28,46 @@
             background: var(--casino-bg);
             min-height: 100vh;
             overflow-x: hidden;
+        }
+
+        body.lobby-waiting {
+            background: white;
+            color: #111827;
+        }
+
+        body.lobby-waiting .card,
+        body.lobby-waiting .hero,
+        body.lobby-waiting .result-box,
+        body.lobby-waiting .word-box,
+        body.lobby-waiting .intro-inline-panel {
+            background: white;
+            color: #111827;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 28px rgba(0,0,0,0.06);
+            backdrop-filter: none;
+        }
+
+        body.lobby-waiting .muted,
+        body.lobby-waiting .instruction,
+        body.lobby-waiting .pill,
+        body.lobby-waiting #phaseText,
+        body.lobby-waiting #statusDiv,
+        body.lobby-waiting #mainInstruction,
+        body.lobby-waiting #introWaitMessage {
+            color: #4b5563 !important;
+        }
+
+        body.lobby-waiting .clean-list li,
+        body.lobby-waiting .leaderboard-item {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+        }
+
+        body.lobby-waiting .score-badge,
+        body.lobby-waiting .status-pill {
+            background: #fef3c7;
+            border-color: #fde68a;
+            color: #92400e;
         }
 
         .hidden { display: none !important; }
@@ -170,6 +212,11 @@
             font-weight: 900;
             letter-spacing: 1px;
             margin-bottom: 8px;
+        }
+
+        .big-role.impostor-role {
+            color: var(--danger);
+            text-shadow: 0 0 18px rgba(220, 38, 38, 0.28);
         }
 
         .instruction {
@@ -341,6 +388,29 @@
             margin-top: 12px;
             font-weight: 700;
             color: #fde68a;
+        }
+
+        .lobby-wait-box {
+            text-align: center;
+            padding: 34px 20px;
+        }
+
+        .lobby-wait-title {
+            margin: 0 0 12px 0;
+            font-size: 2rem;
+            font-weight: 900;
+            color: #111827;
+        }
+
+        .lobby-wait-team {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #374151;
+        }
+
+        .lobby-wait-subtext {
+            margin-top: 10px;
+            color: #6b7280;
         }
 
         #playerVideoLayer,
@@ -583,7 +653,6 @@
         let skipIntroChosen = false;
         let hostControlsLockedAfterStart = false;
 
-        const appShell = document.getElementById("appShell");
         const playerVideoLayer = document.getElementById("playerVideoLayer");
         const introVideo = document.getElementById("introVideo");
         const bgMusic = document.getElementById("bgMusic");
@@ -642,6 +711,16 @@
         const fullLeaderboardList = document.getElementById("fullLeaderboardList");
 
         roomCodeText.textContent = code || "-----";
+
+        function enableLobbyWaitingTheme() {
+            if (!isHost) {
+                document.body.classList.add("lobby-waiting");
+            }
+        }
+
+        function disableLobbyWaitingTheme() {
+            document.body.classList.remove("lobby-waiting");
+        }
 
         function show(el) {
             el.classList.remove("hidden");
@@ -801,11 +880,13 @@
             introFinishedOnClient = false;
             hasVotedThisRound = false;
             hostControlsLockedAfterStart = false;
+
             if (isHost) {
                 skipIntroCheckbox.checked = false;
                 skipIntroChosen = false;
                 show(skipIntroOptionWrap);
             }
+
             stopIntroVideo();
             hide(playerVideoLayer);
             glitchLayer.classList.remove("active");
@@ -844,6 +925,7 @@
         async function handleIntroVideoStart() {
             if (isHost) return;
 
+            disableLobbyWaitingTheme();
             hideMainBoxes();
             setPhase("Introduction", "Watch the intro video. After it ends, your team will be marked finished.");
             show(playerVideoLayer);
@@ -856,19 +938,48 @@
             }
         }
 
+        function showPlayerLobbyWaitingScreen() {
+            if (isHost) return;
+
+            enableLobbyWaitingTheme();
+            currentState = "lobby";
+            hideMainBoxes();
+            show(agreementBox);
+            hide(introWaitInlineBox);
+            hide(agreementRulesPanel);
+
+            setPhase("Lobby", "Waiting for host...");
+            agreementStatus.innerHTML = `
+                <div class="lobby-wait-box">
+                    <div class="lobby-wait-title">Waiting for host...</div>
+                    <div class="lobby-wait-team">${teamName || "Team"}</div>
+                    <div class="lobby-wait-subtext">Stay on this screen until the host starts the game.</div>
+                </div>
+            `;
+            statusDiv.textContent = "Waiting for host...";
+            updateIdentityText();
+        }
+
         function showInlineIntroWaiting(data = {}) {
             currentState = "agreement";
+            disableLobbyWaitingTheme();
             hideMainBoxes();
             show(agreementBox);
             show(introWaitInlineBox);
             show(agreementRulesPanel);
 
             const msg = data.message || "Waiting for all teams to finish the intro.";
+
             setPhase(
                 "Agreement / Transition",
                 isHost ? "Wait for all teams to finish the intro, then press Continue." : msg
             );
-            agreementStatus.textContent = msg;
+
+            agreementStatus.innerHTML = `
+                <div><strong>${msg}</strong></div>
+                ${!isHost ? `<p class="muted" style="margin-top: 8px;">${teamName || "Team"}</p>` : ""}
+            `;
+
             statusDiv.textContent = msg;
 
             setIntroProgress(
@@ -885,6 +996,7 @@
         function showReadyPromptInMainUI() {
             if (isHost) return;
 
+            disableLobbyWaitingTheme();
             currentState = "intro_wait";
             hideMainBoxes();
             show(agreementBox);
@@ -894,6 +1006,7 @@
             setPhase("Introduction", "Press Ready when your team is prepared to watch the intro sequence.");
             agreementStatus.innerHTML = `
                 <div><strong>Introduction Ready</strong></div>
+                <p class="muted" style="margin-top: 8px;">Team: ${teamName || "Team"}</p>
                 <p class="muted" style="margin-top: 8px;">Press Ready when your team is prepared to watch the intro sequence.</p>
                 <div class="row" style="margin-top: 12px;">
                     <button id="introReadyBtn">Ready</button>
@@ -907,6 +1020,11 @@
                 introReadyBtn.disabled = true;
                 socket.emit("player_intro_ready", { code });
             };
+        }
+
+        function submitVote(votedTeam) {
+            if (hasVotedThisRound || isHost) return;
+            socket.emit("submit_vote", { code, voted_team: votedTeam });
         }
 
         saveRoundsBtn.onclick = () => {
@@ -952,6 +1070,23 @@
                     submitPhraseBtn.click();
                 }
             }
+        });
+
+        introVideo.addEventListener("ended", async () => {
+            if (isHost || introFinishedOnClient) return;
+
+            await sleep(INTRO_AUDIO_DELAY_MS);
+
+            try {
+                bgMusic.currentTime = 0;
+                await bgMusic.play();
+            } catch (e) {}
+
+            hide(playerVideoLayer);
+            await playGlitchOnly();
+
+            introFinishedOnClient = true;
+            socket.emit("player_intro_finished", { code });
         });
 
         socket.on("connect", () => {
@@ -1017,10 +1152,12 @@
 
             if (currentState === "lobby") {
                 resetIntroClientFlagsForNewGame();
-                hideMainBoxes();
-                setPhase("Lobby", isHost ? "Wait for teams to join, then start the game." : "Waiting for host...");
                 if (!isHost) {
-                    agreementStatus.textContent = "Waiting for host...";
+                    showPlayerLobbyWaitingScreen();
+                } else {
+                    disableLobbyWaitingTheme();
+                    hideMainBoxes();
+                    setPhase("Lobby", "Wait for teams to join, then start the game.");
                 }
             }
 
@@ -1031,11 +1168,7 @@
 
         socket.on("player_waiting_screen", () => {
             if (isHost) return;
-            hideMainBoxes();
-            setPhase("Lobby", "Waiting for host...");
-            show(agreementBox);
-            agreementStatus.textContent = "Waiting for host...";
-            hide(introWaitInlineBox);
+            showPlayerLobbyWaitingScreen();
         });
 
         socket.on("player_ready_prompt", () => {
@@ -1057,8 +1190,8 @@
             currentState = "agreement";
             showInlineIntroWaiting({
                 message: data.message || "Waiting...",
-                intro_finished_count: null,
-                total_teams: null
+                intro_finished_count: data.intro_finished_count,
+                total_teams: data.total_teams
             });
             updateIdentityText();
         });
@@ -1066,6 +1199,7 @@
         socket.on("round_started", (data) => {
             currentState = "role";
             hasVotedThisRound = false;
+            disableLobbyWaitingTheme();
             hide(playerVideoLayer);
             hideMainBoxes();
             show(roleBox);
@@ -1097,7 +1231,7 @@
 
             if (data.role === "IMPOSTOR") {
                 roleText.innerHTML = `
-                    <div class="big-role">IMPOSTOR</div>
+                    <div class="big-role impostor-role">IMPOSTOR</div>
                     <p class="instruction">Blend in. You do not know the word.</p>
                 `;
             } else {
@@ -1133,6 +1267,7 @@
 
         socket.on("start_turn", (data) => {
             currentState = "phrase";
+            disableLobbyWaitingTheme();
             hideMainBoxes();
             show(phraseBox);
             show(responsesCenterBox);
@@ -1181,6 +1316,7 @@
         socket.on("start_voting", (data) => {
             currentState = "voting";
             hasVotedThisRound = false;
+            disableLobbyWaitingTheme();
             hideMainBoxes();
             show(votingBox);
             show(responsesCenterBox);
@@ -1226,6 +1362,7 @@
 
         socket.on("round_result", (data) => {
             currentState = "paused_after_result";
+            disableLobbyWaitingTheme();
             hideMainBoxes();
             show(roundResultBox);
             show(responsesCenterBox);
@@ -1253,6 +1390,7 @@
 
         socket.on("game_over", (data) => {
             currentState = "game_over";
+            disableLobbyWaitingTheme();
             hideMainBoxes();
             show(finalLeaderboardBox);
 
@@ -1267,41 +1405,21 @@
                 : "";
 
             const topThree = sorted.slice(0, 3);
+
             topThreeList.innerHTML = topThree.map((entry, index) => `
                 <div class="leaderboard-item">
                     <span><span class="place-badge">#${index + 1}</span> ${entry[0]}</span>
-                    <strong>${entry[1]} pts</strong>
+                    <strong>${entry[1]}</strong>
                 </div>
             `).join("");
 
             fullLeaderboardList.innerHTML = sorted.map((entry, index) => `
                 <div class="leaderboard-item">
-                    <span>${index + 1}. ${entry[0]}</span>
-                    <strong>${entry[1]} pts</strong>
+                    <span>#${index + 1} ${entry[0]}</span>
+                    <strong>${entry[1]}</strong>
                 </div>
             `).join("");
-
-            statusDiv.textContent = "Game over.";
         });
-
-        introVideo.addEventListener("ended", async () => {
-            try {
-                setTimeout(() => {
-                    bgMusic.play().catch(() => {});
-                }, INTRO_AUDIO_DELAY_MS);
-            } catch (e) {}
-
-            hide(playerVideoLayer);
-            await playGlitchOnly();
-
-            introFinishedOnClient = true;
-            socket.emit("player_intro_finished", { code });
-        });
-
-        function submitVote(votedTeam) {
-            if (isHost || hasVotedThisRound) return;
-            socket.emit("submit_vote", { code, voted_team: votedTeam });
-        }
     </script>
 </body>
 </html>
