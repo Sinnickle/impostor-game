@@ -64,7 +64,6 @@ def create_game_state():
         "votes": {},
         "scores": {},
 
-        # legacy-safe, but not used for agreement gating anymore
         "agreement_ready": set(),
         "intro_ready": set(),
         "intro_finished": set(),
@@ -185,15 +184,6 @@ def emit_round_started(code, preserved=False):
         "max_rounds": game["max_rounds"],
         "order": game["order"],
         "preserved": preserved,
-    }, room=code)
-
-
-def move_to_agreement(code, message=None):
-    game = games[code]
-    game["state"] = "agreement"
-    emit_roster_update(code)
-    socketio.emit("agreement_phase", {
-        "message": message or f"Waiting for all teams to finish the intro before Round {game['round']} begins."
     }, room=code)
 
 

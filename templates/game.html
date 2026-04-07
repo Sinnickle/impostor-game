@@ -14,12 +14,9 @@
                 radial-gradient(circle at bottom left, #0ea5e9 0%, transparent 24%),
                 linear-gradient(135deg, #0f172a, #111827, #1e1b4b);
             --glass: rgba(255,255,255,0.10);
-            --glass-strong: rgba(255,255,255,0.16);
             --line: rgba(255,255,255,0.18);
             --gold: #facc15;
             --soft: rgba(255,255,255,0.75);
-            --danger: #fb7185;
-            --ok: #22c55e;
         }
 
         body {
@@ -277,49 +274,79 @@
             width: 100%;
         }
 
-        .danger-btn {
-            background: linear-gradient(135deg, #fb7185, #e11d48);
-            color: white;
-        }
-
         .neutral-btn {
             background: linear-gradient(135deg, #cbd5e1, #94a3b8);
             color: #111827;
         }
 
-        #playerBridge,
+        .champion-banner {
+            padding: 16px;
+            border-radius: 18px;
+            margin-bottom: 14px;
+            background:
+                linear-gradient(135deg, rgba(250,204,21,0.22), rgba(245,158,11,0.18)),
+                rgba(255,255,255,0.08);
+            border: 1px solid rgba(250,204,21,0.22);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.10);
+        }
+
+        .place-badge {
+            font-weight: 900;
+            color: #fde68a;
+        }
+
+        .host-lobby-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 0.96rem;
+        }
+
+        .checkbox-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            accent-color: #facc15;
+        }
+
+        .intro-inline-panel {
+            margin-top: 14px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .intro-progress {
+            margin-top: 12px;
+            font-weight: 700;
+            color: #fde68a;
+        }
+
         #playerVideoLayer,
         #glitchLayer {
             position: fixed;
             inset: 0;
-            z-index: 80;
-        }
-
-        #playerBridge {
-            display: none;
-            place-items: center;
-            padding: 24px;
-            background:
-                linear-gradient(135deg, rgba(15,23,42,0.96), rgba(17,24,39,0.96));
-        }
-
-        #bridgeContent {
-            width: min(760px, 100%);
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 20px;
-            padding: 28px;
-            text-align: center;
-            box-shadow: 0 24px 48px rgba(0,0,0,0.35);
-        }
-
-        #bridgeContent h2 {
-            margin-top: 0;
-            font-size: 2rem;
-        }
-
-        #bridgeContent p {
-            color: var(--soft);
         }
 
         #playerVideoLayer {
@@ -366,34 +393,6 @@
             100% { opacity: 0; transform: translate(0, 0); }
         }
 
-        .champion-banner {
-            padding: 16px;
-            border-radius: 18px;
-            margin-bottom: 14px;
-            background:
-                linear-gradient(135deg, rgba(250,204,21,0.22), rgba(245,158,11,0.18)),
-                rgba(255,255,255,0.08);
-            border: 1px solid rgba(250,204,21,0.22);
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-
-        .leaderboard-item {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.10);
-        }
-
-        .place-badge {
-            font-weight: 900;
-            color: #fde68a;
-        }
-
         @media (max-width: 1100px) {
             .app-shell {
                 grid-template-columns: 1fr;
@@ -402,13 +401,6 @@
     </style>
 </head>
 <body>
-    <div id="playerBridge">
-        <div id="bridgeContent">
-            <h2>Waiting...</h2>
-            <p>Please stay on this page.</p>
-        </div>
-    </div>
-
     <div id="playerVideoLayer">
         <video id="introVideo" playsinline preload="auto">
             <source src="/static/intro.mp4" type="video/mp4">
@@ -456,13 +448,19 @@
                         <div id="mainInstruction" class="muted">Loading...</div>
                     </div>
 
-                    <div id="hostControls" class="row hidden">
-                        <input id="roundCountInput" type="number" min="1" max="20" value="3" style="width: 110px;">
-                        <button id="saveRoundsBtn">Save Rounds</button>
-                        <button id="startGameBtn">Start Game</button>
-                        <button id="skipIntroBtn">Skip Intro Video</button>
-                        <button id="continueBtn" class="hidden">Continue</button>
-                        <button id="restartActionBtn" class="hidden">Restart Round</button>
+                    <div id="hostControls" class="host-lobby-options hidden">
+                        <div class="row">
+                            <input id="roundCountInput" type="number" min="1" max="20" value="3" style="width: 110px;">
+                            <button id="saveRoundsBtn">Save Rounds</button>
+                            <button id="startGameBtn">Start Game</button>
+                            <button id="continueBtn" class="hidden">Continue</button>
+                            <button id="restartActionBtn" class="hidden">Restart Round</button>
+                        </div>
+
+                        <label id="skipIntroOptionWrap" class="checkbox-row">
+                            <input id="skipIntroCheckbox" type="checkbox">
+                            <span>Skip intro video and go straight to glitch + ready state</span>
+                        </label>
                     </div>
                 </div>
             </div>
@@ -470,6 +468,15 @@
             <div id="agreementBox" class="card main-stage hidden">
                 <h3>Agreement / Transition</h3>
                 <div id="agreementStatus" class="result-box">Waiting...</div>
+
+                <div id="introWaitInlineBox" class="intro-inline-panel hidden">
+                    <div><strong>Intro Progress</strong></div>
+                    <div id="introWaitMessage" class="muted" style="margin-top: 8px;">
+                        Waiting for all teams to finish the intro.
+                    </div>
+                    <div id="introProgressCount" class="intro-progress">0 / 0 teams finished</div>
+                </div>
+
                 <div id="agreementRulesPanel" class="result-box" style="margin-top: 14px;">
                     <p><strong>Rules Summary</strong></p>
                     <p>One team is the impostor. Human teams see the word. The impostor does not.</p>
@@ -573,10 +580,10 @@
         let currentRestartMode = null;
         let introFinishedOnClient = false;
         let hasVotedThisRound = false;
+        let skipIntroChosen = false;
+        let hostControlsLockedAfterStart = false;
 
         const appShell = document.getElementById("appShell");
-        const playerBridge = document.getElementById("playerBridge");
-        const bridgeContent = document.getElementById("bridgeContent");
         const playerVideoLayer = document.getElementById("playerVideoLayer");
         const introVideo = document.getElementById("introVideo");
         const bgMusic = document.getElementById("bgMusic");
@@ -598,13 +605,17 @@
         const roundCountInput = document.getElementById("roundCountInput");
         const saveRoundsBtn = document.getElementById("saveRoundsBtn");
         const startGameBtn = document.getElementById("startGameBtn");
-        const skipIntroBtn = document.getElementById("skipIntroBtn");
         const continueBtn = document.getElementById("continueBtn");
         const restartActionBtn = document.getElementById("restartActionBtn");
+        const skipIntroCheckbox = document.getElementById("skipIntroCheckbox");
+        const skipIntroOptionWrap = document.getElementById("skipIntroOptionWrap");
 
         const agreementBox = document.getElementById("agreementBox");
         const agreementStatus = document.getElementById("agreementStatus");
         const agreementRulesPanel = document.getElementById("agreementRulesPanel");
+        const introWaitInlineBox = document.getElementById("introWaitInlineBox");
+        const introWaitMessage = document.getElementById("introWaitMessage");
+        const introProgressCount = document.getElementById("introProgressCount");
 
         const roleBox = document.getElementById("roleBox");
         const roleText = document.getElementById("roleText");
@@ -634,13 +645,11 @@
 
         function show(el) {
             el.classList.remove("hidden");
-            if (el === playerBridge) el.style.display = "grid";
             if (el === playerVideoLayer) el.style.display = "block";
         }
 
         function hide(el) {
             el.classList.add("hidden");
-            if (el === playerBridge) el.style.display = "none";
             if (el === playerVideoLayer) el.style.display = "none";
         }
 
@@ -759,65 +768,47 @@
             currentRestartMode = mode;
 
             hide(startGameBtn);
-            hide(skipIntroBtn);
             hide(restartActionBtn);
 
             if (!isHost) return;
 
             if (mode === "start") {
                 show(startGameBtn);
-                show(skipIntroBtn);
+                if (!hostControlsLockedAfterStart) {
+                    show(skipIntroOptionWrap);
+                } else {
+                    hide(skipIntroOptionWrap);
+                }
             } else if (mode === "restart_round") {
                 restartActionBtn.textContent = "Restart Round";
                 show(restartActionBtn);
+                hide(skipIntroOptionWrap);
             } else if (mode === "restart_game") {
                 restartActionBtn.textContent = "Restart Game";
                 show(restartActionBtn);
+                hide(skipIntroOptionWrap);
+            } else {
+                hide(skipIntroOptionWrap);
             }
+        }
+
+        function setIntroProgress(message, finishedCount, totalTeams) {
+            introWaitMessage.textContent = message || "Waiting for all teams to finish the intro.";
+            introProgressCount.textContent = `${finishedCount || 0} / ${totalTeams || 0} teams finished`;
         }
 
         function resetIntroClientFlagsForNewGame() {
             introFinishedOnClient = false;
+            hasVotedThisRound = false;
+            hostControlsLockedAfterStart = false;
+            if (isHost) {
+                skipIntroCheckbox.checked = false;
+                skipIntroChosen = false;
+                show(skipIntroOptionWrap);
+            }
             stopIntroVideo();
-            hide(playerBridge);
             hide(playerVideoLayer);
             glitchLayer.classList.remove("active");
-        }
-
-        function showPlayerBridgeWait() {
-            if (isHost) return;
-            bridgeContent.innerHTML = `
-                <h2>Waiting for Host</h2>
-                <p>Your team is connected. Stay on this page until the host starts the game.</p>
-            `;
-            show(playerBridge);
-        }
-
-        function showPlayerBridgeReady() {
-            if (isHost) return;
-            bridgeContent.innerHTML = `
-                <h2>Introduction Ready</h2>
-                <p>Press Ready when your team is prepared to watch the intro sequence.</p>
-                <div class="row" style="justify-content: center; margin-top: 16px;">
-                    <button id="introReadyBtn">Ready</button>
-                </div>
-            `;
-            show(playerBridge);
-
-            const introReadyBtn = document.getElementById("introReadyBtn");
-            introReadyBtn.onclick = () => {
-                introReadyBtn.disabled = true;
-                socket.emit("player_intro_ready", { code });
-            };
-        }
-
-        function showPostIntroWaitingBridge(message = "Waiting for all teams to finish the intro before Round 1 begins.") {
-            if (isHost) return;
-            bridgeContent.innerHTML = `
-                <h2>Stand By</h2>
-                <p>${message}</p>
-            `;
-            show(playerBridge);
         }
 
         function stopIntroVideo() {
@@ -843,23 +834,18 @@
             if (isHost) return;
             if (introFinishedOnClient) return;
 
-            hide(appShell);
-            hide(playerBridge);
             stopIntroVideo();
-
             await playGlitchOnly();
 
             introFinishedOnClient = true;
-            show(appShell);
-            showPostIntroWaitingBridge("Intro skipped. Waiting for host to continue.");
             socket.emit("player_skip_intro_finished", { code });
         }
 
         async function handleIntroVideoStart() {
             if (isHost) return;
 
-            hide(playerBridge);
-            hide(appShell);
+            hideMainBoxes();
+            setPhase("Introduction", "Watch the intro video. After it ends, your team will be marked finished.");
             show(playerVideoLayer);
 
             try {
@@ -870,38 +856,75 @@
             }
         }
 
-        introVideo.addEventListener("ended", async () => {
-            try {
-                setTimeout(() => {
-                    bgMusic.play().catch(() => {});
-                }, INTRO_AUDIO_DELAY_MS);
-            } catch (e) {}
+        function showInlineIntroWaiting(data = {}) {
+            currentState = "agreement";
+            hideMainBoxes();
+            show(agreementBox);
+            show(introWaitInlineBox);
+            show(agreementRulesPanel);
 
-            hide(playerVideoLayer);
-            await playGlitchOnly();
+            const msg = data.message || "Waiting for all teams to finish the intro.";
+            setPhase(
+                "Agreement / Transition",
+                isHost ? "Wait for all teams to finish the intro, then press Continue." : msg
+            );
+            agreementStatus.textContent = msg;
+            statusDiv.textContent = msg;
 
-            introFinishedOnClient = true;
-            show(appShell);
-            showPostIntroWaitingBridge();
-            socket.emit("player_intro_finished", { code });
-        });
+            setIntroProgress(
+                msg,
+                data.intro_finished_count || 0,
+                data.total_teams || 0
+            );
+
+            if (!isHost) {
+                roleText.innerHTML = "";
+            }
+        }
+
+        function showReadyPromptInMainUI() {
+            if (isHost) return;
+
+            currentState = "intro_wait";
+            hideMainBoxes();
+            show(agreementBox);
+            show(introWaitInlineBox);
+            show(agreementRulesPanel);
+
+            setPhase("Introduction", "Press Ready when your team is prepared to watch the intro sequence.");
+            agreementStatus.innerHTML = `
+                <div><strong>Introduction Ready</strong></div>
+                <p class="muted" style="margin-top: 8px;">Press Ready when your team is prepared to watch the intro sequence.</p>
+                <div class="row" style="margin-top: 12px;">
+                    <button id="introReadyBtn">Ready</button>
+                </div>
+            `;
+            introWaitMessage.textContent = "Teams will be marked finished after they complete the intro.";
+            introProgressCount.textContent = "--";
+
+            const introReadyBtn = document.getElementById("introReadyBtn");
+            introReadyBtn.onclick = () => {
+                introReadyBtn.disabled = true;
+                socket.emit("player_intro_ready", { code });
+            };
+        }
 
         saveRoundsBtn.onclick = () => {
             const rounds = parseInt(roundCountInput.value || "3", 10);
             socket.emit("set_round_count", { code, rounds });
         };
 
-        startGameBtn.onclick = () => {
-            socket.emit("start_game_request", {
-                code,
-                skip_intro: false
-            });
+        skipIntroCheckbox.onchange = () => {
+            skipIntroChosen = !!skipIntroCheckbox.checked;
         };
 
-        skipIntroBtn.onclick = () => {
+        startGameBtn.onclick = () => {
+            hostControlsLockedAfterStart = true;
+            hide(skipIntroOptionWrap);
+
             socket.emit("start_game_request", {
                 code,
-                skip_intro: true
+                skip_intro: !!skipIntroCheckbox.checked
             });
         };
 
@@ -994,12 +1017,15 @@
 
             if (currentState === "lobby") {
                 resetIntroClientFlagsForNewGame();
-                show(appShell);
                 hideMainBoxes();
                 setPhase("Lobby", isHost ? "Wait for teams to join, then start the game." : "Waiting for host...");
                 if (!isHost) {
-                    showPlayerBridgeWait();
+                    agreementStatus.textContent = "Waiting for host...";
                 }
+            }
+
+            if (currentState === "agreement") {
+                showInlineIntroWaiting(data);
             }
         });
 
@@ -1007,14 +1033,14 @@
             if (isHost) return;
             hideMainBoxes();
             setPhase("Lobby", "Waiting for host...");
-            showPlayerBridgeWait();
+            show(agreementBox);
+            agreementStatus.textContent = "Waiting for host...";
+            hide(introWaitInlineBox);
         });
 
         socket.on("player_ready_prompt", () => {
             if (isHost) return;
-            hideMainBoxes();
-            setPhase("Introduction", "The host started the intro sequence.");
-            showPlayerBridgeReady();
+            showReadyPromptInMainUI();
         });
 
         socket.on("player_intro_video", async () => {
@@ -1029,31 +1055,18 @@
 
         socket.on("agreement_phase", (data) => {
             currentState = "agreement";
-            show(appShell);
-            hide(playerVideoLayer);
-            hideMainBoxes();
-            show(agreementBox);
-
-            setPhase("Agreement / Transition", isHost
-                ? "Press Continue when everyone is ready."
-                : "Waiting for host to continue.");
-
-            agreementStatus.textContent = data.message || "Waiting...";
-            statusDiv.textContent = data.message || "Waiting...";
+            showInlineIntroWaiting({
+                message: data.message || "Waiting...",
+                intro_finished_count: null,
+                total_teams: null
+            });
             updateIdentityText();
-
-            if (!isHost) {
-                showPostIntroWaitingBridge(data.message || "Waiting...");
-            } else {
-                hide(playerBridge);
-            }
         });
 
         socket.on("round_started", (data) => {
             currentState = "role";
             hasVotedThisRound = false;
-            hide(playerBridge);
-            show(appShell);
+            hide(playerVideoLayer);
             hideMainBoxes();
             show(roleBox);
 
@@ -1269,6 +1282,20 @@
             `).join("");
 
             statusDiv.textContent = "Game over.";
+        });
+
+        introVideo.addEventListener("ended", async () => {
+            try {
+                setTimeout(() => {
+                    bgMusic.play().catch(() => {});
+                }, INTRO_AUDIO_DELAY_MS);
+            } catch (e) {}
+
+            hide(playerVideoLayer);
+            await playGlitchOnly();
+
+            introFinishedOnClient = true;
+            socket.emit("player_intro_finished", { code });
         });
 
         function submitVote(votedTeam) {
