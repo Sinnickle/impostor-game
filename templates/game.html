@@ -85,98 +85,88 @@
         }
 
         .bulb-card {
-            position: relative;
-            isolation: isolate;
-        }
-
-        .bulb-card::before {
-            content: "";
-            position: absolute;
-            inset: -3px;
-            border-radius: 28px;
-            pointer-events: none;
-            box-shadow:
-                inset 0 0 0 2px rgba(255, 219, 126, 0.52),
-                0 0 18px rgba(255, 211, 92, 0.12);
-        }
-
-        .bulb-card::after {
-    content: "";
-    position: absolute;
-    inset: -8px;
-    border-radius: 32px;
-    pointer-events: none;
-    opacity: 1;
-    z-index: 3;
-    background:
-        radial-gradient(circle at 7% 0%, var(--bulb-core) 0 7px, var(--bulb-ring) 7px 12px, var(--bulb-edge) 12px 13px, transparent 13px),
-        radial-gradient(circle at 18% 0%, rgba(255, 230, 150, 0.55) 0 7px, rgba(255, 186, 70, 0.50) 7px 12px, rgba(126, 73, 17, 0.72) 12px 13px, transparent 13px),
-        radial-gradient(circle at 29% 0%, var(--bulb-core) 0 7px, var(--bulb-ring) 7px 12px, var(--bulb-edge) 12px 13px, transparent 13px),
-        radial-gradient(circle at 40% 0%, rgba(255, 230, 150, 0.55) 0 7px, rgba(255, 186, 70, 0.50) 7px 12px, rgba(126, 73, 17, 0.72) 12px 13px, transparent 13px),
-        radial-gradient(circle at 51% 0%, var(--bulb-core) 0 7px, var(--bulb-ring) 7px 12px, var(--bulb-edge) 12px 13px, transparent 13px),
-        radial-gradient(circle at 62% 0%, rgba(255, 230, 150, 0.55) 0 7px, rgba(255, 186, 70, 0.50) 7px 12px, rgba(126, 73, 17, 0.72) 12px 13px, transparent 13px),
-        radial-gradient(circle at 73% 0%, var(--bulb-core) 0 7px, var(--bulb-ring) 7px 12px, var(--bulb-edge) 12px 13px, transparent 13px),
-        radial-gradient(circle at 84% 0%, rgba(255, 230, 150, 0.55) 0 7px, rgba(255, 186, 70, 0.50) 7px 12px, rgba(126, 73, 17, 0.72) 12px 13px, transparent 13px),
-        radial-gradient(circle at 95% 0%, var(--bulb-core) 0 7px, var(--bulb-ring) 7px 12px, var(--bulb-edge) 12px 13px, transparent 13px),
-
-        radial-gradient(circle at 0% 10%, rgba(255, 230, 150, 0.55) 0 7px, rgba(255, 186, 70, 0.50) 7px 12px, rgba(126, 73, 17, 0.72) 12px 13px, transparent 13px),
-        radial-gradient(circle at 0% 24%, var(--bulb-core) 0 7px, var(--bulb-ring) 7px 12px, var(--bulb-edge) 12px 13px, transparent 13px),
-        radial-gradient(circle at 0% 38%, rgba(255, 230, 150, 0.55) 0 7px, rgba(255, 186, 70, 0.50) 7px 12px, rgba(126, 73, 17, 0.72) 12px 13px, transparent 13px),
-        radial-gradient(circle at 0% 52%, var(--bulb-core) 0 7px, var(--bulb-ring) 7px 12px, var(--bulb-edge) 12px 13px, transparent 13px),
-        radial-gradient(circle at 0% 66%, rgba(255, 230, 150, 0.55) 0 7px, rgba(255, 186, 70, 0.50) 7px 12px, rgba(126, 73, 17, 0.72) 12px 13px, transparent 13px),
-        radial-gradient(circle at 0% 80%, var(--bulb-core) 0 7px, var(--bulb-ring) 7px 12px, var(--bulb-edge) 12px 13px, transparent 13px),
-        radial-gradient(circle at 0% 94%, rgba(255, 230, 150, 0.55) 0 7px, rgba(255, 186, 70, 0.50) 7px 12px, rgba(126, 73, 17, 0.72) 12px 13px, transparent 13px),
-
-        radial-gradient(circle at 100% 10%, var(--bulb-core) 0 7px, var(--bulb-ring) 7px 12px, var(--bulb-edge) 12px 13px, transparent 13px),
-        radial-gradient(circle at 100% 24%, rgba(255, 230, 150, 0.55) 0 7px, rgba(255, 186, 70, 0.50) 7px 12px, rgba(126, 73, 17, 0.72) 12px 13px, transparent 13px),
-        radial-gradient(circle at 100% 38%, var(--bulb-core) 0 7px, var(--bulb-ring) 7px 12px, var(--bulb-edge) 12px 13px, transparent 13px),
-        radial-gradient(circle at 100% 52%, rgba(255, 230, 150, 0.55) 0 7px, rgba(255, 186, 70, 0.50) 7px 12px, rgba(126, 73, 17, 0.72) 12px 13px, transparent 13px),
-        radial-gradient(circle at 100% 66%, var(--bulb-core) 0 7px, var(--bulb-ring) 7px 12px, var(--bulb-edge) 12px 13px, transparent 13px),
-        radial-gradient(circle at 100% 80%, rgba(255, 230, 150, 0.55) 0 7px, rgba(255, 186, 70, 0.50) 7px 12px, rgba(126, 73, 17, 0.72) 12px 13px, transparent 13px),
-        radial-gradient(circle at 100% 94%, var(--bulb-core) 0 7px, var(--bulb-ring) 7px 12px, var(--bulb-edge) 12px 13px, transparent 13px),
-
-        radial-gradient(circle at 7% 100%, rgba(255, 230, 150, 0.55) 0 7px, rgba(255, 186, 70, 0.50) 7px 12px, rgba(126, 73, 17, 0.72) 12px 13px, transparent 13px),
-        radial-gradient(circle at 18% 100%, var(--bulb-core) 0 7px, var(--bulb-ring) 7px 12px, var(--bulb-edge) 12px 13px, transparent 13px),
-        radial-gradient(circle at 29% 100%, rgba(255, 230, 150, 0.55) 0 7px, rgba(255, 186, 70, 0.50) 7px 12px, rgba(126, 73, 17, 0.72) 12px 13px, transparent 13px),
-        radial-gradient(circle at 40% 100%, var(--bulb-core) 0 7px, var(--bulb-ring) 7px 12px, var(--bulb-edge) 12px 13px, transparent 13px),
-        radial-gradient(circle at 51% 100%, rgba(255, 230, 150, 0.55) 0 7px, rgba(255, 186, 70, 0.50) 7px 12px, rgba(126, 73, 17, 0.72) 12px 13px, transparent 13px),
-        radial-gradient(circle at 62% 100%, var(--bulb-core) 0 7px, var(--bulb-ring) 7px 12px, var(--bulb-edge) 12px 13px, transparent 13px),
-        radial-gradient(circle at 73% 100%, rgba(255, 230, 150, 0.55) 0 7px, rgba(255, 186, 70, 0.50) 7px 12px, rgba(126, 73, 17, 0.72) 12px 13px, transparent 13px),
-        radial-gradient(circle at 84% 100%, var(--bulb-core) 0 7px, var(--bulb-ring) 7px 12px, var(--bulb-edge) 12px 13px, transparent 13px),
-        radial-gradient(circle at 95% 100%, rgba(255, 230, 150, 0.55) 0 7px, rgba(255, 186, 70, 0.50) 7px 12px, rgba(126, 73, 17, 0.72) 12px 13px, transparent 13px);
-    filter:
-        drop-shadow(0 0 5px var(--bulb-glow))
-        drop-shadow(0 0 14px var(--bulb-glow))
-        drop-shadow(0 0 26px var(--bulb-glow-pink));
-    animation: casinoBulbsChase 1.05s steps(1, end) infinite;
+    position: relative;
+    isolation: isolate;
+    --bulb-size: 14px;
+    --bulb-gap-x: 34px;
+    --bulb-gap-y: 34px;
 }
 
-        @keyframes casinoBulbsChase {
-    0%, 24% {
-        opacity: 1;
+.bulb-card::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 28px;
+    pointer-events: none;
+    z-index: 1;
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 219, 126, 0.52),
+        0 0 18px rgba(255, 211, 92, 0.12);
+}
+
+.bulb-card::after {
+    content: "";
+    position: absolute;
+    inset: -11px;
+    border-radius: 34px;
+    pointer-events: none;
+    z-index: 3;
+    opacity: 1;
+
+    background-image:
+        radial-gradient(circle, rgba(255,248,210,0.98) 0 38%, rgba(255,205,92,0.96) 39% 68%, rgba(126,73,17,0.92) 69% 78%, transparent 79%),
+        radial-gradient(circle, rgba(255,248,210,0.40) 0 38%, rgba(255,205,92,0.34) 39% 68%, rgba(126,73,17,0.45) 69% 78%, transparent 79%),
+        radial-gradient(circle, rgba(255,248,210,0.98) 0 38%, rgba(255,205,92,0.96) 39% 68%, rgba(126,73,17,0.92) 69% 78%, transparent 79%),
+        radial-gradient(circle, rgba(255,248,210,0.40) 0 38%, rgba(255,205,92,0.34) 39% 68%, rgba(126,73,17,0.45) 69% 78%, transparent 79%);
+
+    background-size:
+        var(--bulb-gap-x) var(--bulb-size),
+        var(--bulb-gap-x) var(--bulb-size),
+        var(--bulb-size) var(--bulb-gap-y),
+        var(--bulb-size) var(--bulb-gap-y);
+
+    background-repeat:
+        repeat-x,
+        repeat-x,
+        repeat-y,
+        repeat-y;
+
+    background-position:
+        left 12px top 0px,
+        left calc(12px + (var(--bulb-gap-x) / 2)) bottom 0px,
+        left 0px top 12px,
+        right 0px top calc(12px + (var(--bulb-gap-y) / 2));
+
+    filter:
+        drop-shadow(0 0 4px rgba(255, 211, 92, 0.42))
+        drop-shadow(0 0 10px rgba(255, 211, 92, 0.26));
+
+    animation: casinoBulbsAlternating 1.8s steps(1, end) infinite;
+}
+
+@keyframes casinoBulbsAlternating {
+    0%, 49.999% {
+        background-image:
+            radial-gradient(circle, rgba(255,248,210,1) 0 38%, rgba(255,205,92,1) 39% 68%, rgba(126,73,17,0.94) 69% 78%, transparent 79%),
+            radial-gradient(circle, rgba(255,248,210,0.24) 0 38%, rgba(255,205,92,0.20) 39% 68%, rgba(126,73,17,0.36) 69% 78%, transparent 79%),
+            radial-gradient(circle, rgba(255,248,210,1) 0 38%, rgba(255,205,92,1) 39% 68%, rgba(126,73,17,0.94) 69% 78%, transparent 79%),
+            radial-gradient(circle, rgba(255,248,210,0.24) 0 38%, rgba(255,205,92,0.20) 39% 68%, rgba(126,73,17,0.36) 69% 78%, transparent 79%);
         filter:
-            drop-shadow(0 0 6px var(--bulb-glow))
-            drop-shadow(0 0 16px var(--bulb-glow))
-            drop-shadow(0 0 30px var(--bulb-glow-pink));
+            drop-shadow(0 0 6px rgba(255, 211, 92, 0.75))
+            drop-shadow(0 0 16px rgba(255, 211, 92, 0.46))
+            drop-shadow(0 0 24px rgba(255, 78, 147, 0.18));
     }
-    25%, 49% {
-        opacity: 0.72;
+
+    50%, 100% {
+        background-image:
+            radial-gradient(circle, rgba(255,248,210,0.24) 0 38%, rgba(255,205,92,0.20) 39% 68%, rgba(126,73,17,0.36) 69% 78%, transparent 79%),
+            radial-gradient(circle, rgba(255,248,210,1) 0 38%, rgba(255,205,92,1) 39% 68%, rgba(126,73,17,0.94) 69% 78%, transparent 79%),
+            radial-gradient(circle, rgba(255,248,210,0.24) 0 38%, rgba(255,205,92,0.20) 39% 68%, rgba(126,73,17,0.36) 69% 78%, transparent 79%),
+            radial-gradient(circle, rgba(255,248,210,1) 0 38%, rgba(255,205,92,1) 39% 68%, rgba(126,73,17,0.94) 69% 78%, transparent 79%);
         filter:
-            drop-shadow(0 0 2px rgba(255, 211, 92, 0.18))
-            drop-shadow(0 0 7px rgba(255, 211, 92, 0.12));
-    }
-    50%, 74% {
-        opacity: 1;
-        filter:
-            drop-shadow(0 0 7px rgba(255, 230, 130, 0.95))
-            drop-shadow(0 0 18px rgba(255, 211, 92, 0.88))
-            drop-shadow(0 0 34px rgba(255, 78, 147, 0.34));
-    }
-    75%, 100% {
-        opacity: 0.78;
-        filter:
-            drop-shadow(0 0 2px rgba(255, 211, 92, 0.16))
-            drop-shadow(0 0 6px rgba(255, 211, 92, 0.10));
+            drop-shadow(0 0 6px rgba(255, 211, 92, 0.75))
+            drop-shadow(0 0 16px rgba(255, 211, 92, 0.46))
+            drop-shadow(0 0 24px rgba(255, 78, 147, 0.18));
     }
 }
 
