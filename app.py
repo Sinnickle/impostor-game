@@ -1008,22 +1008,42 @@ def submit_vote(data):
 
 
 @socketio.on("disconnect")
-def on_disconnect():
+def handle_disconnect():
     sid = request.sid
 
-    for code, game in games.items():
-        identity = game["players_by_sid"].pop(sid, None)
+    for code, game in list(games.items()):
+        # HOST DISCONNECT
+        if sid == game.get("host_sid"):
+            # Notify all players
+            socketio.emit("host_left", {}, room=code)
 
-        if identity == "HOST":
-            if game["host_sid"] == sid:
-                game["host_connected"] = False
-            continue
+            # Delete game completely
+            del games[code]
+            return
 
-        if identity and identity != "HOST":
-            if game["team_sids"].get(identity) == sid:
-                game["team_sids"].pop(identity, None)
+        # PLAYER DISCONNECT
+        if sid in game["players_by_sid"]:
+            team = game["players_by_sid"].pop(sid, None)
 
-        emit_roster_update(code)
+            if team and team in game["teams"]:
+                game["teams"].remove(team)
+                game["team_sids"].pop(team, None)
+                game["scores"].pop(team, None)
+
+                game["intro_ready"].discard(team)
+                game["intro_finished"].discard(team)
+                game["agreement_ready"].discard(team)
+                game["additional_round_voters"].discard(team)
+
+                # Remove their vote/response if exists
+                game["votes"].pop(team, None)
+                game["responses"].pop(team, None)
+
+                emit_status(code, f"{team} left the game.")
+
+                emit_roster_update(code)
+
+            return
 
 
 if __name__ == "__main__":
