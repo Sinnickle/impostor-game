@@ -396,7 +396,7 @@ def calculate_round_result(code):
         result_text = "The impostor was caught. All human teams gain +2 points."
     else:
         game["scores"][game["impostor"]] += 5
-        result_text = "The impostor survived. The impostor team gains +4 points."
+        result_text = "The impostor survived. The impostor team gains +5 points."
 
     game["state"] = "paused_after_result"
     emit_roster_update(code)
@@ -895,6 +895,22 @@ def restart_game(data):
 
     reset_to_round_one_new_game(code)
     emit_status(code, "Game restarted. Starting again from Round 1.")
+
+
+@socketio.on("restart_action")
+def restart_action(data):
+    mode = str(data.get("mode", "")).strip()
+    code = str(data.get("code", "")).strip().upper()
+
+    if mode == "restart_round":
+        restart_round({"code": code})
+        return
+
+    if mode == "restart_game":
+        restart_game({"code": code})
+        return
+
+    emit("error", "Invalid restart mode.")
 
 
 @socketio.on("submit_phrase")

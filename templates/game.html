@@ -1,2751 +1,1513 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Impostor Game Room</title>
 
-
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
-
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-
-
     <style>
-
         * { box-sizing: border-box; }
 
-
-
         :root {
-
             --gold: #f6d365;
-
             --gold-strong: #ffcf5c;
-
             --gold-deep: #b7791f;
-
             --red-velvet: #7c1022;
-
             --red-soft: #b11f3b;
-
             --casino-black: #09060a;
-
             --panel-dark: rgba(20, 8, 12, 0.86);
-
             --panel-mid: rgba(39, 15, 20, 0.84);
-
             --line: rgba(255, 222, 130, 0.34);
-
             --white-soft: rgba(255,255,255,0.82);
-
             --danger: #ff4d5e;
-
             --shadow-deep: 0 18px 40px rgba(0,0,0,0.45);
 
-
-
             --bulb-core: rgba(255, 244, 196, 0.98);
-
             --bulb-ring: rgba(255, 197, 79, 0.95);
-
             --bulb-edge: rgba(126, 73, 17, 0.95);
-
             --bulb-glow: rgba(255, 211, 92, 0.80);
-
             --bulb-glow-pink: rgba(255, 78, 147, 0.32);
-
         }
-
-
 
         html, body {
-
             margin: 0;
-
             min-height: 100%;
-
             overflow-x: hidden;
-
             background: #12070b;
-
             color: #fff8ec;
-
             font-family: "Inter", Arial, sans-serif;
-
         }
-
-
 
         body {
-
             position: relative;
-
             background-image: url("/static/casino-bg.png");
-
             background-size: cover;
-
             background-position: center top;
-
             background-repeat: no-repeat;
-
             background-attachment: fixed;
-
         }
-
-
 
         .hidden { display: none !important; }
 
-
-
         .app-shell {
-
             position: relative;
-
             z-index: 1;
-
             display: grid;
-
             grid-template-columns: 280px minmax(0, 1fr) 300px;
-
             gap: 18px;
-
             padding: 18px;
-
             min-height: 100vh;
-
         }
-
-
 
         .side-panel, .main-panel {
-
             display: flex;
-
             flex-direction: column;
-
             gap: 16px;
-
             min-height: 0;
-
         }
-
-
 
         .card {
-
             position: relative;
-
             overflow: visible;
-
             background: linear-gradient(180deg, rgba(70, 19, 28, 0.92), rgba(24, 9, 13, 0.92));
-
             border: 1px solid var(--line);
-
             border-radius: 24px;
-
             padding: 18px;
-
             box-shadow:
-
                 var(--shadow-deep),
-
                 inset 0 1px 0 rgba(255,255,255,0.06),
-
                 0 0 0 1px rgba(255, 214, 120, 0.08);
-
             backdrop-filter: blur(8px);
-
         }
-
-
 
         .bulb-card {
-
             position: relative;
-
             isolation: isolate;
-
         }
-
-
 
         .bulb-card::before {
-
             content: "";
-
             position: absolute;
-
             inset: -3px;
-
             border-radius: 28px;
-
             pointer-events: none;
-
             box-shadow:
-
                 inset 0 0 0 2px rgba(255, 219, 126, 0.52),
-
                 0 0 18px rgba(255, 211, 92, 0.12);
-
         }
-
-
 
         .bulb-card::after {
-
             content: "";
-
             position: absolute;
-
             inset: -10px;
-
             border-radius: 32px;
-
             pointer-events: none;
-
             opacity: 1;
-
             background:
-
                 radial-gradient(circle at 7% 0%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 18% 0%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 29% 0%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 40% 0%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 51% 0%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 62% 0%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 73% 0%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 84% 0%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 95% 0%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
 
-
-
                 radial-gradient(circle at 0% 10%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 0% 24%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 0% 38%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 0% 52%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 0% 66%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 0% 80%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 0% 94%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
 
-
-
                 radial-gradient(circle at 100% 10%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 100% 24%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 100% 38%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 100% 52%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 100% 66%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 100% 80%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 100% 94%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
 
-
-
                 radial-gradient(circle at 7% 100%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 18% 100%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 29% 100%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 40% 100%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 51% 100%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 62% 100%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 73% 100%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 84% 100%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-
                 radial-gradient(circle at 95% 100%, var(--bulb-core) 0 5px, var(--bulb-ring) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px);
-
             filter:
-
                 drop-shadow(0 0 3px var(--bulb-glow))
-
                 drop-shadow(0 0 10px var(--bulb-glow))
-
                 drop-shadow(0 0 18px var(--bulb-glow-pink));
-
             animation: casinoBulbsPulse 1.2s steps(1, end) infinite;
-
         }
-
-
 
         @keyframes casinoBulbsPulse {
-
             0%, 49% {
-
                 opacity: 1;
-
                 filter:
-
                     drop-shadow(0 0 3px var(--bulb-glow))
-
                     drop-shadow(0 0 10px var(--bulb-glow))
-
                     drop-shadow(0 0 18px var(--bulb-glow-pink));
-
             }
-
             50%, 100% {
-
                 opacity: 0.5;
-
                 filter:
-
                     drop-shadow(0 0 1px rgba(255, 211, 92, 0.16))
-
                     drop-shadow(0 0 4px rgba(255, 211, 92, 0.10));
-
             }
-
         }
-
-
 
         h1, h2, h3 {
-
             margin-top: 0;
-
             font-family: "Cinzel", serif;
-
             letter-spacing: 0.5px;
-
         }
-
-
 
         h3 {
-
             margin-bottom: 12px;
-
             font-size: 1.18rem;
-
             color: #ffeab4;
-
         }
-
-
 
         p { line-height: 1.45; }
 
-
-
         .muted { color: var(--white-soft); }
-
         .small-note { font-size: 0.94rem; }
 
-
-
         .row {
-
             display: flex;
-
             gap: 10px;
-
             flex-wrap: wrap;
-
             align-items: center;
-
         }
-
-
 
         button, input, textarea { font: inherit; }
 
-
-
         button {
-
             position: relative;
-
             border: none;
-
             border-radius: 14px;
-
             padding: 12px 18px;
-
             font-weight: 800;
-
             cursor: pointer;
-
             color: #211005;
-
             background: linear-gradient(180deg, #ffe497 0%, #ffcf5c 52%, #dc9f32 100%);
-
             box-shadow:
-
                 0 10px 20px rgba(0,0,0,0.28),
-
                 0 0 16px rgba(255, 210, 94, 0.16),
-
                 inset 0 1px 0 rgba(255,255,255,0.55);
-
             transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
-
         }
-
-
 
         button:hover {
-
             transform: translateY(-1px);
-
             filter: brightness(1.03);
-
         }
-
-
 
         button:disabled {
-
             opacity: 0.55;
-
             cursor: not-allowed;
-
             transform: none;
-
             filter: none;
-
         }
-
-
 
         input, textarea {
-
             width: 100%;
-
             border: 1px solid rgba(255, 222, 130, 0.20);
-
             border-radius: 14px;
-
             padding: 12px;
-
             background: rgba(255,255,255,0.08);
-
             color: #fffaf1;
-
             outline: none;
-
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
-
         }
-
-
 
         input::placeholder,
-
         textarea::placeholder {
-
             color: rgba(255,255,255,0.55);
-
         }
-
-
 
         textarea {
-
             resize: vertical;
-
             min-height: 104px;
-
         }
-
-
 
         .pill,
-
         .status-pill,
-
         .score-badge {
-
             display: inline-flex;
-
             align-items: center;
-
             justify-content: center;
-
             border-radius: 999px;
-
             font-weight: 800;
-
         }
-
-
 
         .pill {
-
             padding: 6px 10px;
-
             background: rgba(255,255,255,0.08);
-
             border: 1px solid rgba(255,255,255,0.14);
-
             font-size: 0.9rem;
-
             color: var(--white-soft);
-
         }
-
-
 
         .status-pill {
-
             padding: 6px 12px;
-
             background: rgba(255, 210, 94, 0.12);
-
             border: 1px solid rgba(255, 210, 94, 0.28);
-
             color: #ffe8ac;
-
             font-size: 0.85rem;
-
         }
-
-
 
         .score-badge {
-
             min-width: 44px;
-
             padding: 6px 10px;
-
             background: rgba(255, 210, 94, 0.16);
-
             color: #ffe8ac;
-
             border: 1px solid rgba(255, 210, 94, 0.20);
-
         }
-
-
 
         .result-box, .word-box {
-
             background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.05));
-
             border: 1px solid rgba(255,255,255,0.12);
-
             border-radius: 16px;
-
             padding: 14px;
-
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
-
         }
-
-
 
         .word-box {
-
             margin-top: 12px;
-
             background: linear-gradient(180deg, rgba(255, 214, 110, 0.18), rgba(184, 61, 90, 0.10));
-
             border-color: rgba(255, 214, 110, 0.24);
-
         }
-
-
 
         .big-role {
-
             font-family: "Cinzel", serif;
-
             font-size: 2.25rem;
-
             font-weight: 900;
-
             letter-spacing: 1px;
-
             margin-bottom: 8px;
-
             text-shadow: 0 0 16px rgba(255, 210, 94, 0.18);
-
         }
-
-
 
         .impostor-role {
-
             color: #ff4d5e;
-
             text-shadow: 0 0 18px rgba(255, 77, 94, 0.32);
-
         }
-
-
 
         .timer {
-
             font-size: 1.05rem;
-
             font-weight: 800;
-
             color: #ffe29a;
-
         }
-
-
 
         .clean-list {
-
             list-style: none;
-
             padding: 0;
-
             margin: 0;
-
         }
-
-
 
         .clean-list li {
-
             margin-bottom: 10px;
-
             padding: 12px 12px;
-
             border-radius: 14px;
-
             background: rgba(255,255,255,0.055);
-
             border: 1px solid rgba(255,255,255,0.10);
-
         }
-
-
 
         .team-card-row {
-
             display: flex;
-
             justify-content: space-between;
-
             gap: 10px;
-
             align-items: center;
-
         }
-
-
 
         .responses-header-row {
-
             display: flex;
-
             justify-content: space-between;
-
             align-items: center;
-
             gap: 12px;
-
             flex-wrap: wrap;
-
         }
-
-
 
         #responsesCenterBox {
-
             border: 1px solid rgba(255, 222, 130, 0.22);
-
             background: linear-gradient(135deg, rgba(255, 210, 94, 0.12), rgba(255, 71, 133, 0.08)), rgba(255,255,255,0.06);
-
         }
-
-
 
         .responses-grid-list {
-
             display: grid;
-
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-
             gap: 12px;
-
             margin-top: 14px;
-
         }
-
-
 
         .responses-grid-list li {
-
             margin-bottom: 0;
-
             min-height: 82px;
-
             display: flex;
-
             align-items: center;
-
         }
-
-
 
         .response-row {
-
             width: 100%;
-
             display: flex;
-
             flex-direction: column;
-
             align-items: flex-start;
-
             gap: 8px;
-
         }
-
-
 
         .response-team {
-
             font-size: 1rem;
-
             color: #ffe39d;
-
             font-weight: 800;
-
         }
-
-
 
         .response-phrase {
-
             font-size: 1.15rem;
-
             font-weight: 800;
-
             color: white;
-
             word-break: break-word;
-
         }
-
-
 
         .vote-button-grid {
-
             display: grid;
-
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-
             gap: 10px;
-
             margin-top: 14px;
-
         }
-
-
 
         .champion-banner {
-
             padding: 16px;
-
             border-radius: 18px;
-
             margin-bottom: 14px;
-
             background: linear-gradient(135deg, rgba(255, 212, 98, 0.25), rgba(255, 113, 113, 0.12)), rgba(255,255,255,0.08);
-
             border: 1px solid rgba(255, 212, 98, 0.26);
-
             font-size: 1.1rem;
-
             font-weight: 800;
-
         }
-
-
 
         .leaderboard-item {
-
             display: flex;
-
             justify-content: space-between;
-
             gap: 10px;
-
             padding: 12px 14px;
-
             border-radius: 14px;
-
             margin-bottom: 10px;
-
             background: rgba(255,255,255,0.06);
-
             border: 1px solid rgba(255,255,255,0.10);
-
         }
-
-
 
         .place-badge {
-
             font-weight: 900;
-
             color: #ffe49f;
-
         }
-
-
 
         .host-lobby-options {
-
             display: flex;
-
             flex-direction: column;
-
             gap: 10px;
-
             align-items: flex-start;
-
         }
-
-
 
         .checkbox-row {
-
             display: flex;
-
             align-items: center;
-
             gap: 10px;
-
             color: white;
-
             font-size: 0.96rem;
-
         }
-
-
 
         .checkbox-row input[type="checkbox"] {
-
             width: 18px;
-
             height: 18px;
-
             margin: 0;
-
             accent-color: #ffcf5c;
-
         }
-
-
 
         .intro-inline-panel {
-
             margin-top: 14px;
-
             border: 1px solid rgba(255,255,255,0.14);
-
             background: rgba(255,255,255,0.05);
-
             border-radius: 16px;
-
             padding: 14px;
-
         }
-
-
 
         .intro-progress {
-
             margin-top: 12px;
-
             font-weight: 800;
-
             color: #ffe39d;
-
         }
-
-
 
         .hero h1 {
-
             margin: 0 0 8px 0;
-
             font-size: 2rem;
-
             color: #fff2c9;
-
             text-shadow: 0 2px 0 #5c260d, 0 0 14px rgba(255, 214, 110, 0.28);
-
         }
-
-
 
         .hero p {
-
             margin: 0;
-
             color: var(--white-soft);
-
         }
-
-
 
         .main-stage {
-
             min-height: 180px;
-
         }
-
-
 
         #playerVideoLayer,
-
         #glitchLayer,
-
         #playerWhiteScreen {
-
             position: fixed;
-
             inset: 0;
-
         }
-
-
 
         #playerVideoLayer {
-
             display: none;
-
             background: black;
-
             z-index: 90;
-
         }
-
-
 
         #introVideo {
-
             width: 100%;
-
             height: 100%;
-
             object-fit: cover;
-
         }
-
-
 
         #glitchLayer {
-
             pointer-events: none;
-
             opacity: 0;
-
             z-index: 95;
-
             mix-blend-mode: screen;
-
             background:
-
                 repeating-linear-gradient(
-
                     0deg,
-
                     rgba(255,255,255,0.14) 0px,
-
                     rgba(255,255,255,0.14) 1px,
-
                     rgba(0,0,0,0.0) 2px,
-
                     rgba(0,0,0,0.0) 4px
-
                 ),
-
                 repeating-linear-gradient(
-
                     90deg,
-
                     rgba(255, 0, 102, 0.08) 0px,
-
                     rgba(255, 0, 102, 0.08) 3px,
-
                     rgba(0, 255, 255, 0.08) 3px,
-
                     rgba(0, 255, 255, 0.08) 6px,
-
                     rgba(255, 230, 0, 0.08) 6px,
-
                     rgba(255, 230, 0, 0.08) 9px,
-
                     rgba(0,0,0,0.0) 9px,
-
                     rgba(0,0,0,0.0) 13px
-
                 ),
-
                 radial-gradient(circle at 20% 20%, rgba(255,0,128,0.20), transparent 20%),
-
                 radial-gradient(circle at 80% 30%, rgba(0,255,255,0.20), transparent 20%),
-
                 radial-gradient(circle at 40% 75%, rgba(255,230,0,0.16), transparent 16%),
-
                 linear-gradient(135deg, rgba(255,0,128,0.12), rgba(0,255,255,0.10), rgba(255,255,255,0.08));
-
             transition: opacity 0.05s linear;
-
         }
-
-
 
         #glitchLayer.active {
-
             opacity: 1;
-
             animation: fullScreenCasinoGlitch 2s steps(2, end) forwards;
-
         }
-
-
 
         #playerWhiteScreen {
-
             z-index: 100;
-
             display: none;
-
             align-items: center;
-
             justify-content: center;
-
             text-align: center;
-
             padding: 24px;
-
             background: white;
-
         }
-
-
 
         .white-screen-inner {
-
             width: min(900px, 100%);
-
             color: black;
-
         }
-
-
 
         .white-screen-title {
-
             font-family: "Inter", Arial, sans-serif;
-
             font-size: clamp(2.4rem, 5vw, 4.4rem);
-
             font-weight: 900;
-
             margin: 0 0 10px 0;
-
             line-height: 1.03;
-
             color: black;
-
         }
-
-
 
         .white-screen-name {
-
             font-size: clamp(1.4rem, 3vw, 2.4rem);
-
             font-weight: 900;
-
             margin: 0 0 22px 0;
-
             color: black;
-
         }
-
-
 
         .white-screen-subtext {
-
             font-size: 1.08rem;
-
             font-weight: 700;
-
             color: #222;
-
             margin: 0 auto;
-
             max-width: 620px;
-
             line-height: 1.55;
-
         }
-
-
 
         .white-screen-button-wrap {
-
             margin-top: 30px;
-
         }
-
-
 
         .white-screen-big-button {
-
             font-family: "Cinzel", serif;
-
             font-size: clamp(1.2rem, 2.5vw, 1.8rem);
-
             font-weight: 900;
-
             padding: 20px 42px;
-
             border-radius: 18px;
-
             min-width: 220px;
-
         }
 
-
-
+        /* PLAYER ONLY UI FIT FIXES */
         .player-mode {
-    overflow-x: hidden;
-    overflow-y: auto;
-    min-height: 100vh;
-    height: auto;
-    background-size: cover;
-    background-position: center top;
-    background-repeat: no-repeat;
-    background-color: #12070b;
-}
+            overflow: hidden;
+            height: 100vh;
+            background-size: cover;
+            background-position: center top;
+            background-repeat: no-repeat;
+            background-color: #12070b;
+        }
 
-.player-mode body {
-    overflow-y: auto;
-}
+        .player-mode body {
+            overflow: hidden;
+        }
 
         .player-mode .app-shell {
-    width: min(1380px, calc(100vw - 24px));
-    min-height: 100vh;
-    height: auto;
-    margin: 0 auto;
-    padding:
-        clamp(120px, 17vh, 180px)
-        clamp(12px, 1.6vw, 22px)
-        clamp(16px, 2vh, 24px);
-    display: grid;
-    grid-template-columns: minmax(220px, 270px) minmax(0, 1fr) minmax(220px, 270px);
-    grid-template-areas: "left main right";
-    align-items: start;
-    gap: 14px;
-    overflow: visible;
-}
-
-
+            width: min(1380px, calc(100vw - 20px));
+            height: 100vh;
+            margin: 0 auto;
+            padding:
+                clamp(88px, 11vh, 122px)
+                clamp(10px, 1vw, 16px)
+                clamp(10px, 1.2vh, 16px);
+            display: grid;
+            grid-template-columns: minmax(200px, 240px) minmax(0, 1fr) minmax(200px, 240px);
+            grid-template-areas: "left main right";
+            align-items: stretch;
+            gap: 12px;
+            overflow: hidden;
+        }
 
         .player-mode .side-panel.left-player-panel {
-
             display: flex;
-
             grid-area: left;
-
-            justify-content: center;
-
+            justify-content: flex-start;
+            min-height: 0;
+            overflow: hidden;
+            gap: 12px;
         }
-
-
 
         .player-mode .main-panel {
-
             grid-area: main;
-
-            justify-content: center;
-
+            justify-content: flex-start;
             min-height: 0;
-
             overflow: hidden;
-
+            gap: 12px;
         }
-
-
 
         .player-mode .right-player-panel {
-
             grid-area: right;
-
-            justify-content: center;
-
+            justify-content: flex-start;
             min-height: 0;
-
             overflow: hidden;
-
+            gap: 12px;
         }
-
-
 
         .player-mode .main-panel .card:first-child {
-
             display: none;
-
         }
-
-
 
         .player-mode .scoreboard-host-only,
-
         .player-mode .hero-host-only,
-
         .player-mode .host-only {
-
             display: none !important;
-
         }
-
-
 
         .player-mode .main-panel > .card,
-
         .player-mode .right-player-panel > .card,
-
         .player-mode .left-player-panel > .card {
-
             background: linear-gradient(180deg, rgba(55, 15, 22, 0.88), rgba(16, 7, 10, 0.88));
-
         }
-
-
 
         .player-mode .left-player-panel > .card,
-
         .player-mode .right-player-panel > .card {
-
             flex: 1 1 0;
-
             min-height: 0;
-
+            overflow: hidden;
         }
-
-
 
         .player-mode .main-panel > .card {
-
             width: 100%;
-
+            min-height: 0;
+            overflow: hidden;
         }
 
+        .player-mode .card {
+            padding: 14px;
+        }
 
+        .player-mode h3 {
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .player-mode p {
+            margin-top: 0;
+            margin-bottom: 8px;
+            line-height: 1.34;
+            font-size: 0.95rem;
+        }
+
+        .player-mode .clean-list li {
+            padding: 10px 10px;
+            margin-bottom: 8px;
+        }
+
+        .player-mode .responses-grid-list {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .player-mode .responses-grid-list li {
+            min-height: 64px;
+        }
+
+        .player-mode .response-team {
+            font-size: 0.92rem;
+        }
+
+        .player-mode .response-phrase {
+            font-size: 1rem;
+        }
+
+        .player-mode #phraseBox,
+        .player-mode #responsesCenterBox,
+        .player-mode #votingBox,
+        .player-mode #roundResultBox,
+        .player-mode #roleBox,
+        .player-mode #agreementBox,
+        .player-mode #finalLeaderboardBox {
+            overflow: hidden;
+        }
+
+        .player-mode #phraseInput {
+            min-height: 76px;
+            max-height: 110px;
+            resize: none;
+        }
+
+        .player-mode .vote-button-grid {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .player-mode button {
+            padding: 10px 14px;
+        }
 
         .player-role-banner {
-
             display: none;
-
             margin-bottom: 14px;
-
             padding: 18px 20px;
-
             border-radius: 20px;
-
             background: linear-gradient(135deg, rgba(255, 214, 110, 0.14), rgba(255, 82, 118, 0.10)), rgba(255,255,255,0.05);
-
             border: 1px solid rgba(255, 218, 124, 0.20);
-
             box-shadow: 0 0 24px rgba(255, 210, 94, 0.10), inset 0 1px 0 rgba(255,255,255,0.04);
-
         }
-
-
 
         .player-role-banner.active {
-
             display: block;
-
         }
-
-
 
         .player-role-banner-title {
-
             font-family: "Cinzel", serif;
-
             font-size: 1.4rem;
-
             font-weight: 900;
-
             margin-bottom: 8px;
-
             color: #fff1c2;
-
         }
-
-
 
         .player-role-banner.impostor .player-role-banner-title {
-
             color: #ff7e8f;
-
         }
-
-
 
         .player-role-banner-sub {
-
             color: rgba(255,255,255,0.86);
-
             font-weight: 700;
-
         }
-
-
 
         @keyframes fullScreenCasinoGlitch {
-
             0% {
-
                 opacity: 0;
-
                 transform: translate(0, 0) scale(1);
-
                 filter: hue-rotate(0deg) saturate(1.2) contrast(1.12);
-
             }
-
             6% {
-
                 opacity: 1;
-
                 transform: translate(-16px, 4px) scale(1.01);
-
                 filter: hue-rotate(35deg) saturate(1.7) contrast(1.4);
-
             }
-
             12% {
-
                 opacity: 1;
-
                 transform: translate(14px, -8px) scale(1.02);
-
                 filter: hue-rotate(90deg) saturate(1.9) contrast(1.5);
-
             }
-
             19% {
-
                 opacity: 0.92;
-
                 transform: translate(-10px, 10px) scale(1);
-
                 filter: hue-rotate(150deg) saturate(2) contrast(1.42);
-
             }
-
             27% {
-
                 opacity: 1;
-
                 transform: translate(18px, -6px) scale(1.01);
-
                 filter: hue-rotate(220deg) saturate(2) contrast(1.52);
-
             }
-
             35% {
-
                 opacity: 0.94;
-
                 transform: translate(-20px, 8px) scale(1.015);
-
                 filter: hue-rotate(280deg) saturate(1.95) contrast(1.45);
-
             }
-
             48% {
-
                 opacity: 1;
-
                 transform: translate(12px, -12px) scale(1);
-
                 filter: hue-rotate(320deg) saturate(1.8) contrast(1.35);
-
             }
-
             60% {
-
                 opacity: 0.95;
-
                 transform: translate(-8px, 6px) scale(1.01);
-
                 filter: hue-rotate(20deg) saturate(1.6) contrast(1.28);
-
             }
-
             76% {
-
                 opacity: 0.88;
-
                 transform: translate(7px, -4px) scale(1);
-
                 filter: hue-rotate(75deg) saturate(1.35) contrast(1.15);
-
             }
-
             100% {
-
                 opacity: 0;
-
                 transform: translate(0, 0) scale(1);
-
                 filter: hue-rotate(0deg) saturate(1) contrast(1);
-
             }
-
         }
 
-
-
         @media (max-width: 1180px) {
-    .app-shell {
-        grid-template-columns: 1fr;
-    }
+            .app-shell {
+                grid-template-columns: 1fr;
+            }
 
-    .player-mode .app-shell {
-        width: min(100vw - 20px, 1100px);
-        grid-template-columns: 1fr;
-        grid-template-areas:
-            "main"
-            "left"
-            "right";
-        height: auto;
-        min-height: 100vh;
-        overflow: visible;
-        padding-top: 130px;
-    }
+            .player-mode .app-shell {
+                width: min(100vw - 18px, 1100px);
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "main"
+                    "left"
+                    "right";
+                height: auto;
+                min-height: 100vh;
+                overflow-y: auto;
+                padding-top: 92px;
+                gap: 12px;
+            }
 
-    .player-mode {
-        overflow-y: auto;
-        height: auto;
-        min-height: 100vh;
-    }
-}
+            .player-mode {
+                overflow-y: auto;
+                height: auto;
+                min-height: 100vh;
+            }
+
+            .player-mode .main-panel,
+            .player-mode .left-player-panel,
+            .player-mode .right-player-panel {
+                overflow: visible;
+            }
+
+            .player-mode .main-panel > .card,
+            .player-mode .left-player-panel > .card,
+            .player-mode .right-player-panel > .card {
+                overflow: visible;
+            }
+        }
 
         @media (max-width: 720px) {
-    .app-shell {
-        padding: 12px;
-        gap: 12px;
-    }
+            .app-shell {
+                padding: 12px;
+                gap: 12px;
+            }
 
-    .card {
-        padding: 14px;
-        border-radius: 20px;
-    }
+            .card {
+                padding: 14px;
+                border-radius: 20px;
+            }
 
-    .player-mode {
-        background-size: cover;
-        background-position: center top;
-        overflow-y: auto;
-        height: auto;
-        min-height: 100vh;
-    }
+            .player-mode {
+                background-size: cover;
+                background-position: center top;
+                overflow-y: auto;
+                height: auto;
+                min-height: 100vh;
+            }
 
-    .player-mode .app-shell {
-        width: calc(100vw - 12px);
-        height: auto;
-        min-height: 100vh;
-        overflow: visible;
-        padding-top: 110px;
-        padding-left: 6px;
-        padding-right: 6px;
-        gap: 10px;
-    }
-}
+            .player-mode .app-shell {
+                width: calc(100vw - 10px);
+                height: auto;
+                min-height: 100vh;
+                overflow-y: auto;
+                padding-top: 78px;
+                padding-left: 5px;
+                padding-right: 5px;
+                gap: 10px;
+            }
 
+            .player-mode .responses-grid-list {
+                grid-template-columns: 1fr;
+            }
+
+            .player-mode .vote-button-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
-
 </head>
 
 <body>
-
     <div id="playerVideoLayer">
-
         <video id="introVideo" playsinline preload="auto">
-
             <source src="/static/intro.mp4" type="video/mp4">
-
         </video>
-
         <audio id="bgMusic" preload="auto" loop>
-
             <source src="/static/bg-music.mp3" type="audio/mpeg">
-
         </audio>
-
     </div>
-
-
 
     <div id="glitchLayer"></div>
 
-
-
     <div id="playerWhiteScreen">
-
         <div class="white-screen-inner">
-
             <div id="playerWhiteScreenTitle" class="white-screen-title">Waiting for host...</div>
-
             <div id="playerWhiteScreenName" class="white-screen-name"></div>
-
             <div id="playerWhiteScreenSubtext" class="white-screen-subtext"></div>
-
             <div id="playerWhiteScreenButtonWrap" class="white-screen-button-wrap hidden">
-
                 <button id="playerReadyBigBtn" class="white-screen-big-button">READY</button>
-
             </div>
-
         </div>
-
     </div>
-
-
 
     <div id="appShell" class="app-shell">
-
         <div class="side-panel left-player-panel">
-
             <div class="card hero hero-host-only bulb-card">
-
                 <h1>IMPOSTOR</h1>
-
                 <p id="phaseText">Lobby</p>
-
             </div>
 
-
-
             <div class="card bulb-card">
-
                 <h3>Room</h3>
-
                 <p><strong>Code:</strong> <span id="roomCodeText">-----</span></p>
-
                 <p class="muted">Host sees the whole system. Teams wait for phase changes.</p>
-
             </div>
-
-
 
             <div class="card bulb-card">
-
                 <h3>Teams</h3>
-
                 <ul id="teamsList" class="clean-list">
-
                     <li>No teams yet.</li>
-
                 </ul>
-
             </div>
-
-
 
             <div class="card bulb-card scoreboard-host-only">
-
                 <h3>Scoreboard</h3>
-
                 <ul id="scoreboardList" class="clean-list">
-
                     <li>No scores yet.</li>
-
                 </ul>
-
             </div>
-
         </div>
-
-
 
         <div class="main-panel">
-
             <div class="card bulb-card host-only">
-
                 <div class="row" style="justify-content: space-between; align-items: flex-start;">
-
                     <div>
-
                         <h3 style="margin-bottom: 8px;">Main Instruction</h3>
-
                         <div id="mainInstruction" class="muted">Host can start the game from here.</div>
-
                     </div>
-
-
 
                     <div id="hostControls" class="host-lobby-options hidden">
-
                         <div class="row">
-
                             <input id="roundCountInput" type="number" min="1" max="20" value="3" style="width: 110px;">
-
                             <button id="saveRoundsBtn">Save Rounds</button>
-
                             <button id="startGameBtn">Start Game</button>
-
                             <button id="continueBtn" class="hidden">Continue</button>
-
                             <button id="restartActionBtn" class="hidden">Restart Round</button>
-
                         </div>
 
-
-
                         <label id="skipIntroOptionWrap" class="checkbox-row">
-
                             <input id="skipIntroCheckbox" type="checkbox">
-
                             <span>Skip intro video and go straight to glitch + ready state</span>
-
                         </label>
-
                     </div>
-
                 </div>
-
             </div>
-
-
 
             <div id="playerRoleBanner" class="player-role-banner bulb-card">
-
                 <div id="playerRoleBannerTitle" class="player-role-banner-title">ROLE</div>
-
                 <div id="playerRoleBannerSub" class="player-role-banner-sub">Waiting for your assignment.</div>
-
             </div>
-
-
 
             <div id="agreementBox" class="card main-stage bulb-card hidden">
-
                 <h3>Agreement / Transition</h3>
-
                 <div id="agreementStatus" class="result-box">Waiting...</div>
 
-
-
                 <div id="introWaitInlineBox" class="intro-inline-panel hidden">
-
                     <div><strong>Intro Progress</strong></div>
-
                     <div id="introWaitMessage" class="muted" style="margin-top: 8px;">
-
                         Waiting for all teams to finish the intro.
-
                     </div>
-
                     <div id="introProgressCount" class="intro-progress">0 / 0 teams finished</div>
-
                 </div>
-
-
 
                 <div id="agreementRulesPanel" class="result-box" style="margin-top: 14px;">
-
                     <p><strong>Rules Summary</strong></p>
-
                     <p>One team is the impostor. Human teams see the word. The impostor does not.</p>
-
                     <p>Teams submit one phrase each, max three words, one at a time.</p>
-
                     <p>After all phrases are shown, every team votes for the impostor or votes for an additional round.</p>
-
                 </div>
-
             </div>
-
-
 
             <div id="roleBox" class="card main-stage bulb-card hidden">
-
                 <h3>Role Reveal</h3>
-
                 <div id="roleText">Waiting for role reveal.</div>
-
                 <div id="hostRoleInfo" style="margin-top: 14px;"></div>
-
             </div>
-
-
 
             <div id="phraseBox" class="card main-stage bulb-card hidden">
-
                 <h3>Phrase Submission</h3>
-
                 <p id="turnLabel">Current Team: --</p>
-
                 <p id="phraseTimerText" class="timer">Timer: --</p>
-
                 <textarea id="phraseInput" rows="3" maxlength="60" placeholder="Enter a phrase, max 3 words"></textarea>
-
                 <div class="row" style="margin-top: 12px;">
-
                     <button id="submitPhraseBtn">Submit Phrase</button>
-
                 </div>
-
                 <p class="muted small-note">
-
                     You cannot directly say the given word. Submission is final.
-
                 </p>
-
             </div>
-
-
 
             <div id="responsesCenterBox" class="card main-stage bulb-card hidden">
-
                 <div class="responses-header-row">
-
                     <h3>Submitted Phrases</h3>
-
                     <span class="status-pill">Live Round Feed</span>
-
                 </div>
-
                 <p class="muted small-note">
-
                     Every submitted phrase appears here for all teams to review.
-
                 </p>
-
                 <ul id="responsesList" class="clean-list responses-grid-list">
-
                     <li>No phrases yet.</li>
-
                 </ul>
-
             </div>
-
-
 
             <div id="votingBox" class="card main-stage bulb-card hidden">
-
                 <h3>Voting Phase</h3>
-
                 <div id="votingText" class="result-box">Voting has not started yet.</div>
-
                 <div id="voteOptions" class="vote-button-grid"></div>
-
             </div>
-
-
 
             <div id="roundResultBox" class="card main-stage bulb-card hidden">
-
                 <h3>Round Result</h3>
-
                 <div id="roundResultContent" class="result-box">Round result will appear here.</div>
-
             </div>
-
-
 
             <div id="finalLeaderboardBox" class="card main-stage bulb-card hidden">
-
                 <h3>Final Leaderboard</h3>
-
                 <div id="championBanner"></div>
-
                 <div id="topThreeList"></div>
-
                 <div id="fullLeaderboardList"></div>
-
             </div>
-
         </div>
-
-
 
         <div class="side-panel right-player-panel">
-
             <div class="card bulb-card">
-
                 <h3>Round Info</h3>
-
                 <p><strong>Round:</strong> <span id="roundInfoText">1 / 3</span></p>
-
                 <p><strong>You are:</strong> <span id="identityText">Loading.</span></p>
-
                 <p><strong>Current Turn:</strong> <span id="currentTurnText">--</span></p>
-
             </div>
 
-
-
             <div class="card bulb-card">
-
                 <h3>Turn Order</h3>
-
                 <ul id="orderList" class="clean-list">
-
                     <li>No order yet.</li>
-
                 </ul>
-
             </div>
-
-
 
             <div class="card bulb-card">
-
                 <h3>Status</h3>
-
                 <div id="statusDiv" class="muted">Preparing room...</div>
-
             </div>
-
         </div>
-
     </div>
 
-
-
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-
     <script>
-
         const socket = io();
 
-
-
         const INTRO_AUDIO_DELAY_MS = 250;
-
         const GLITCH_DURATION_MS = 2000;
-
-
 
         /*
             PLAYER BG MUSIC VOLUME
             Change this number whenever you want.
         */
-
         const PLAYER_BG_MUSIC_VOLUME = 0.18;
 
-
-
         const params = new URLSearchParams(window.location.search);
-
         const code = (params.get("code") || localStorage.getItem("code") || "").trim().toUpperCase();
-
         const teamName = (params.get("team") || localStorage.getItem("teamName") || "").trim();
-
         const isHost = (params.get("host") === "1") || localStorage.getItem("isHost") === "true";
 
-
-
         let myRole = null;
-
         let myWord = null;
-
         let currentState = "lobby";
-
         let currentTurnTeam = null;
-
         let currentOrder = [];
-
         let roundResponses = {};
-
         let currentRestartMode = null;
-
         let introFinishedOnClient = false;
-
         let hasVotedThisRound = false;
-
         let skipIntroChosen = false;
-
         let hostControlsLockedAfterStart = false;
-
         let bgMusicStarted = false;
 
-
-
         const body = document.body;
-
         const appShell = document.getElementById("appShell");
-
         const playerVideoLayer = document.getElementById("playerVideoLayer");
-
         const introVideo = document.getElementById("introVideo");
-
         const bgMusic = document.getElementById("bgMusic");
-
         const glitchLayer = document.getElementById("glitchLayer");
 
-
-
         const playerWhiteScreen = document.getElementById("playerWhiteScreen");
-
         const playerWhiteScreenTitle = document.getElementById("playerWhiteScreenTitle");
-
         const playerWhiteScreenName = document.getElementById("playerWhiteScreenName");
-
         const playerWhiteScreenSubtext = document.getElementById("playerWhiteScreenSubtext");
-
         const playerWhiteScreenButtonWrap = document.getElementById("playerWhiteScreenButtonWrap");
-
         const playerReadyBigBtn = document.getElementById("playerReadyBigBtn");
 
-
-
         const roomCodeText = document.getElementById("roomCodeText");
-
         const phaseText = document.getElementById("phaseText");
-
         const mainInstruction = document.getElementById("mainInstruction");
-
         const teamsList = document.getElementById("teamsList");
-
         const scoreboardList = document.getElementById("scoreboardList");
-
         const statusDiv = document.getElementById("statusDiv");
-
         const roundInfoText = document.getElementById("roundInfoText");
-
         const identityText = document.getElementById("identityText");
-
         const currentTurnText = document.getElementById("currentTurnText");
-
         const orderList = document.getElementById("orderList");
-
         const responsesList = document.getElementById("responsesList");
 
-
-
         const hostControls = document.getElementById("hostControls");
-
         const roundCountInput = document.getElementById("roundCountInput");
-
         const saveRoundsBtn = document.getElementById("saveRoundsBtn");
-
         const startGameBtn = document.getElementById("startGameBtn");
-
         const continueBtn = document.getElementById("continueBtn");
-
         const restartActionBtn = document.getElementById("restartActionBtn");
-
         const skipIntroCheckbox = document.getElementById("skipIntroCheckbox");
-
         const skipIntroOptionWrap = document.getElementById("skipIntroOptionWrap");
 
-
-
         const agreementBox = document.getElementById("agreementBox");
-
         const agreementStatus = document.getElementById("agreementStatus");
-
         const agreementRulesPanel = document.getElementById("agreementRulesPanel");
-
         const introWaitInlineBox = document.getElementById("introWaitInlineBox");
-
         const introWaitMessage = document.getElementById("introWaitMessage");
-
         const introProgressCount = document.getElementById("introProgressCount");
 
-
-
         const roleBox = document.getElementById("roleBox");
-
         const roleText = document.getElementById("roleText");
-
         const hostRoleInfo = document.getElementById("hostRoleInfo");
 
-
-
         const phraseBox = document.getElementById("phraseBox");
-
         const turnLabel = document.getElementById("turnLabel");
-
         const phraseTimerText = document.getElementById("phraseTimerText");
-
         const phraseInput = document.getElementById("phraseInput");
-
         const submitPhraseBtn = document.getElementById("submitPhraseBtn");
-
-
 
         const responsesCenterBox = document.getElementById("responsesCenterBox");
 
-
-
         const votingBox = document.getElementById("votingBox");
-
         const votingText = document.getElementById("votingText");
-
         const voteOptions = document.getElementById("voteOptions");
 
-
-
         const roundResultBox = document.getElementById("roundResultBox");
-
         const roundResultContent = document.getElementById("roundResultContent");
 
-
-
         const finalLeaderboardBox = document.getElementById("finalLeaderboardBox");
-
         const championBanner = document.getElementById("championBanner");
-
         const topThreeList = document.getElementById("topThreeList");
-
         const fullLeaderboardList = document.getElementById("fullLeaderboardList");
 
-
-
         const playerRoleBanner = document.getElementById("playerRoleBanner");
-
         const playerRoleBannerTitle = document.getElementById("playerRoleBannerTitle");
-
         const playerRoleBannerSub = document.getElementById("playerRoleBannerSub");
-
-
 
         roomCodeText.textContent = code || "-----";
 
-
-
         if (!isHost) {
-
             body.classList.add("player-mode");
-
         }
-
-
 
         function show(el) {
-
             el.classList.remove("hidden");
-
             if (el === playerVideoLayer) el.style.display = "block";
-
         }
-
-
 
         function hide(el) {
-
             el.classList.add("hidden");
-
             if (el === playerVideoLayer) el.style.display = "none";
-
         }
-
-
 
         function sleep(ms) {
-
             return new Promise(resolve => setTimeout(resolve, ms));
-
         }
-
-
 
         function setPhase(title, desc) {
-
             if (phaseText) phaseText.textContent = title;
-
             if (mainInstruction) mainInstruction.textContent = desc;
-
         }
-
-
 
         function setHostLobbyDefaults() {
-
             if (!isHost) return;
-
             setPhase("Lobby", "Host can start the game from here.");
-
             statusDiv.textContent = code ? `Connected to room ${code}. Waiting for teams.` : "Connected. Waiting for teams.";
-
             hostControls.classList.remove("hidden");
-
             setHostActionMode("start");
-
         }
-
-
 
         function updateIdentityText() {
-
             if (isHost) {
-
                 identityText.textContent = "HOST";
-
                 return;
-
             }
-
-
 
             if (!myRole) {
-
                 identityText.textContent = teamName || "TEAM";
-
                 return;
-
             }
-
-
 
             if (myRole === "HUMAN") {
-
                 identityText.textContent = `HUMAN${myWord ? " • " + myWord : ""}`;
-
                 return;
-
             }
-
-
 
             identityText.textContent = myRole;
-
         }
 
-
-
         function updatePlayerRoleBanner() {
-
             if (isHost) return;
 
-
-
             if (!myRole) {
-
                 playerRoleBanner.classList.remove("active", "impostor");
-
                 return;
-
             }
-
-
 
             playerRoleBanner.classList.add("active");
 
-
-
             if (myRole === "IMPOSTOR") {
-
                 playerRoleBanner.classList.add("impostor");
-
                 playerRoleBannerTitle.textContent = "IMPOSTOR";
-
                 playerRoleBannerSub.textContent = "Blend in. You do not know the word.";
-
             } else {
-
                 playerRoleBanner.classList.remove("impostor");
-
                 playerRoleBannerTitle.textContent = "HUMAN";
-
                 playerRoleBannerSub.textContent = myWord
-
                     ? `Shared word: ${myWord}`
-
                     : "You have the shared word.";
-
             }
-
         }
-
-
 
         function setCurrentTurn(team) {
-
             currentTurnTeam = team || null;
-
             currentTurnText.textContent = currentTurnTeam || "--";
-
         }
-
-
 
         function renderTeams(teams) {
-
             if (!teams || !teams.length) {
-
                 teamsList.innerHTML = "<li>No teams yet.</li>";
-
                 return;
-
             }
-
-
 
             teamsList.innerHTML = teams.map(team => `
-
                 <li>
-
                     <div class="team-card-row">
-
                         <span>${team}</span>
-
                         <span class="pill">${team === teamName ? "YOU" : "TEAM"}</span>
-
                     </div>
-
                 </li>
-
             `).join("");
-
         }
-
-
 
         function renderScoreboard(scores) {
-
             const entries = Object.entries(scores || {})
-
                 .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 
-
-
             if (!entries.length) {
-
                 scoreboardList.innerHTML = "<li>No scores yet.</li>";
-
                 return;
-
             }
-
-
 
             scoreboardList.innerHTML = entries.map(([team, score]) => `
-
                 <li>
-
                     <div class="team-card-row">
-
                         <span>${team}</span>
-
                         <span class="score-badge">${score}</span>
-
                     </div>
-
                 </li>
-
             `).join("");
-
         }
-
-
 
         function renderOrder(order) {
-
             currentOrder = order || [];
 
-
-
             if (!currentOrder.length) {
-
                 orderList.innerHTML = "<li>No order yet.</li>";
-
                 return;
-
             }
-
-
 
             orderList.innerHTML = currentOrder.map((team, index) => `
-
                 <li>
-
                     <div class="team-card-row">
-
                         <span>${index + 1}. ${team}</span>
-
                         <span class="pill">${team === currentTurnTeam ? "NOW" : "WAIT"}</span>
-
                     </div>
-
                 </li>
-
             `).join("");
-
         }
-
-
 
         function renderResponses(responses) {
-
             roundResponses = { ...(responses || {}) };
-
             const entries = Object.entries(roundResponses);
 
-
-
             if (!entries.length) {
-
                 responsesList.innerHTML = "<li>No phrases yet.</li>";
-
                 return;
-
             }
-
-
 
             responsesList.innerHTML = entries.map(([team, phrase]) => `
-
                 <li>
-
                     <div class="response-row">
-
                         <span class="response-team">${team}</span>
-
                         <span class="response-phrase">${phrase}</span>
-
                     </div>
-
                 </li>
-
             `).join("");
-
         }
-
-
 
         function hideMainBoxes() {
-
             hide(agreementBox);
-
             hide(roleBox);
-
             hide(phraseBox);
-
             hide(responsesCenterBox);
-
             hide(votingBox);
-
             hide(roundResultBox);
-
             hide(finalLeaderboardBox);
-
         }
-
-
 
         function hidePlayerWhiteScreen() {
-
             playerWhiteScreen.style.display = "none";
-
         }
-
-
 
         function showPlayerWhiteScreen({ title, subtext = "", showReadyButton = false }) {
-
             if (isHost) return;
 
-
-
             playerWhiteScreenTitle.textContent = title;
-
             playerWhiteScreenName.textContent = teamName || "";
-
             playerWhiteScreenSubtext.textContent = subtext;
 
-
-
             if (showReadyButton) {
-
                 playerWhiteScreenButtonWrap.classList.remove("hidden");
-
             } else {
-
                 playerWhiteScreenButtonWrap.classList.add("hidden");
-
             }
 
-
-
             appShell.classList.add("hidden");
-
             playerWhiteScreen.style.display = "flex";
-
         }
-
-
 
         function showNormalApp() {
-
             hidePlayerWhiteScreen();
-
             appShell.classList.remove("hidden");
-
         }
 
-
-
         function setHostActionMode(mode) {
-
             currentRestartMode = mode;
 
-
-
             hide(startGameBtn);
-
             hide(restartActionBtn);
-
-
 
             if (!isHost) return;
 
-
-
             if (mode === "start") {
-
                 show(startGameBtn);
-
                 if (!hostControlsLockedAfterStart) {
-
                     show(skipIntroOptionWrap);
-
                 } else {
-
                     hide(skipIntroOptionWrap);
-
                 }
-
             } else if (mode === "restart_round") {
-
                 restartActionBtn.textContent = "Restart Round";
-
                 show(restartActionBtn);
-
                 hide(skipIntroOptionWrap);
-
             } else if (mode === "restart_game") {
-
                 restartActionBtn.textContent = "Restart Game";
-
                 show(restartActionBtn);
-
                 hide(skipIntroOptionWrap);
-
             } else {
-
                 hide(skipIntroOptionWrap);
-
             }
-
         }
-
-
 
         function setIntroProgress(message, finishedCount, totalTeams) {
-
             introWaitMessage.textContent = message || "Waiting for all teams to finish the intro.";
 
-
-
             if (typeof finishedCount === "number" && typeof totalTeams === "number") {
-
                 introProgressCount.textContent = `${finishedCount} / ${totalTeams} teams finished`;
-
             } else {
-
                 introProgressCount.textContent = "--";
-
             }
-
         }
-
-
 
         function stopIntroVideo() {
-
             try {
-
                 introVideo.pause();
-
                 introVideo.currentTime = 0;
-
             } catch (e) {}
-
-
 
             try {
-
                 bgMusic.pause();
-
                 bgMusic.currentTime = 0;
-
                 bgMusicStarted = false;
-
             } catch (e) {}
-
         }
-
-
 
         async function playBackgroundMusic() {
-
             if (isHost) return;
-
             if (bgMusicStarted) return;
 
-
-
             try {
-
                 bgMusic.volume = PLAYER_BG_MUSIC_VOLUME;
-
                 await bgMusic.play();
-
                 bgMusicStarted = true;
-
             } catch (e) {
-
                 console.log("Background music could not start yet.", e);
-
             }
-
         }
-
-
 
         async function playGlitchOnly() {
-
             glitchLayer.classList.remove("active");
-
             void glitchLayer.offsetWidth;
-
             glitchLayer.classList.add("active");
-
             await sleep(GLITCH_DURATION_MS);
-
             glitchLayer.classList.remove("active");
-
         }
 
-
-
         async function playSkipIntroSequence() {
-
             if (isHost) return;
-
             if (introFinishedOnClient) return;
 
-
-
             hidePlayerWhiteScreen();
-
             stopIntroVideo();
 
-
-
             await playGlitchOnly();
-
             await playBackgroundMusic();
 
-
-
             introFinishedOnClient = true;
-
-
 
             socket.emit("player_skip_intro_finished", { code });
 
-
-
             showInlineIntroWaiting({
-
                 message: "Waiting for others to watch the intro."
-
             });
-
         }
-
-
 
         async function handleIntroVideoStart() {
-
             if (isHost) return;
 
-
-
             hidePlayerWhiteScreen();
-
             hideMainBoxes();
-
             setPhase("Introduction", "Watch the intro video. After it ends, your team will be marked finished.");
-
             show(playerVideoLayer);
 
-
-
             try {
-
                 introVideo.currentTime = 0;
-
                 await introVideo.play();
-
             } catch (e) {
-
                 statusDiv.textContent = "Video autoplay was blocked. Press play manually if needed.";
-
             }
-
         }
 
-
-
         function showInlineIntroWaiting(data = {}) {
-
             currentState = "agreement";
 
-
-
             if (!isHost) {
-
                 showNormalApp();
-
             }
 
-
-
             hideMainBoxes();
-
             show(agreementBox);
-
             show(introWaitInlineBox);
-
             show(agreementRulesPanel);
-
-
 
             const msg = data.message || "Waiting for others to watch the intro.";
 
-
-
             setPhase(
-
                 "Agreement / Transition",
-
                 isHost
-
                     ? "Wait for all teams to finish the intro, then continue."
-
                     : "You finished. Wait for the other teams."
-
             );
 
-
-
             agreementStatus.textContent = msg;
-
             setIntroProgress(data.message, data.finished_count, data.total_teams);
-
         }
 
-
-
         playerReadyBigBtn.addEventListener("click", async () => {
-
             playerReadyBigBtn.disabled = true;
 
-
-
             if (skipIntroChosen) {
-
                 await playSkipIntroSequence();
-
                 return;
-
             }
 
-
-
             socket.emit("player_intro_ready", { code });
-
         });
-
-
 
         skipIntroCheckbox?.addEventListener("change", () => {
-
             skipIntroChosen = !!skipIntroCheckbox.checked;
-
         });
 
-
-
         introVideo.addEventListener("ended", async () => {
-
             hide(playerVideoLayer);
 
-
-
             await playGlitchOnly();
-
             await sleep(INTRO_AUDIO_DELAY_MS);
-
             await playBackgroundMusic();
-
-
 
             introFinishedOnClient = true;
 
-
-
             showInlineIntroWaiting({
-
                 message: "Waiting for others to watch the intro."
-
             });
 
-
-
             socket.emit("player_intro_finished", { code });
-
         });
-
-
 
         function syncHostControlsFromRoster(data = {}) {
             if (!isHost) return;
@@ -2773,41 +1535,41 @@
             }
         }
 
-function buildRoundResultHtml(data = {}) {
-    const majorityLine = data.additional_round_triggered
-        ? `<p><strong>Additional round votes:</strong> ${data.additional_round_votes || 0}</p>`
-        : `<p><strong>Majority vote:</strong> ${data.majority_team || "No majority"}</p>`;
+        function buildRoundResultHtml(data = {}) {
+            const majorityLine = data.additional_round_triggered
+                ? `<p><strong>Additional round votes:</strong> ${data.additional_round_votes || 0}</p>`
+                : `<p><strong>Majority vote:</strong> ${data.majority_team || "No majority"}</p>`;
 
-    const actualImpostorLine = (!data.additional_round_triggered && data.actual_impostor)
-        ? `<p><strong>Actual Impostor:</strong> ${data.actual_impostor}</p>`
-        : "";
+            const actualImpostorLine = (!data.additional_round_triggered && data.actual_impostor)
+                ? `<p><strong>Actual Impostor:</strong> ${data.actual_impostor}</p>`
+                : "";
 
-    const individualCorrectLine = data.additional_round_triggered
-        ? ""
-        : `<p><strong>Individual correct teams:</strong> ${
-            Array.isArray(data.individual_correct_teams) && data.individual_correct_teams.length
-                ? data.individual_correct_teams.join(", ")
-                : "None"
-        }</p>`;
+            const individualCorrectLine = data.additional_round_triggered
+                ? ""
+                : `<p><strong>Individual correct teams:</strong> ${
+                    Array.isArray(data.individual_correct_teams) && data.individual_correct_teams.length
+                        ? data.individual_correct_teams.join(", ")
+                        : "None"
+                }</p>`;
 
-    const scores = Object.entries(data.scores || {})
-        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-        .map(([team, score]) => `<li><div class="team-card-row"><span>${team}</span><span class="score-badge">${score}</span></div></li>`)
-        .join("");
+            const scores = Object.entries(data.scores || {})
+                .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+                .map(([team, score]) => `<li><div class="team-card-row"><span>${team}</span><span class="score-badge">${score}</span></div></li>`)
+                .join("");
 
-    return `
-        <div class="result-box">
-            <p><strong>Result:</strong> ${data.result_text || "Round result will appear here."}</p>
-            ${actualImpostorLine}
-            ${majorityLine}
-            ${individualCorrectLine}
-            <div style="margin-top: 14px;">
-                <strong>Scores</strong>
-                <ul class="clean-list" style="margin-top: 10px;">${scores || "<li>No scores yet.</li>"}</ul>
-            </div>
-        </div>
-    `;
-}
+            return `
+                <div class="result-box">
+                    <p><strong>Result:</strong> ${data.result_text || "Round result will appear here."}</p>
+                    ${actualImpostorLine}
+                    ${majorityLine}
+                    ${individualCorrectLine}
+                    <div style="margin-top: 14px;">
+                        <strong>Scores</strong>
+                        <ul class="clean-list" style="margin-top: 10px;">${scores || "<li>No scores yet.</li>"}</ul>
+                    </div>
+                </div>
+            `;
+        }
 
         function renderGameOver(data = {}) {
             showNormalApp();
@@ -3096,43 +1858,43 @@ function buildRoundResultHtml(data = {}) {
         });
 
         socket.on("start_voting", (data) => {
-    currentState = "voting";
-    hasVotedThisRound = false;
-    hideMainBoxes();
-    show(votingBox);
-    show(responsesCenterBox);
-    showNormalApp();
-    renderResponses(data.responses || {});
-    votingText.textContent = `Vote for the impostor team or choose Additional Round. ${typeof data.time_limit === "number" ? `${data.time_limit}s remaining.` : ""}`.trim();
+            currentState = "voting";
+            hasVotedThisRound = false;
+            hideMainBoxes();
+            show(votingBox);
+            show(responsesCenterBox);
+            showNormalApp();
+            renderResponses(data.responses || {});
+            votingText.textContent = `Vote for the impostor team or choose Additional Round. ${typeof data.time_limit === "number" ? `${data.time_limit}s remaining.` : ""}`.trim();
 
-    voteOptions.innerHTML = "";
+            voteOptions.innerHTML = "";
 
-    (data.teams || []).forEach(target => {
-        const btn = document.createElement("button");
-        btn.textContent = target;
-        btn.disabled = hasVotedThisRound || target === teamName;
-        btn.addEventListener("click", () => {
-            if (hasVotedThisRound) return;
-            hasVotedThisRound = true;
-            socket.emit("submit_vote", { code, voted_team: target });
-            Array.from(voteOptions.querySelectorAll("button")).forEach(button => button.disabled = true);
+            (data.teams || []).forEach(target => {
+                const btn = document.createElement("button");
+                btn.textContent = target;
+                btn.disabled = hasVotedThisRound || target === teamName;
+                btn.addEventListener("click", () => {
+                    if (hasVotedThisRound) return;
+                    hasVotedThisRound = true;
+                    socket.emit("submit_vote", { code, voted_team: target });
+                    Array.from(voteOptions.querySelectorAll("button")).forEach(button => button.disabled = true);
+                });
+                voteOptions.appendChild(btn);
+            });
+
+            const extraBtn = document.createElement("button");
+            extraBtn.textContent = "Additional Round";
+            extraBtn.disabled = hasVotedThisRound;
+            extraBtn.addEventListener("click", () => {
+                if (hasVotedThisRound) return;
+                hasVotedThisRound = true;
+                socket.emit("submit_vote", { code, voted_team: "ADDITIONAL_ROUND" });
+                Array.from(voteOptions.querySelectorAll("button")).forEach(button => button.disabled = true);
+            });
+            voteOptions.appendChild(extraBtn);
+
+            statusDiv.textContent = "Voting started.";
         });
-        voteOptions.appendChild(btn);
-    });
-
-    const extraBtn = document.createElement("button");
-    extraBtn.textContent = "Additional Round";
-    extraBtn.disabled = hasVotedThisRound;
-    extraBtn.addEventListener("click", () => {
-        if (hasVotedThisRound) return;
-        hasVotedThisRound = true;
-        socket.emit("submit_vote", { code, voted_team: "ADDITIONAL_ROUND" });
-        Array.from(voteOptions.querySelectorAll("button")).forEach(button => button.disabled = true);
-    });
-    voteOptions.appendChild(extraBtn);
-
-    statusDiv.textContent = "Voting started.";
-});
 
         socket.on("vote_timer_update", (data) => {
             const secs = typeof data?.seconds_left === "number" ? data.seconds_left : null;
@@ -3160,90 +1922,45 @@ function buildRoundResultHtml(data = {}) {
             renderGameOver(data || {});
         });
 
-        submitPhraseBtn.addEventListener("click", () => {
-
-            const phrase = phraseInput.value.trim();
-
-            if (!phrase) return;
-
-            socket.emit("submit_phrase", { code, phrase });
-
-            phraseInput.value = "";
-
-            submitPhraseBtn.disabled = true;
-
-            phraseInput.disabled = true;
-
-        });
-
-
-
         saveRoundsBtn?.addEventListener("click", () => {
-
-            const rounds = parseInt(roundCountInput.value, 10);
-
+            if (!isHost) return;
+            const rounds = Math.max(1, Math.min(20, parseInt(roundCountInput.value || "3", 10) || 3));
             socket.emit("set_round_count", { code, rounds });
-
-            statusDiv.textContent = `Saved rounds: ${rounds}`;
-
         });
-
-
 
         startGameBtn?.addEventListener("click", () => {
-
+            if (!isHost) return;
+            hostControlsLockedAfterStart = true;
+            hide(skipIntroOptionWrap);
             socket.emit("start_game_request", {
-
                 code,
-
                 skip_intro: !!skipIntroCheckbox.checked
-
             });
-
-            statusDiv.textContent = "Starting game...";
-
         });
-
-
 
         continueBtn?.addEventListener("click", () => {
-
+            if (!isHost) return;
             socket.emit("host_continue", { code });
-
         });
-
-
 
         restartActionBtn?.addEventListener("click", () => {
-
-            socket.emit("restart_action", {
-
-                code,
-
-                mode: currentRestartMode
-
-            });
-
+            if (!isHost) return;
+            socket.emit("restart_action", { code, mode: currentRestartMode });
         });
 
+        submitPhraseBtn?.addEventListener("click", () => {
+            const phrase = phraseInput.value.trim();
+            socket.emit("submit_phrase", { code, phrase });
+        });
 
-
-        updateIdentityText();
-
-
-
-        if (isHost) {
-
-            setHostLobbyDefaults();
-
-        } else {
-
-            statusDiv.textContent = "Waiting for host...";
-
-        }
-
+        phraseInput?.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                if (!submitPhraseBtn.disabled) {
+                    submitPhraseBtn.click();
+                }
+            }
+        });
     </script>
-
 </body>
-
 </html>
