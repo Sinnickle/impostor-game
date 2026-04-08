@@ -3160,43 +3160,43 @@
         });
 
         socket.on("start_voting", (data) => {
-            currentState = "voting";
-            hideMainBoxes();
-            show(votingBox);
-            show(responsesCenterBox);
-            showNormalApp();
+    currentState = "voting";
+    hasVotedThisRound = false;
+    hideMainBoxes();
+    show(votingBox);
+    show(responsesCenterBox);
+    showNormalApp();
+    renderResponses(data.responses || {});
+    votingText.textContent = `Vote for the impostor team or choose Additional Round. ${typeof data.time_limit === "number" ? `${data.time_limit}s remaining.` : ""}`.trim();
 
-            renderResponses(data.responses || {});
-            hasVotedThisRound = false;
-            votingText.textContent = `Vote now. ${typeof data.time_limit === "number" ? `${data.time_limit}s remaining.` : ""}`.trim();
-            voteOptions.innerHTML = "";
+    voteOptions.innerHTML = "";
 
-            (data.teams || []).forEach(target => {
-                const btn = document.createElement("button");
-                btn.textContent = target;
-                btn.disabled = hasVotedThisRound || target === teamName;
-                btn.addEventListener("click", () => {
-                    if (hasVotedThisRound) return;
-                    hasVotedThisRound = true;
-                    socket.emit("submit_vote", { code, vote: target });
-                    Array.from(voteOptions.querySelectorAll("button")).forEach(button => button.disabled = true);
-                });
-                voteOptions.appendChild(btn);
-            });
-
-            const extraBtn = document.createElement("button");
-            extraBtn.textContent = "Additional Round";
-            extraBtn.disabled = hasVotedThisRound;
-            extraBtn.addEventListener("click", () => {
-                if (hasVotedThisRound) return;
-                hasVotedThisRound = true;
-                socket.emit("submit_vote", { code, vote: "ADDITIONAL_ROUND" });
-                Array.from(voteOptions.querySelectorAll("button")).forEach(button => button.disabled = true);
-            });
-            voteOptions.appendChild(extraBtn);
-
-            statusDiv.textContent = "Voting started.";
+    (data.teams || []).forEach(target => {
+        const btn = document.createElement("button");
+        btn.textContent = target;
+        btn.disabled = hasVotedThisRound || target === teamName;
+        btn.addEventListener("click", () => {
+            if (hasVotedThisRound) return;
+            hasVotedThisRound = true;
+            socket.emit("submit_vote", { code, voted_team: target });
+            Array.from(voteOptions.querySelectorAll("button")).forEach(button => button.disabled = true);
         });
+        voteOptions.appendChild(btn);
+    });
+
+    const extraBtn = document.createElement("button");
+    extraBtn.textContent = "Additional Round";
+    extraBtn.disabled = hasVotedThisRound;
+    extraBtn.addEventListener("click", () => {
+        if (hasVotedThisRound) return;
+        hasVotedThisRound = true;
+        socket.emit("submit_vote", { code, voted_team: "ADDITIONAL_ROUND" });
+        Array.from(voteOptions.querySelectorAll("button")).forEach(button => button.disabled = true);
+    });
+    voteOptions.appendChild(extraBtn);
+
+    statusDiv.textContent = "Voting started.";
+});
 
         socket.on("vote_timer_update", (data) => {
             const secs = typeof data?.seconds_left === "number" ? data.seconds_left : null;

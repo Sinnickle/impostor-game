@@ -393,7 +393,7 @@ def calculate_round_result(code):
                 game["scores"][team] += 2
         result_text = "The impostor was caught. All human teams gain +2 points."
     else:
-        game["scores"][game["impostor"]] += 4
+        game["scores"][game["impostor"]] += 5
         result_text = "The impostor survived. The impostor team gains +4 points."
 
     game["state"] = "paused_after_result"
