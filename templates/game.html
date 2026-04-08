@@ -1145,60 +1145,36 @@
 
 
         .player-mode {
+    overflow-x: hidden;
+    overflow-y: auto;
+    min-height: 100vh;
+    height: auto;
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-color: #12070b;
+}
 
-            overflow: hidden;
-
-            height: 100vh;
-
-            background-size: cover;
-
-            background-position: center top;
-
-            background-repeat: no-repeat;
-
-            background-color: #12070b;
-
-        }
-
-
-
-        .player-mode body {
-
-            overflow: hidden;
-
-        }
-
-
+.player-mode body {
+    overflow-y: auto;
+}
 
         .player-mode .app-shell {
-
-            width: min(1400px, calc(100vw - 36px));
-
-            height: 100vh;
-
-            margin: 0 auto;
-
-            padding:
-
-                clamp(210px, 29vh, 320px)
-
-                clamp(18px, 2vw, 28px)
-
-                clamp(18px, 2vh, 28px);
-
-            display: grid;
-
-            grid-template-columns: minmax(260px, 320px) minmax(560px, 1fr) minmax(260px, 320px);
-
-            grid-template-areas: "left main right";
-
-            align-items: stretch;
-
-            gap: 18px;
-
-            overflow: hidden;
-
-        }
+    width: min(1380px, calc(100vw - 24px));
+    min-height: 100vh;
+    height: auto;
+    margin: 0 auto;
+    padding:
+        clamp(120px, 17vh, 180px)
+        clamp(12px, 1.6vw, 22px)
+        clamp(16px, 2vh, 24px);
+    display: grid;
+    grid-template-columns: minmax(220px, 270px) minmax(0, 1fr) minmax(220px, 270px);
+    grid-template-areas: "left main right";
+    align-items: start;
+    gap: 14px;
+    overflow: visible;
+}
 
 
 
@@ -1463,108 +1439,60 @@
 
 
         @media (max-width: 1180px) {
+    .app-shell {
+        grid-template-columns: 1fr;
+    }
 
-            .app-shell {
+    .player-mode .app-shell {
+        width: min(100vw - 20px, 1100px);
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "main"
+            "left"
+            "right";
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+        padding-top: 130px;
+    }
 
-                grid-template-columns: 1fr;
-
-            }
-
-
-
-            .player-mode .app-shell {
-
-                width: min(100vw - 24px, 1100px);
-
-                grid-template-columns: 1fr;
-
-                grid-template-areas:
-
-                    "main"
-
-                    "left"
-
-                    "right";
-
-                height: auto;
-
-                min-height: 100vh;
-
-                overflow-y: auto;
-
-                padding-top: 220px;
-
-            }
-
-
-
-            .player-mode {
-
-                overflow-y: auto;
-
-                height: auto;
-
-                min-height: 100vh;
-
-            }
-
-        }
-
-
+    .player-mode {
+        overflow-y: auto;
+        height: auto;
+        min-height: 100vh;
+    }
+}
 
         @media (max-width: 720px) {
+    .app-shell {
+        padding: 12px;
+        gap: 12px;
+    }
 
-            .app-shell {
+    .card {
+        padding: 14px;
+        border-radius: 20px;
+    }
 
-                padding: 12px;
+    .player-mode {
+        background-size: cover;
+        background-position: center top;
+        overflow-y: auto;
+        height: auto;
+        min-height: 100vh;
+    }
 
-                gap: 12px;
-
-            }
-
-
-
-            .card {
-
-                padding: 14px;
-
-                border-radius: 20px;
-
-            }
-
-
-
-            .player-mode {
-
-                background-size: cover;
-
-                background-position: center top;
-
-                overflow-y: auto;
-
-                height: auto;
-
-                min-height: 100vh;
-
-            }
-
-
-
-            .player-mode .app-shell {
-
-                width: calc(100vw - 16px);
-
-                height: auto;
-
-                min-height: 100vh;
-
-                overflow-y: auto;
-
-                padding-top: 190px;
-
-            }
-
-        }
+    .player-mode .app-shell {
+        width: calc(100vw - 12px);
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+        padding-top: 110px;
+        padding-left: 6px;
+        padding-right: 6px;
+        gap: 10px;
+    }
+}
 
     </style>
 
@@ -2845,33 +2773,41 @@
             }
         }
 
-        function buildRoundResultHtml(data = {}) {
-            const majorityLine = data.additional_round_triggered
-                ? `<p><strong>Additional round votes:</strong> ${data.additional_round_votes || 0}</p>`
-                : `<p><strong>Majority vote:</strong> ${data.majority_team || "No majority"}</p>`;
+function buildRoundResultHtml(data = {}) {
+    const majorityLine = data.additional_round_triggered
+        ? `<p><strong>Additional round votes:</strong> ${data.additional_round_votes || 0}</p>`
+        : `<p><strong>Majority vote:</strong> ${data.majority_team || "No majority"}</p>`;
 
-            const individualCorrect = Array.isArray(data.individual_correct_teams) && data.individual_correct_teams.length
+    const actualImpostorLine = (!data.additional_round_triggered && data.actual_impostor)
+        ? `<p><strong>Actual Impostor:</strong> ${data.actual_impostor}</p>`
+        : "";
+
+    const individualCorrectLine = data.additional_round_triggered
+        ? ""
+        : `<p><strong>Individual correct teams:</strong> ${
+            Array.isArray(data.individual_correct_teams) && data.individual_correct_teams.length
                 ? data.individual_correct_teams.join(", ")
-                : "None";
+                : "None"
+        }</p>`;
 
-            const scores = Object.entries(data.scores || {})
-                .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-                .map(([team, score]) => `<li><div class="team-card-row"><span>${team}</span><span class="score-badge">${score}</span></div></li>`)
-                .join("");
+    const scores = Object.entries(data.scores || {})
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([team, score]) => `<li><div class="team-card-row"><span>${team}</span><span class="score-badge">${score}</span></div></li>`)
+        .join("");
 
-            return `
-                <div class="result-box">
-                    <p><strong>Result:</strong> ${data.result_text || "Round result will appear here."}</p>
-                    <p><strong>Actual Impostor:</strong> ${data.actual_impostor || "--"}</p>
-                    ${majorityLine}
-                    <p><strong>Individual correct teams:</strong> ${individualCorrect}</p>
-                    <div style="margin-top: 14px;">
-                        <strong>Scores</strong>
-                        <ul class="clean-list" style="margin-top: 10px;">${scores || "<li>No scores yet.</li>"}</ul>
-                    </div>
-                </div>
-            `;
-        }
+    return `
+        <div class="result-box">
+            <p><strong>Result:</strong> ${data.result_text || "Round result will appear here."}</p>
+            ${actualImpostorLine}
+            ${majorityLine}
+            ${individualCorrectLine}
+            <div style="margin-top: 14px;">
+                <strong>Scores</strong>
+                <ul class="clean-list" style="margin-top: 10px;">${scores || "<li>No scores yet.</li>"}</ul>
+            </div>
+        </div>
+    `;
+}
 
         function renderGameOver(data = {}) {
             showNormalApp();

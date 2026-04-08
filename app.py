@@ -372,11 +372,13 @@ def calculate_round_result(code):
             "additional_round_triggered": True,
             "additional_round_votes": additional_round_votes,
             "majority_team": None,
-            "actual_impostor": game["impostor"],
+            "actual_impostor": None,
             "majority_correct": False,
-            "individual_correct_teams": individual_correct,
-            "result_text": "An additional round was approved. Same round, same roles, same word, same turn order.",
+            "individual_correct_teams": [],
+            "result_text": "An additional round was approved. Same round, same roles, same word, same turn order."
         }, room=code)
+
+        emit_status(code, "Additional round approved. Host can continue.")
         return
 
     if vote_targets:
