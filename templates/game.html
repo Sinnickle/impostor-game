@@ -108,56 +108,55 @@
 .bulb-card::after {
     content: "";
     position: absolute;
-    inset: -10px;
-    border-radius: 32px;
+
+    /* KEY FIX: keep bulbs INSIDE instead of outside */
+    inset: 6px;
+
+    border-radius: 24px;
     pointer-events: none;
     z-index: 3;
-    opacity: 1;
 
     background-image:
-        radial-gradient(circle, rgba(255, 244, 196, 1) 0 5px, rgba(255, 197, 79, 1) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-        radial-gradient(circle, rgba(255, 244, 196, 0.20) 0 5px, rgba(255, 197, 79, 0.18) 5px 8px, rgba(126, 73, 17, 0.35) 8px 9px, transparent 9px),
-        radial-gradient(circle, rgba(255, 244, 196, 1) 0 5px, rgba(255, 197, 79, 1) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-        radial-gradient(circle, rgba(255, 244, 196, 0.20) 0 5px, rgba(255, 197, 79, 0.18) 5px 8px, rgba(126, 73, 17, 0.35) 8px 9px, transparent 9px),
-        radial-gradient(circle, rgba(255, 244, 196, 0.20) 0 5px, rgba(255, 197, 79, 0.18) 5px 8px, rgba(126, 73, 17, 0.35) 8px 9px, transparent 9px),
-        radial-gradient(circle, rgba(255, 244, 196, 1) 0 5px, rgba(255, 197, 79, 1) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-        radial-gradient(circle, rgba(255, 244, 196, 0.20) 0 5px, rgba(255, 197, 79, 0.18) 5px 8px, rgba(126, 73, 17, 0.35) 8px 9px, transparent 9px),
-        radial-gradient(circle, rgba(255, 244, 196, 1) 0 5px, rgba(255, 197, 79, 1) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px);
+        radial-gradient(circle at center, rgba(255,244,196,1) 0 5px, rgba(255,197,79,1) 5px 8px, rgba(126,73,17,0.95) 8px 9px, transparent 9px),
+        radial-gradient(circle at center, rgba(255,244,196,0.2) 0 5px, rgba(255,197,79,0.18) 5px 8px, rgba(126,73,17,0.35) 8px 9px, transparent 9px),
+
+        radial-gradient(circle at center, rgba(255,244,196,1) 0 5px, rgba(255,197,79,1) 5px 8px, rgba(126,73,17,0.95) 8px 9px, transparent 9px),
+        radial-gradient(circle at center, rgba(255,244,196,0.2) 0 5px, rgba(255,197,79,0.18) 5px 8px, rgba(126,73,17,0.35) 8px 9px, transparent 9px),
+
+        radial-gradient(circle at center, rgba(255,244,196,0.2) 0 5px, rgba(255,197,79,0.18) 5px 8px, rgba(126,73,17,0.35) 8px 9px, transparent 9px),
+        radial-gradient(circle at center, rgba(255,244,196,1) 0 5px, rgba(255,197,79,1) 5px 8px, rgba(126,73,17,0.95) 8px 9px, transparent 9px),
+
+        radial-gradient(circle at center, rgba(255,244,196,0.2) 0 5px, rgba(255,197,79,0.18) 5px 8px, rgba(126,73,17,0.35) 8px 9px, transparent 9px),
+        radial-gradient(circle at center, rgba(255,244,196,1) 0 5px, rgba(255,197,79,1) 5px 8px, rgba(126,73,17,0.95) 8px 9px, transparent 9px);
 
     background-size:
-        var(--bulb-step-x) 18px,
-        var(--bulb-step-x) 18px,
-        var(--bulb-step-x) 18px,
-        var(--bulb-step-x) 18px,
-        18px var(--bulb-step-y),
-        18px var(--bulb-step-y),
-        18px var(--bulb-step-y),
-        18px var(--bulb-step-y);
+        34px 18px, 34px 18px,
+        34px 18px, 34px 18px,
+        18px 34px, 18px 34px,
+        18px 34px, 18px 34px;
 
     background-repeat:
-        repeat-x,
-        repeat-x,
-        repeat-x,
-        repeat-x,
-        repeat-y,
-        repeat-y,
-        repeat-y,
-        repeat-y;
+        repeat-x, repeat-x,
+        repeat-x, repeat-x,
+        repeat-y, repeat-y,
+        repeat-y, repeat-y;
 
     background-position:
-        left 14px top 0,
-        left calc(14px + (var(--bulb-step-x) / 2)) top 0,
-        left 14px bottom 0,
-        left calc(14px + (var(--bulb-step-x) / 2)) bottom 0,
-        left 0 top calc(14px + (var(--bulb-step-y) / 2)),
-        left 0 top 14px,
-        right 0 top calc(14px + (var(--bulb-step-y) / 2)),
-        right 0 top 14px;
+        left top,
+        left 17px top,
+
+        left bottom,
+        left 17px bottom,
+
+        left top,
+        left top 17px,
+
+        right top,
+        right top 17px;
 
     filter:
-        drop-shadow(0 0 6px rgba(255, 211, 92, 0.72))
-        drop-shadow(0 0 14px rgba(255, 211, 92, 0.34))
-        drop-shadow(0 0 22px rgba(255, 78, 147, 0.14));
+        drop-shadow(0 0 6px rgba(255,211,92,0.7))
+        drop-shadow(0 0 14px rgba(255,211,92,0.3));
 
     animation: bulbBorderAlternate 2s steps(1, end) infinite;
 }
@@ -1147,14 +1146,28 @@
         const bgMusic = document.getElementById("bgMusic");
         const glitchLayer = document.getElementById("glitchLayer");
 
-        introVideo.addEventListener("timeupdate", () => {
+        appShell.style.display = "none";
+
+        let glitchStarted = false;
+
+introVideo.addEventListener("timeupdate", () => {
     if (!introVideo.duration) return;
 
     const timeLeft = introVideo.duration - introVideo.currentTime;
 
-    // Start glitch 1 second before end
-    if (timeLeft <= 1 && !glitchLayer.classList.contains("active")) {
+    // START GLITCH 2 SECONDS BEFORE END
+    if (timeLeft <= 2 && !glitchStarted) {
+        glitchStarted = true;
+
         glitchLayer.classList.add("active");
+
+        // IMPORTANT: TRANSITION UI WHILE GLITCH IS COVERING SCREEN
+        setTimeout(() => {
+            hide(playerVideoLayer);
+
+            // your main UI is already behind it, so just reveal it
+            appShell.style.display = "grid";
+        }, 900); // happens mid-glitch (feels smooth)
     }
 });
 
