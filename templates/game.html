@@ -87,10 +87,11 @@
         .bulb-card {
     position: relative;
     isolation: isolate;
+    overflow: visible; /* IMPORTANT FIX */
+
     --bulb-size: 12px;
     --bulb-step-x: 34px;
     --bulb-step-y: 34px;
-    --bulb-edge-offset: 8px;
 }
 
 .bulb-card::before {
@@ -109,10 +110,10 @@
     content: "";
     position: absolute;
 
-    /* KEY FIX: keep bulbs INSIDE instead of outside */
-    inset: 6px;
+    /* KEY: sit slightly OUTSIDE border */
+    inset: -6px;
 
-    border-radius: 24px;
+    border-radius: 28px;
     pointer-events: none;
     z-index: 3;
 
@@ -155,8 +156,8 @@
         right top 17px;
 
     filter:
-        drop-shadow(0 0 6px rgba(255,211,92,0.7))
-        drop-shadow(0 0 14px rgba(255,211,92,0.3));
+        drop-shadow(0 0 6px rgba(255,211,92,0.8))
+        drop-shadow(0 0 14px rgba(255,211,92,0.4));
 
     animation: bulbBorderAlternate 2s steps(1, end) infinite;
 }
