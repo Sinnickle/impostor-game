@@ -1126,6 +1126,10 @@
         const teamName = (params.get("team") || localStorage.getItem("teamName") || "").trim();
         const isHost = (params.get("host") === "1") || localStorage.getItem("isHost") === "true";
 
+        if (!isHost) {
+    appShell.style.display = "none";
+}
+
         let myRole = null;
         let myWord = null;
         let currentState = "lobby";
@@ -1145,8 +1149,6 @@
         const introVideo = document.getElementById("introVideo");
         const bgMusic = document.getElementById("bgMusic");
         const glitchLayer = document.getElementById("glitchLayer");
-
-        appShell.style.display = "none";
 
         let glitchStarted = false;
 
