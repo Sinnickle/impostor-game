@@ -84,109 +84,87 @@
             backdrop-filter: blur(8px);
         }
 
-        .bulb-card {
-    position: relative;
-    isolation: isolate;
-    overflow: visible; /* IMPORTANT FIX */
+                .bulb-card {
+            position: relative;
+            isolation: isolate;
+            overflow: visible;
+        }
 
-    --bulb-size: 12px;
-    --bulb-step-x: 34px;
-    --bulb-step-y: 34px;
-}
+        .bulb-card::before {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            border-radius: 28px;
+            pointer-events: none;
+            z-index: 1;
+            box-shadow:
+                inset 0 0 0 2px rgba(255, 219, 126, 0.52),
+                0 0 18px rgba(255, 211, 92, 0.12);
+        }
 
-.bulb-card::before {
-    content: "";
-    position: absolute;
-    inset: -4px;
-    border-radius: 28px;
-    pointer-events: none;
-    z-index: 1;
-    box-shadow:
-        inset 0 0 0 2px rgba(255, 219, 126, 0.52),
-        0 0 18px rgba(255, 211, 92, 0.12);
-}
+        .bulb-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
 
-.bulb-card::after {
-    content: "";
-    position: absolute;
+        .player-mode .bulb-card::after {
+            display: none;
+        }
 
-    /* KEY: sit slightly OUTSIDE border */
-    inset: -6px;
+        .player-mode .bulb-card {
+            --player-bulb-size: 16px;
+            --player-bulb-corner-radius: 24px;
+            --player-bulb-offset: 8px;
+        }
 
-    border-radius: 28px;
-    pointer-events: none;
-    z-index: 3;
+        .player-mode .border-bulbs {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 4;
+            overflow: visible;
+        }
 
-    background-image:
-        radial-gradient(circle at center, rgba(255,244,196,1) 0 5px, rgba(255,197,79,1) 5px 8px, rgba(126,73,17,0.95) 8px 9px, transparent 9px),
-        radial-gradient(circle at center, rgba(255,244,196,0.2) 0 5px, rgba(255,197,79,0.18) 5px 8px, rgba(126,73,17,0.35) 8px 9px, transparent 9px),
+        .player-mode .border-bulb {
+            position: absolute;
+            width: var(--player-bulb-size);
+            height: var(--player-bulb-size);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background:
+                radial-gradient(circle at 35% 35%, rgba(255, 252, 230, 1) 0 22%, rgba(255, 244, 196, 0.98) 22% 42%, rgba(255, 197, 79, 0.98) 42% 72%, rgba(126, 73, 17, 0.98) 72% 84%, rgba(70, 35, 8, 0.96) 84% 100%);
+            box-shadow:
+                0 0 8px rgba(255, 211, 92, 0.95),
+                0 0 16px rgba(255, 211, 92, 0.62),
+                0 0 28px rgba(255, 78, 147, 0.22);
+            animation: playerBorderBulbPulse 2s steps(1, end) infinite;
+            will-change: filter, opacity, box-shadow;
+        }
 
-        radial-gradient(circle at center, rgba(255,244,196,1) 0 5px, rgba(255,197,79,1) 5px 8px, rgba(126,73,17,0.95) 8px 9px, transparent 9px),
-        radial-gradient(circle at center, rgba(255,244,196,0.2) 0 5px, rgba(255,197,79,0.18) 5px 8px, rgba(126,73,17,0.35) 8px 9px, transparent 9px),
+        .player-mode .border-bulb.alt {
+            animation-delay: 1s;
+        }
 
-        radial-gradient(circle at center, rgba(255,244,196,0.2) 0 5px, rgba(255,197,79,0.18) 5px 8px, rgba(126,73,17,0.35) 8px 9px, transparent 9px),
-        radial-gradient(circle at center, rgba(255,244,196,1) 0 5px, rgba(255,197,79,1) 5px 8px, rgba(126,73,17,0.95) 8px 9px, transparent 9px),
-
-        radial-gradient(circle at center, rgba(255,244,196,0.2) 0 5px, rgba(255,197,79,0.18) 5px 8px, rgba(126,73,17,0.35) 8px 9px, transparent 9px),
-        radial-gradient(circle at center, rgba(255,244,196,1) 0 5px, rgba(255,197,79,1) 5px 8px, rgba(126,73,17,0.95) 8px 9px, transparent 9px);
-
-    background-size:
-        34px 18px, 34px 18px,
-        34px 18px, 34px 18px,
-        18px 34px, 18px 34px,
-        18px 34px, 18px 34px;
-
-    background-repeat:
-        repeat-x, repeat-x,
-        repeat-x, repeat-x,
-        repeat-y, repeat-y,
-        repeat-y, repeat-y;
-
-    background-position:
-        left top,
-        left 17px top,
-
-        left bottom,
-        left 17px bottom,
-
-        left top,
-        left top 17px,
-
-        right top,
-        right top 17px;
-
-    filter:
-        drop-shadow(0 0 6px rgba(255,211,92,0.8))
-        drop-shadow(0 0 14px rgba(255,211,92,0.4));
-
-    animation: bulbBorderAlternate 2s steps(1, end) infinite;
-}
-
-@keyframes bulbBorderAlternate {
-    0%, 49.999% {
-        background-image:
-            radial-gradient(circle, rgba(255, 244, 196, 1) 0 5px, rgba(255, 197, 79, 1) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-            radial-gradient(circle, rgba(255, 244, 196, 0.20) 0 5px, rgba(255, 197, 79, 0.18) 5px 8px, rgba(126, 73, 17, 0.35) 8px 9px, transparent 9px),
-            radial-gradient(circle, rgba(255, 244, 196, 1) 0 5px, rgba(255, 197, 79, 1) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-            radial-gradient(circle, rgba(255, 244, 196, 0.20) 0 5px, rgba(255, 197, 79, 0.18) 5px 8px, rgba(126, 73, 17, 0.35) 8px 9px, transparent 9px),
-            radial-gradient(circle, rgba(255, 244, 196, 0.20) 0 5px, rgba(255, 197, 79, 0.18) 5px 8px, rgba(126, 73, 17, 0.35) 8px 9px, transparent 9px),
-            radial-gradient(circle, rgba(255, 244, 196, 1) 0 5px, rgba(255, 197, 79, 1) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-            radial-gradient(circle, rgba(255, 244, 196, 0.20) 0 5px, rgba(255, 197, 79, 0.18) 5px 8px, rgba(126, 73, 17, 0.35) 8px 9px, transparent 9px),
-            radial-gradient(circle, rgba(255, 244, 196, 1) 0 5px, rgba(255, 197, 79, 1) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px);
-    }
-
-    50%, 100% {
-        background-image:
-            radial-gradient(circle, rgba(255, 244, 196, 0.20) 0 5px, rgba(255, 197, 79, 0.18) 5px 8px, rgba(126, 73, 17, 0.35) 8px 9px, transparent 9px),
-            radial-gradient(circle, rgba(255, 244, 196, 1) 0 5px, rgba(255, 197, 79, 1) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-            radial-gradient(circle, rgba(255, 244, 196, 0.20) 0 5px, rgba(255, 197, 79, 0.18) 5px 8px, rgba(126, 73, 17, 0.35) 8px 9px, transparent 9px),
-            radial-gradient(circle, rgba(255, 244, 196, 1) 0 5px, rgba(255, 197, 79, 1) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-            radial-gradient(circle, rgba(255, 244, 196, 1) 0 5px, rgba(255, 197, 79, 1) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-            radial-gradient(circle, rgba(255, 244, 196, 0.20) 0 5px, rgba(255, 197, 79, 0.18) 5px 8px, rgba(126, 73, 17, 0.35) 8px 9px, transparent 9px),
-            radial-gradient(circle, rgba(255, 244, 196, 1) 0 5px, rgba(255, 197, 79, 1) 5px 8px, rgba(126, 73, 17, 0.95) 8px 9px, transparent 9px),
-            radial-gradient(circle, rgba(255, 244, 196, 0.20) 0 5px, rgba(255, 197, 79, 0.18) 5px 8px, rgba(126, 73, 17, 0.35) 8px 9px, transparent 9px);
-    }
-}
+        @keyframes playerBorderBulbPulse {
+            0%, 49.999% {
+                opacity: 1;
+                filter: brightness(1.08);
+                box-shadow:
+                    0 0 8px rgba(255, 211, 92, 0.95),
+                    0 0 16px rgba(255, 211, 92, 0.62),
+                    0 0 28px rgba(255, 78, 147, 0.22);
+            }
+            50%, 100% {
+                opacity: 0.32;
+                filter: brightness(0.7);
+                box-shadow:
+                    0 0 3px rgba(255, 211, 92, 0.28),
+                    0 0 7px rgba(255, 211, 92, 0.14),
+                    0 0 12px rgba(255, 78, 147, 0.06);
+            }
+        }
 
         h1, h2, h3 {
             margin-top: 0;
@@ -508,31 +486,38 @@
             pointer-events: none;
             opacity: 0;
             z-index: 95;
-            mix-blend-mode: screen;
-            background:
+            background-color: #000;
+            mix-blend-mode: normal;
+            background-image:
                 repeating-linear-gradient(
                     0deg,
-                    rgba(255,255,255,0.14) 0px,
-                    rgba(255,255,255,0.14) 1px,
-                    rgba(0,0,0,0.0) 2px,
-                    rgba(0,0,0,0.0) 4px
+                    rgba(255,255,255,0.22) 0px,
+                    rgba(255,255,255,0.22) 2px,
+                    rgba(0,0,0,0.92) 2px,
+                    rgba(0,0,0,0.92) 5px
                 ),
                 repeating-linear-gradient(
                     90deg,
-                    rgba(255, 0, 102, 0.08) 0px,
-                    rgba(255, 0, 102, 0.08) 3px,
-                    rgba(0, 255, 255, 0.08) 3px,
-                    rgba(0, 255, 255, 0.08) 6px,
-                    rgba(255, 230, 0, 0.08) 6px,
-                    rgba(255, 230, 0, 0.08) 9px,
-                    rgba(0,0,0,0.0) 9px,
-                    rgba(0,0,0,0.0) 13px
+                    rgba(255, 0, 102, 0.30) 0px,
+                    rgba(255, 0, 102, 0.30) 4px,
+                    rgba(0, 255, 255, 0.30) 4px,
+                    rgba(0, 255, 255, 0.30) 8px,
+                    rgba(255, 230, 0, 0.26) 8px,
+                    rgba(255, 230, 0, 0.26) 12px,
+                    rgba(0,0,0,0.88) 12px,
+                    rgba(0,0,0,0.88) 18px
                 ),
-                radial-gradient(circle at 20% 20%, rgba(255,0,128,0.20), transparent 20%),
-                radial-gradient(circle at 80% 30%, rgba(0,255,255,0.20), transparent 20%),
-                radial-gradient(circle at 40% 75%, rgba(255,230,0,0.16), transparent 16%),
-                linear-gradient(135deg, rgba(255,0,128,0.12), rgba(0,255,255,0.10), rgba(255,255,255,0.08));
-            transition: opacity 0.05s linear;
+                radial-gradient(circle at 18% 20%, rgba(255,0,128,0.42), transparent 22%),
+                radial-gradient(circle at 78% 28%, rgba(0,255,255,0.40), transparent 22%),
+                radial-gradient(circle at 42% 74%, rgba(255,230,0,0.34), transparent 18%),
+                linear-gradient(
+                    135deg,
+                    rgba(255, 0, 128, 0.24),
+                    rgba(0, 255, 255, 0.22),
+                    rgba(255,255,255,0.16)
+                );
+            background-size: auto, auto, auto, auto, auto, auto;
+            transition: none;
         }
 
         #glitchLayer.active {
@@ -604,23 +589,36 @@
 }
 
 .player-mode body {
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.player-mode {
+    overflow-x: hidden;
+    overflow-y: auto;
+    min-height: 100vh;
+    height: auto;
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-color: #12070b;
 }
 
 .player-mode .app-shell {
     width: min(1380px, calc(100vw - 20px));
-    height: 100vh;
+    min-height: 100vh;
+    height: auto;
     margin: 0 auto;
     padding:
         clamp(150px, 18vh, 210px)
         clamp(10px, 1vw, 16px)
-        clamp(10px, 1.2vh, 16px);
+        clamp(16px, 2vh, 24px);
     display: grid;
     grid-template-columns: minmax(200px, 240px) minmax(0, 1fr) minmax(200px, 240px);
     grid-template-areas: "left main right";
-    align-items: stretch;
+    align-items: start;
     gap: 12px;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .player-mode .side-panel.left-player-panel {
@@ -628,30 +626,27 @@
     grid-area: left;
     justify-content: flex-start;
     min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: visible;
     gap: 12px;
-    padding-right: 4px;
+    padding: 8px;
 }
 
 .player-mode .main-panel {
     grid-area: main;
     justify-content: flex-start;
     min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: visible;
     gap: 12px;
-    padding-right: 4px;
+    padding: 8px;
 }
 
 .player-mode .right-player-panel {
     grid-area: right;
     justify-content: flex-start;
     min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: visible;
     gap: 12px;
-    padding-right: 4px;
+    padding: 8px;
 }
 
 .player-mode .main-panel .card:first-child {
@@ -675,12 +670,14 @@
     flex: 0 0 auto;
     min-height: fit-content;
     overflow: visible;
+    margin: 0;
 }
 
 .player-mode .main-panel > .card {
     width: 100%;
     min-height: fit-content;
     overflow: visible;
+    margin: 0;
 }
 
 .player-mode .card {
@@ -785,54 +782,54 @@
 
         @keyframes fullScreenCasinoGlitch {
             0% {
-                opacity: 0;
+                opacity: 1;
                 transform: translate(0, 0) scale(1);
-                filter: hue-rotate(0deg) saturate(1.2) contrast(1.12);
+                filter: hue-rotate(0deg) saturate(1.45) contrast(1.28) brightness(0.88);
             }
-            6% {
+            8% {
                 opacity: 1;
-                transform: translate(-16px, 4px) scale(1.01);
-                filter: hue-rotate(35deg) saturate(1.7) contrast(1.4);
+                transform: translate(-18px, 6px) scale(1.02);
+                filter: hue-rotate(40deg) saturate(2.1) contrast(1.55) brightness(0.95);
             }
-            12% {
+            16% {
                 opacity: 1;
-                transform: translate(14px, -8px) scale(1.02);
-                filter: hue-rotate(90deg) saturate(1.9) contrast(1.5);
+                transform: translate(16px, -10px) scale(1.03);
+                filter: hue-rotate(95deg) saturate(2.2) contrast(1.62) brightness(1);
             }
-            19% {
-                opacity: 0.92;
-                transform: translate(-10px, 10px) scale(1);
-                filter: hue-rotate(150deg) saturate(2) contrast(1.42);
-            }
-            27% {
+            24% {
                 opacity: 1;
-                transform: translate(18px, -6px) scale(1.01);
-                filter: hue-rotate(220deg) saturate(2) contrast(1.52);
+                transform: translate(-12px, 12px) scale(1.01);
+                filter: hue-rotate(155deg) saturate(2.3) contrast(1.58) brightness(0.98);
             }
-            35% {
-                opacity: 0.94;
-                transform: translate(-20px, 8px) scale(1.015);
-                filter: hue-rotate(280deg) saturate(1.95) contrast(1.45);
-            }
-            48% {
+            34% {
                 opacity: 1;
-                transform: translate(12px, -12px) scale(1);
-                filter: hue-rotate(320deg) saturate(1.8) contrast(1.35);
+                transform: translate(20px, -8px) scale(1.02);
+                filter: hue-rotate(225deg) saturate(2.25) contrast(1.66) brightness(1);
             }
-            60% {
-                opacity: 0.95;
-                transform: translate(-8px, 6px) scale(1.01);
-                filter: hue-rotate(20deg) saturate(1.6) contrast(1.28);
+            46% {
+                opacity: 1;
+                transform: translate(-22px, 10px) scale(1.025);
+                filter: hue-rotate(285deg) saturate(2.15) contrast(1.6) brightness(0.96);
             }
-            76% {
-                opacity: 0.88;
-                transform: translate(7px, -4px) scale(1);
-                filter: hue-rotate(75deg) saturate(1.35) contrast(1.15);
+            58% {
+                opacity: 1;
+                transform: translate(14px, -12px) scale(1.01);
+                filter: hue-rotate(330deg) saturate(1.95) contrast(1.46) brightness(0.94);
+            }
+            74% {
+                opacity: 1;
+                transform: translate(-8px, 5px) scale(1.005);
+                filter: hue-rotate(60deg) saturate(1.6) contrast(1.28) brightness(0.92);
+            }
+            88% {
+                opacity: 1;
+                transform: translate(5px, -3px) scale(1);
+                filter: hue-rotate(20deg) saturate(1.3) contrast(1.14) brightness(0.9);
             }
             100% {
                 opacity: 0;
                 transform: translate(0, 0) scale(1);
-                filter: hue-rotate(0deg) saturate(1) contrast(1);
+                filter: hue-rotate(0deg) saturate(1) contrast(1) brightness(1);
             }
         }
 
@@ -1161,24 +1158,183 @@ const isHost = params.get("host") === "1";
 
         let glitchStarted = false;
 
+        let playerBulbResizeObserver = null;
+        let playerBulbBuildRaf = null;
+
+        function clearPlayerBulbBorders() {
+            document.querySelectorAll(".border-bulbs").forEach(el => el.remove());
+        }
+
+        function buildPlayerBulbBorderForCard(card) {
+    if (isHost) return;
+    if (!body.classList.contains("player-mode")) return;
+    if (!card) return;
+
+    const old = card.querySelector(".border-bulbs");
+    if (old) old.remove();
+
+    const rect = card.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+
+    if (width < 40 || height < 40) return;
+
+    const bulbLayer = document.createElement("div");
+    bulbLayer.className = "border-bulbs";
+
+    const styles = getComputedStyle(card);
+    const bulbSize = parseFloat(styles.getPropertyValue("--player-bulb-size")) || 16;
+    const step = 34;
+
+    /*
+        Put bulb centers INSIDE the card by half the bulb size,
+        so every bulb is fully visible and tangent to the border.
+    */
+    const inset = bulbSize / 2 - 10;
+
+    /*
+        Use the actual card radius if possible.
+    */
+    let radius = parseFloat(styles.borderTopLeftRadius);
+    if (!Number.isFinite(radius)) {
+        radius = parseFloat(styles.getPropertyValue("--player-bulb-corner-radius")) || 24;
+    }
+
+    /*
+        Since bulbs are inset inward, the path radius also moves inward.
+    */
+    const r = Math.max(0, radius - inset);
+
+    const left = inset;
+    const top = inset;
+    const right = width - inset;
+    const bottom = height - inset;
+
+    if (right <= left || bottom <= top) return;
+    if ((right - left) < r * 2 || (bottom - top) < r * 2) return;
+
+    let bulbIndex = 0;
+
+    function addBulb(x, y) {
+        const bulb = document.createElement("span");
+        bulb.className = "border-bulb" + (bulbIndex % 2 === 1 ? " alt" : "");
+        bulb.style.left = `${x}px`;
+        bulb.style.top = `${y}px`;
+        bulbLayer.appendChild(bulb);
+        bulbIndex++;
+    }
+
+    function addLine(x1, y1, x2, y2, includeStart = true, includeEnd = true) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const length = Math.hypot(dx, dy);
+        const count = Math.max(1, Math.floor(length / step));
+
+        for (let i = 0; i <= count; i++) {
+            if (i === 0 && !includeStart) continue;
+            if (i === count && !includeEnd) continue;
+
+            const t = count === 0 ? 0 : i / count;
+            addBulb(x1 + dx * t, y1 + dy * t);
+        }
+    }
+
+    function addArc(cx, cy, radius, startDeg, endDeg, includeStart = true, includeEnd = true) {
+        const start = startDeg * Math.PI / 180;
+        const end = endDeg * Math.PI / 180;
+        const arcLength = Math.abs(end - start) * radius;
+        const count = Math.max(1, Math.floor(arcLength / step));
+
+        for (let i = 0; i <= count; i++) {
+            if (i === 0 && !includeStart) continue;
+            if (i === count && !includeEnd) continue;
+
+            const t = count === 0 ? 0 : i / count;
+            const angle = start + (end - start) * t;
+
+            addBulb(
+                cx + Math.cos(angle) * radius,
+                cy + Math.sin(angle) * radius
+            );
+        }
+    }
+
+    if (r > 0) {
+        addLine(left + r, top, right - r, top, true, false);
+        addArc(right - r, top + r, r, -90, 0, true, false);
+        addLine(right, top + r, right, bottom - r, true, false);
+        addArc(right - r, bottom - r, r, 0, 90, true, false);
+        addLine(right - r, bottom, left + r, bottom, true, false);
+        addArc(left + r, bottom - r, r, 90, 180, true, false);
+        addLine(left, bottom - r, left, top + r, true, false);
+        addArc(left + r, top + r, r, 180, 270, true, false);
+    } else {
+        addLine(left, top, right, top, true, false);
+        addLine(right, top, right, bottom, true, false);
+        addLine(right, bottom, left, bottom, true, false);
+        addLine(left, bottom, left, top, true, false);
+    }
+
+    card.appendChild(bulbLayer);
+}
+
+        function rebuildPlayerBulbBorders() {
+            if (isHost) return;
+            if (!body.classList.contains("player-mode")) return;
+
+            const cards = document.querySelectorAll(".bulb-card");
+            cards.forEach(card => buildPlayerBulbBorderForCard(card));
+        }
+
+        function schedulePlayerBulbBorderBuild() {
+            if (isHost) return;
+
+            if (playerBulbBuildRaf) {
+                cancelAnimationFrame(playerBulbBuildRaf);
+            }
+
+            playerBulbBuildRaf = requestAnimationFrame(() => {
+                rebuildPlayerBulbBorders();
+            });
+        }
+
+        function initPlayerBulbBorders() {
+            if (isHost) return;
+            if (!body.classList.contains("player-mode")) return;
+
+            schedulePlayerBulbBorderBuild();
+
+            if (playerBulbResizeObserver) {
+                playerBulbResizeObserver.disconnect();
+            }
+
+            playerBulbResizeObserver = new ResizeObserver(() => {
+                schedulePlayerBulbBorderBuild();
+            });
+
+            document.querySelectorAll(".bulb-card").forEach(card => {
+                playerBulbResizeObserver.observe(card);
+            });
+
+            window.addEventListener("resize", schedulePlayerBulbBorderBuild);
+        }
+
 introVideo.addEventListener("timeupdate", () => {
+    if (isHost) return;
     if (!introVideo.duration) return;
 
     const timeLeft = introVideo.duration - introVideo.currentTime;
 
-    // START GLITCH 2 SECONDS BEFORE END
     if (timeLeft <= 2 && !glitchStarted) {
         glitchStarted = true;
 
+        glitchLayer.classList.remove("active");
+        void glitchLayer.offsetWidth;
         glitchLayer.classList.add("active");
 
-        // IMPORTANT: TRANSITION UI WHILE GLITCH IS COVERING SCREEN
         setTimeout(() => {
             hide(playerVideoLayer);
-
-            // your main UI is already behind it, so just reveal it
-            appShell.style.display = "grid";
-        }, 900); // happens mid-glitch (feels smooth)
+        }, 900);
     }
 });
 
@@ -1405,6 +1561,7 @@ introVideo.addEventListener("timeupdate", () => {
             hide(votingBox);
             hide(roundResultBox);
             hide(finalLeaderboardBox);
+            schedulePlayerBulbBorderBuild();
         }
 
         function hidePlayerWhiteScreen() {
@@ -1431,6 +1588,7 @@ introVideo.addEventListener("timeupdate", () => {
         function showNormalApp() {
             hidePlayerWhiteScreen();
             appShell.classList.remove("hidden");
+            schedulePlayerBulbBorderBuild();
         }
 
         function setHostActionMode(mode) {
@@ -1498,11 +1656,18 @@ introVideo.addEventListener("timeupdate", () => {
         }
 
         async function playGlitchOnly() {
+            if (!isHost) {
+                glitchStarted = true;
+            }
+
             glitchLayer.classList.remove("active");
             void glitchLayer.offsetWidth;
             glitchLayer.classList.add("active");
+
             await sleep(GLITCH_DURATION_MS);
+
             glitchLayer.classList.remove("active");
+            glitchStarted = false;
         }
 
         async function playSkipIntroSequence() {
@@ -1526,6 +1691,9 @@ introVideo.addEventListener("timeupdate", () => {
 
         async function handleIntroVideoStart() {
             if (isHost) return;
+
+            glitchStarted = false;
+            glitchLayer.classList.remove("active");
 
             hidePlayerWhiteScreen();
             hideMainBoxes();
@@ -1563,6 +1731,7 @@ introVideo.addEventListener("timeupdate", () => {
 
             agreementStatus.textContent = msg;
             setIntroProgress(data.message, data.finished_count, data.total_teams);
+            schedulePlayerBulbBorderBuild();
         }
 
         playerReadyBigBtn.addEventListener("click", async () => {
@@ -1581,14 +1750,17 @@ introVideo.addEventListener("timeupdate", () => {
         });
 
         introVideo.addEventListener("ended", async () => {
-    // Video disappears immediately
     hide(playerVideoLayer);
 
-    // DO NOT trigger glitch here anymore (it already started earlier)
-    // await playGlitchOnly(); ❌ REMOVE THIS
+    const glitchStillRunning = glitchStarted;
 
-    // Let glitch continue naturally
-    await sleep(1000);
+    if (glitchStillRunning) {
+        await sleep(Math.max(0, GLITCH_DURATION_MS - 1000));
+        glitchLayer.classList.remove("active");
+        glitchStarted = false;
+    } else {
+        await playGlitchOnly();
+    }
 
     await sleep(INTRO_AUDIO_DELAY_MS);
     await playBackgroundMusic();
@@ -1721,6 +1893,8 @@ introVideo.addEventListener("timeupdate", () => {
                     subtext: "",
                     showReadyButton: false
                 });
+
+                initPlayerBulbBorders();
             }
         });
 
