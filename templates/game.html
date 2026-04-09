@@ -1123,12 +1123,20 @@
         const PLAYER_BG_MUSIC_VOLUME = 0.09;
 
         const params = new URLSearchParams(window.location.search);
-        const code = (params.get("code") || localStorage.getItem("code") || "").trim().toUpperCase();
-        const teamName = (params.get("team") || localStorage.getItem("teamName") || "").trim();
-        const isHost = (params.get("host") === "1") || localStorage.getItem("isHost") === "true";
+const code = (params.get("code") || localStorage.getItem("code") || "").trim().toUpperCase();
+const teamName = (params.get("team") || localStorage.getItem("teamName") || "").trim();
 
-        if (!isHost) {
-    appShell.style.display = "none";
+/*
+    IMPORTANT:
+    Only trust the URL for host/player mode.
+    Do NOT let an old localStorage host flag force player screens into host mode.
+*/
+const isHost = params.get("host") === "1";
+
+        if (isHost) {
+    localStorage.setItem("isHost", "true");
+} else {
+    localStorage.setItem("isHost", "false");
 }
 
         let myRole = null;
