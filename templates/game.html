@@ -999,9 +999,14 @@
                         <div class="row">
                             <input id="roundCountInput" type="number" min="1" max="20" value="3" style="width: 110px;">
                             <button id="saveRoundsBtn">Save Rounds</button>
+                            <input id="impostorCountInput" type="number" min="1" max="4" value="1" style="width: 130px;">
+                            <button id="saveImpostorsBtn">Save Impostors</button>
                             <button id="startGameBtn">Start Game</button>
                             <button id="continueBtn" class="hidden">Continue</button>
                             <button id="restartActionBtn" class="hidden">Restart Round</button>
+                        </div>
+                        <div id="impostorCountHint" class="muted small-note">
+                            1 impostor maximum with the current number of teams.
                         </div>
 
                         <label id="skipIntroOptionWrap" class="checkbox-row">
@@ -1142,6 +1147,7 @@ const isHost = params.get("host") === "1";
 
         let myRole = null;
         let myWord = null;
+        let currentImpostorCount = 1;
         let currentState = "lobby";
         let currentTurnTeam = null;
         let currentOrder = [];
@@ -1368,6 +1374,9 @@ const isHost = params.get("host") === "1";
         const hostControls = document.getElementById("hostControls");
         const roundCountInput = document.getElementById("roundCountInput");
         const saveRoundsBtn = document.getElementById("saveRoundsBtn");
+        const impostorCountInput = document.getElementById("impostorCountInput");
+        const saveImpostorsBtn = document.getElementById("saveImpostorsBtn");
+        const impostorCountHint = document.getElementById("impostorCountHint");
         const startGameBtn = document.getElementById("startGameBtn");
         const continueBtn = document.getElementById("continueBtn");
         const restartActionBtn = document.getElementById("restartActionBtn");
@@ -1410,6 +1419,7 @@ const isHost = params.get("host") === "1";
         const playerRoleBannerSub = document.getElementById("playerRoleBannerSub");
 
         roomCodeText.textContent = code || "-----";
+        updateImpostorControls(1, 1);
 
         if (!isHost) {
             body.classList.add("player-mode");
@@ -1458,7 +1468,9 @@ const isHost = params.get("host") === "1";
                 return;
             }
 
-            identityText.textContent = myRole;
+            identityText.textContent = currentImpostorCount > 1
+                ? `IMPOSTOR • ${currentImpostorCount} TOTAL`
+                : myRole;
         }
 
         function updatePlayerRoleBanner() {
@@ -1473,8 +1485,12 @@ const isHost = params.get("host") === "1";
 
             if (myRole === "IMPOSTOR") {
                 playerRoleBanner.classList.add("impostor");
-                playerRoleBannerTitle.textContent = "IMPOSTOR";
-                playerRoleBannerSub.textContent = "Blend in. You do not know the word.";
+                playerRoleBannerTitle.textContent = currentImpostorCount > 1
+                    ? `IMPOSTOR (${currentImpostorCount})`
+                    : "IMPOSTOR";
+                playerRoleBannerSub.textContent = currentImpostorCount > 1
+                    ? `Blend in. There are ${currentImpostorCount} impostors total, and you do not know the word.`
+                    : "Blend in. You do not know the word.";
             } else {
                 playerRoleBanner.classList.remove("impostor");
                 playerRoleBannerTitle.textContent = "HUMAN";
@@ -1487,6 +1503,17 @@ const isHost = params.get("host") === "1";
         function setCurrentTurn(team) {
             currentTurnTeam = team || null;
             currentTurnText.textContent = currentTurnTeam || "--";
+        }
+
+        function updateImpostorControls(impostorCount, maxAllowed) {
+            if (!impostorCountInput || !impostorCountHint) return;
+
+            const safeMax = Math.max(1, Math.min(4, Number(maxAllowed) || 1));
+            const safeValue = Math.max(1, Math.min(safeMax, Number(impostorCount) || 1));
+
+            impostorCountInput.max = String(safeMax);
+            impostorCountInput.value = String(safeValue);
+            impostorCountHint.textContent = `${safeMax} impostor${safeMax === 1 ? "" : "s"} maximum with the current number of teams.`;
         }
 
         function renderTeams(teams) {
@@ -1847,6 +1874,8 @@ const isHost = params.get("host") === "1";
             if (typeof data.max_rounds === "number") {
                 roundCountInput.value = data.max_rounds;
             }
+
+            updateImpostorControls(data.impostor_count, data.max_impostors_allowed);
         }
 
         function buildRoundResultHtml(data = {}) {
@@ -1854,8 +1883,10 @@ const isHost = params.get("host") === "1";
                 ? `<p><strong>Additional round votes:</strong> ${data.additional_round_votes || 0}</p>`
                 : `<p><strong>Majority vote:</strong> ${data.majority_team || "No majority"}</p>`;
 
-            const actualImpostorLine = (!data.additional_round_triggered && data.actual_impostor)
-                ? `<p><strong>Actual Impostor:</strong> ${data.actual_impostor}</p>`
+            const actualImpostorLine = (!data.additional_round_triggered && Array.isArray(data.actual_impostors))
+                ? `<p><strong>Actual Impostor${data.actual_impostors.length === 1 ? "" : "s"}:</strong> ${
+                    data.actual_impostors.length ? data.actual_impostors.join(", ") : "None"
+                }</p>`
                 : "";
 
             const individualCorrectLine = data.additional_round_triggered
@@ -1981,6 +2012,10 @@ const isHost = params.get("host") === "1";
             }
         });
 
+        socket.on("impostor_count_updated", (data) => {
+            updateImpostorControls(data?.impostor_count, data?.max_impostors_allowed);
+        });
+
         socket.on("roster_update", (data) => {
             renderTeams(data.teams || []);
             renderScoreboard(data.scores || {});
@@ -1998,6 +2033,7 @@ const isHost = params.get("host") === "1";
             }
 
             currentState = data.state || currentState;
+            updateImpostorControls(data.impostor_count, data.max_impostors_allowed);
             syncHostControlsFromRoster(data);
 
             if (isHost && currentState === "lobby") {
@@ -2011,6 +2047,7 @@ const isHost = params.get("host") === "1";
             currentState = "lobby";
             myRole = null;
             myWord = null;
+            currentImpostorCount = 1;
             updateIdentityText();
             updatePlayerRoleBanner();
 
@@ -2080,6 +2117,7 @@ const isHost = params.get("host") === "1";
 
             myRole = data?.role || null;
             myWord = data?.word || null;
+            currentImpostorCount = Math.max(1, Number(data?.impostor_count) || 1);
             updateIdentityText();
             updatePlayerRoleBanner();
 
@@ -2097,7 +2135,13 @@ const isHost = params.get("host") === "1";
             showNormalApp();
 
             roleText.innerHTML = data.role === "IMPOSTOR"
-                ? `<div class="big-role impostor-role">IMPOSTOR</div><p>You do not know the word. Blend in and avoid getting caught.</p>`
+                ? `<div class="big-role impostor-role">${
+                    currentImpostorCount > 1 ? `IMPOSTOR (${currentImpostorCount})` : "IMPOSTOR"
+                }</div><p>${
+                    currentImpostorCount > 1
+                        ? `There are ${currentImpostorCount} impostors total. You do not know the word. Blend in and avoid getting caught.`
+                        : "You do not know the word. Blend in and avoid getting caught."
+                }</p>`
                 : `<div class="big-role">HUMAN</div><p>Your word is shown below.</p><div class="word-box"><strong>Word:</strong> ${data.word || "--"}</div>`;
             hostRoleInfo.innerHTML = "";
             statusDiv.textContent = "Roles revealed.";
@@ -2131,7 +2175,8 @@ const isHost = params.get("host") === "1";
             roleText.innerHTML = `<div class="big-role">HOST OVERVIEW</div><div class="word-box"><strong>Word:</strong> ${data.word || "--"}</div>`;
             hostRoleInfo.innerHTML = `
                 <div class="result-box">
-                    <p><strong>Impostor:</strong> ${data.impostor || "--"}</p>
+                    <p><strong>Impostor Count:</strong> ${data.impostor_count || 1}</p>
+                    <p><strong>Impostor${(data.impostors || []).length === 1 ? "" : "s"}:</strong> ${(data.impostors || []).join(", ") || "--"}</p>
                     <p><strong>Order:</strong> ${(data.order || []).join(" → ") || "--"}</p>
                 </div>
             `;
@@ -2251,6 +2296,13 @@ const isHost = params.get("host") === "1";
             if (!isHost) return;
             const rounds = Math.max(1, Math.min(20, parseInt(roundCountInput.value || "3", 10) || 3));
             socket.emit("set_round_count", { code, rounds });
+        });
+
+        saveImpostorsBtn?.addEventListener("click", () => {
+            if (!isHost) return;
+            const maxAllowed = Math.max(1, Math.min(4, parseInt(impostorCountInput.max || "1", 10) || 1));
+            const impostorCount = Math.max(1, Math.min(maxAllowed, parseInt(impostorCountInput.value || "1", 10) || 1));
+            socket.emit("set_impostor_count", { code, impostor_count: impostorCount });
         });
 
         startGameBtn?.addEventListener("click", () => {

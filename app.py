@@ -41,6 +41,25 @@ def sanitize_phrase(phrase):
     return " ".join(str(phrase).strip().split())
 
 
+def get_max_impostors_for_team_count(team_count):
+    if team_count >= 20:
+        return 4
+    if team_count >= 12:
+        return 3
+    if team_count >= 5:
+        return 2
+    return 1
+
+
+def clamp_impostor_count(requested_count, team_count):
+    try:
+        requested = int(requested_count)
+    except (TypeError, ValueError):
+        requested = 1
+
+    return max(1, min(4, get_max_impostors_for_team_count(team_count), requested))
+
+
 def create_game_state():
     return {
         "host_sid": None,
@@ -55,7 +74,8 @@ def create_game_state():
         "round": 1,
         "max_rounds": 3,
 
-        "impostor": None,
+        "impostor_count": 1,
+        "impostors": [],
         "word": None,
         "order": [],
         "current_turn_index": 0,
@@ -94,6 +114,8 @@ def get_host_button_mode(game):
 
 def emit_roster_update(code):
     game = games[code]
+    team_count = len(game["teams"])
+
     socketio.emit("roster_update", {
         "code": code,
         "teams": game["teams"],
@@ -101,10 +123,12 @@ def emit_roster_update(code):
         "state": game["state"],
         "round": game["round"],
         "max_rounds": game["max_rounds"],
+        "impostor_count": game["impostor_count"],
+        "max_impostors_allowed": get_max_impostors_for_team_count(team_count),
         "intro_ready": sorted(list(game["intro_ready"])),
         "intro_finished": sorted(list(game["intro_finished"])),
         "intro_finished_count": len(game["intro_finished"]),
-        "total_teams": len(game["teams"]),
+        "total_teams": team_count,
         "host_button_mode": get_host_button_mode(game),
         "host_can_continue": (
             (game["state"] == "agreement" and all_teams_intro_finished(game)) or
@@ -149,13 +173,14 @@ def emit_private_role_info(code):
         if not sid:
             continue
 
-        if team == game["impostor"]:
+        if team in game["impostors"]:
             socketio.emit("role_assignment", {
                 "role": "IMPOSTOR",
                 "word": None,
                 "round": game["round"],
                 "max_rounds": game["max_rounds"],
                 "order": game["order"],
+                "impostor_count": game["impostor_count"],
             }, to=sid)
         else:
             socketio.emit("role_assignment", {
@@ -164,6 +189,7 @@ def emit_private_role_info(code):
                 "round": game["round"],
                 "max_rounds": game["max_rounds"],
                 "order": game["order"],
+                "impostor_count": game["impostor_count"],
             }, to=sid)
 
     if game["host_sid"]:
@@ -171,7 +197,8 @@ def emit_private_role_info(code):
             "round": game["round"],
             "max_rounds": game["max_rounds"],
             "word": game["word"],
-            "impostor": game["impostor"],
+            "impostor_count": game["impostor_count"],
+            "impostors": game["impostors"],
             "order": game["order"],
             "scores": game["scores"],
         }, to=game["host_sid"])
@@ -199,7 +226,8 @@ def begin_round(code, preserved=False, preserve_order=False):
     game["vote_token"] += 1
 
     if not preserved:
-        game["impostor"] = random.choice(game["teams"])
+        game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
+        game["impostors"] = random.sample(game["teams"], game["impostor_count"])
         game["word"] = random.choice(WORD_LIST)
 
     if not preserved or not preserve_order or not game["order"]:
@@ -211,9 +239,15 @@ def begin_round(code, preserved=False, preserve_order=False):
     emit_private_role_info(code)
 
     if preserved:
-        emit_status(code, f"Round {game['round']} restarted. Same impostor, same word, same turn order.")
+        emit_status(
+            code,
+            f"Round {game['round']} restarted. Same impostor setup, same word, same turn order."
+        )
     else:
-        emit_status(code, f"Round {game['round']} is ready. Roles have been assigned.")
+        emit_status(
+            code,
+            f"Round {game['round']} is ready. {game['impostor_count']} impostor team(s) have been assigned."
+        )
 
 
 def start_phrase_phase(code):
@@ -354,7 +388,7 @@ def calculate_round_result(code):
 
     individual_correct = []
     for voter_team, voted_team in game["votes"].items():
-        if voted_team == game["impostor"]:
+        if voted_team in game["impostors"]:
             individual_correct.append(voter_team)
             game["scores"][voter_team] += 1
 
@@ -373,6 +407,7 @@ def calculate_round_result(code):
             "additional_round_votes": additional_round_votes,
             "majority_team": None,
             "actual_impostor": None,
+            "actual_impostors": [],
             "majority_correct": False,
             "individual_correct_teams": [],
             "result_text": "An additional round was approved. Same round, same roles, same word, same turn order."
@@ -388,15 +423,16 @@ def calculate_round_result(code):
         if len(top_teams) == 1:
             majority_team = top_teams[0]
 
-    if majority_team == game["impostor"]:
+    if majority_team in game["impostors"]:
         majority_correct = True
         for team in game["teams"]:
-            if team != game["impostor"]:
+            if team not in game["impostors"]:
                 game["scores"][team] += 2
-        result_text = "The impostor was caught. All human teams gain +2 points."
+        result_text = "An impostor was caught by majority vote. All human teams gain +2 points."
     else:
-        game["scores"][game["impostor"]] += 5
-        result_text = "The impostor survived. The impostor team gains +5 points."
+        for impostor_team in game["impostors"]:
+            game["scores"][impostor_team] += 5
+        result_text = "The impostors survived. Every impostor team gains +5 points."
 
     game["state"] = "paused_after_result"
     emit_roster_update(code)
@@ -407,7 +443,8 @@ def calculate_round_result(code):
         "additional_round_triggered": False,
         "additional_round_votes": additional_round_votes,
         "majority_team": majority_team,
-        "actual_impostor": game["impostor"],
+        "actual_impostor": game["impostors"][0] if game["impostors"] else None,
+        "actual_impostors": game["impostors"],
         "majority_correct": majority_correct,
         "individual_correct_teams": individual_correct,
         "result_text": result_text,
@@ -431,6 +468,8 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
         "state": game["state"],
         "round": game["round"],
         "max_rounds": game["max_rounds"],
+        "impostor_count": game["impostor_count"],
+        "max_impostors_allowed": get_max_impostors_for_team_count(len(game["teams"])),
         "intro_ready": sorted(list(game["intro_ready"])),
         "intro_finished": sorted(list(game["intro_finished"])),
         "intro_finished_count": len(game["intro_finished"]),
@@ -542,7 +581,8 @@ def reset_to_round_one_new_game(code):
     game["round"] = 1
     game["state"] = "role"
 
-    game["impostor"] = None
+    game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
+    game["impostors"] = []
     game["word"] = None
     game["order"] = []
     game["current_turn_index"] = 0
@@ -612,6 +652,7 @@ def register_view(data):
             return
         game["teams"].append(team_name)
         game["scores"][team_name] = 0
+        game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
 
     old_sid = game["team_sids"].get(team_name)
     if old_sid and old_sid != sid:
@@ -650,6 +691,36 @@ def set_round_count(data):
     socketio.emit("round_count_updated", {"max_rounds": rounds}, room=code)
 
 
+@socketio.on("set_impostor_count")
+def set_impostor_count(data):
+    code = str(data.get("code", "")).strip().upper()
+    sid = request.sid
+
+    if code not in games:
+        emit("error", "Game code not found.")
+        return
+
+    game = games[code]
+    if sid != game["host_sid"]:
+        emit("error", "Only the host can change impostor count.")
+        return
+
+    if game["state"] != "lobby":
+        emit("error", "Impostor count can only be changed in the lobby.")
+        return
+
+    requested_count = data.get("impostor_count", 1)
+    max_allowed = get_max_impostors_for_team_count(len(game["teams"]))
+    impostor_count = clamp_impostor_count(requested_count, len(game["teams"]))
+    game["impostor_count"] = impostor_count
+
+    emit_roster_update(code)
+    socketio.emit("impostor_count_updated", {
+        "impostor_count": impostor_count,
+        "max_impostors_allowed": max_allowed,
+    }, room=code)
+
+
 @socketio.on("start_game_request")
 def start_game_request(data):
     code = str(data.get("code", "")).strip().upper()
@@ -673,6 +744,8 @@ def start_game_request(data):
     if len(game["teams"]) < 3:
         emit("error", "At least 3 teams are required.")
         return
+
+    game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
 
     game["intro_ready"] = set()
     game["intro_finished"] = set()
@@ -756,7 +829,6 @@ def player_intro_finished(data):
 
     game["intro_finished"].add(team_name)
 
-    # Only move the whole game to agreement once every team is finished.
     if all_teams_intro_finished(game):
         game["state"] = "agreement"
     elif game["state"] == "intro_wait":
@@ -765,14 +837,13 @@ def player_intro_finished(data):
     emit_roster_update(code)
     emit_status(code, f"{team_name} finished the intro.")
 
-    # Only the finished player should see the post-intro waiting screen now.
     emit_individual_post_intro_waiting_to_player(code, sid)
 
-    # Only when ALL teams are finished should everyone be moved to agreement.
     if all_teams_intro_finished(game):
         socketio.emit("agreement_phase", {
             "message": "All teams finished the intro. Host can press Continue to begin Round 1."
         }, room=code)
+
 
 @socketio.on("player_skip_intro_finished")
 def player_skip_intro_finished(data):
@@ -1014,16 +1085,11 @@ def handle_disconnect():
     sid = request.sid
 
     for code, game in list(games.items()):
-        # HOST DISCONNECT
         if sid == game.get("host_sid"):
-            # Notify all players
             socketio.emit("host_left", {}, room=code)
-
-            # Delete game completely
             del games[code]
             return
 
-        # PLAYER DISCONNECT
         if sid in game["players_by_sid"]:
             team = game["players_by_sid"].pop(sid, None)
 
@@ -1037,12 +1103,15 @@ def handle_disconnect():
                 game["agreement_ready"].discard(team)
                 game["additional_round_voters"].discard(team)
 
-                # Remove their vote/response if exists
+                if team in game["impostors"]:
+                    game["impostors"] = [name for name in game["impostors"] if name != team]
+
+                game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
+
                 game["votes"].pop(team, None)
                 game["responses"].pop(team, None)
 
                 emit_status(code, f"{team} left the game.")
-
                 emit_roster_update(code)
 
             return
