@@ -144,7 +144,7 @@
         }
 
         .player-mode .border-bulb.alt {
-            animation-delay: 1s;
+            animation-delay: -1s;
         }
 
         @keyframes playerBorderBulbPulse {
@@ -482,7 +482,7 @@
             object-fit: cover;
         }
 
-        #glitchLayer {
+                #glitchLayer {
             pointer-events: none;
             opacity: 0;
             z-index: 95;
@@ -517,12 +517,12 @@
                     rgba(255,255,255,0.16)
                 );
             background-size: auto, auto, auto, auto, auto, auto;
-            transition: none;
+            transition: opacity 0.16s ease;
         }
 
         #glitchLayer.active {
             opacity: 1;
-            animation: fullScreenCasinoGlitch 2s steps(2, end) forwards;
+            animation: fullScreenCasinoGlitch 2s linear forwards;
         }
 
         #playerWhiteScreen {
@@ -609,10 +609,14 @@
     min-height: 100vh;
     height: auto;
     margin: 0 auto;
-    padding:
-        clamp(150px, 18vh, 210px)
-        clamp(10px, 1vw, 16px)
-        clamp(16px, 2vh, 24px);
+
+    /* 🔥 THIS IS THE IMPORTANT PART */
+    padding-top: clamp(110px, 13vh, 150px);
+
+    padding-left: clamp(10px, 1vw, 16px);
+    padding-right: clamp(10px, 1vw, 16px);
+    padding-bottom: clamp(16px, 2vh, 24px);
+
     display: grid;
     grid-template-columns: minmax(200px, 240px) minmax(0, 1fr) minmax(200px, 240px);
     grid-template-areas: "left main right";
@@ -780,9 +784,9 @@
             font-weight: 700;
         }
 
-        @keyframes fullScreenCasinoGlitch {
+                @keyframes fullScreenCasinoGlitch {
             0% {
-                opacity: 1;
+                opacity: 0;
                 transform: translate(0, 0) scale(1);
                 filter: hue-rotate(0deg) saturate(1.45) contrast(1.28) brightness(0.88);
             }
@@ -822,7 +826,7 @@
                 filter: hue-rotate(60deg) saturate(1.6) contrast(1.28) brightness(0.92);
             }
             88% {
-                opacity: 1;
+                opacity: 0.55;
                 transform: translate(5px, -3px) scale(1);
                 filter: hue-rotate(20deg) saturate(1.3) contrast(1.14) brightness(0.9);
             }
@@ -1319,24 +1323,28 @@ const isHost = params.get("host") === "1";
             window.addEventListener("resize", schedulePlayerBulbBorderBuild);
         }
 
-introVideo.addEventListener("timeupdate", () => {
-    if (isHost) return;
-    if (!introVideo.duration) return;
+        introVideo.addEventListener("timeupdate", () => {
+            if (isHost) return;
+            if (!introVideo.duration) return;
+            if (glitchStarted) return;
 
-    const timeLeft = introVideo.duration - introVideo.currentTime;
+            const timeLeft = introVideo.duration - introVideo.currentTime;
 
-    if (timeLeft <= 2 && !glitchStarted) {
-        glitchStarted = true;
+            if (timeLeft <= 2) {
+                glitchStarted = true;
 
-        glitchLayer.classList.remove("active");
-        void glitchLayer.offsetWidth;
-        glitchLayer.classList.add("active");
+                preloadMainGameUnderGlitch("Waiting for others to watch the intro.");
+                playBackgroundMusic();
 
-        setTimeout(() => {
-            hide(playerVideoLayer);
-        }, 900);
-    }
-});
+                glitchLayer.classList.remove("active");
+                void glitchLayer.offsetWidth;
+                glitchLayer.classList.add("active");
+
+                setTimeout(() => {
+                    hide(playerVideoLayer);
+                }, 900);
+            }
+        });
 
         const playerWhiteScreen = document.getElementById("playerWhiteScreen");
         const playerWhiteScreenTitle = document.getElementById("playerWhiteScreenTitle");
@@ -1647,6 +1655,15 @@ introVideo.addEventListener("timeupdate", () => {
             if (bgMusicStarted) return;
 
             try {
+                bgMusic.pause();
+            } catch (e) {}
+
+            try {
+                bgMusic.currentTime = 0;
+            } catch (e) {}
+
+            try {
+                bgMusic.muted = false;
                 bgMusic.volume = PLAYER_BG_MUSIC_VOLUME;
                 await bgMusic.play();
                 bgMusicStarted = true;
@@ -1655,10 +1672,55 @@ introVideo.addEventListener("timeupdate", () => {
             }
         }
 
-        async function playGlitchOnly() {
-            if (!isHost) {
-                glitchStarted = true;
-            }
+        function preloadMainGameUnderGlitch(message = "Waiting for others to watch the intro.") {
+            if (isHost) return;
+
+            currentState = "agreement";
+
+            showNormalApp();
+            hideMainBoxes();
+            show(agreementBox);
+            show(introWaitInlineBox);
+            show(agreementRulesPanel);
+
+            setPhase(
+                "Agreement / Transition",
+                "You finished. Wait for the other teams."
+            );
+
+            agreementStatus.textContent = message;
+            setIntroProgress(message);
+            schedulePlayerBulbBorderBuild();
+        }
+
+        function preloadMainGameUnderGlitch(message = "Waiting for others to watch the intro.") {
+            if (isHost) return;
+
+            currentState = "agreement";
+
+            showNormalApp();
+            hideMainBoxes();
+            show(agreementBox);
+            show(introWaitInlineBox);
+            show(agreementRulesPanel);
+
+            setPhase(
+                "Agreement / Transition",
+                "You finished. Wait for the other teams."
+            );
+
+            agreementStatus.textContent = message;
+            setIntroProgress(message);
+            schedulePlayerBulbBorderBuild();
+        }
+
+        async function playGlitchOnly(preloadMessage = "Waiting for others to watch the intro.") {
+            if (isHost) return;
+
+            glitchStarted = true;
+
+            preloadMainGameUnderGlitch(preloadMessage);
+            await playBackgroundMusic();
 
             glitchLayer.classList.remove("active");
             void glitchLayer.offsetWidth;
@@ -1667,6 +1729,8 @@ introVideo.addEventListener("timeupdate", () => {
             await sleep(GLITCH_DURATION_MS);
 
             glitchLayer.classList.remove("active");
+            await sleep(180);
+
             glitchStarted = false;
         }
 
@@ -1677,16 +1741,10 @@ introVideo.addEventListener("timeupdate", () => {
             hidePlayerWhiteScreen();
             stopIntroVideo();
 
-            await playGlitchOnly();
-            await playBackgroundMusic();
+            await playGlitchOnly("Waiting for others to watch the intro.");
 
             introFinishedOnClient = true;
-
             socket.emit("player_skip_intro_finished", { code });
-
-            showInlineIntroWaiting({
-                message: "Waiting for others to watch the intro."
-            });
         }
 
         async function handleIntroVideoStart() {
@@ -1750,29 +1808,20 @@ introVideo.addEventListener("timeupdate", () => {
         });
 
         introVideo.addEventListener("ended", async () => {
-    hide(playerVideoLayer);
+            hide(playerVideoLayer);
 
-    const glitchStillRunning = glitchStarted;
+            if (glitchStarted) {
+                await sleep(1100);
+                glitchLayer.classList.remove("active");
+                await sleep(180);
+                glitchStarted = false;
+            } else {
+                await playGlitchOnly("Waiting for others to watch the intro.");
+            }
 
-    if (glitchStillRunning) {
-        await sleep(Math.max(0, GLITCH_DURATION_MS - 1000));
-        glitchLayer.classList.remove("active");
-        glitchStarted = false;
-    } else {
-        await playGlitchOnly();
-    }
-
-    await sleep(INTRO_AUDIO_DELAY_MS);
-    await playBackgroundMusic();
-
-    introFinishedOnClient = true;
-
-    showInlineIntroWaiting({
-        message: "Waiting for others to watch the intro."
-    });
-
-    socket.emit("player_intro_finished", { code });
-});
+            introFinishedOnClient = true;
+            socket.emit("player_intro_finished", { code });
+        });
 
         function syncHostControlsFromRoster(data = {}) {
             if (!isHost) return;

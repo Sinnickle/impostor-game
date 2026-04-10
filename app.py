@@ -755,22 +755,24 @@ def player_intro_finished(data):
         return
 
     game["intro_finished"].add(team_name)
-    game["state"] = "agreement"
+
+    # Only move the whole game to agreement once every team is finished.
+    if all_teams_intro_finished(game):
+        game["state"] = "agreement"
+    elif game["state"] == "intro_wait":
+        game["state"] = "intro_playing"
 
     emit_roster_update(code)
     emit_status(code, f"{team_name} finished the intro.")
 
+    # Only the finished player should see the post-intro waiting screen now.
     emit_individual_post_intro_waiting_to_player(code, sid)
 
+    # Only when ALL teams are finished should everyone be moved to agreement.
     if all_teams_intro_finished(game):
         socketio.emit("agreement_phase", {
             "message": "All teams finished the intro. Host can press Continue to begin Round 1."
         }, room=code)
-    else:
-        socketio.emit("agreement_phase", {
-            "message": "Waiting for all teams to finish the intro."
-        }, room=code)
-
 
 @socketio.on("player_skip_intro_finished")
 def player_skip_intro_finished(data):
