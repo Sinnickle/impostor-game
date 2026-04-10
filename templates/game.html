@@ -482,48 +482,113 @@
             object-fit: cover;
         }
 
-                #glitchLayer {
-            pointer-events: none;
-            opacity: 0;
-            z-index: 95;
-            background-color: #000;
-            mix-blend-mode: normal;
-            background-image:
-                repeating-linear-gradient(
-                    0deg,
-                    rgba(255,255,255,0.22) 0px,
-                    rgba(255,255,255,0.22) 2px,
-                    rgba(0,0,0,0.92) 2px,
-                    rgba(0,0,0,0.92) 5px
-                ),
-                repeating-linear-gradient(
-                    90deg,
-                    rgba(255, 0, 102, 0.30) 0px,
-                    rgba(255, 0, 102, 0.30) 4px,
-                    rgba(0, 255, 255, 0.30) 4px,
-                    rgba(0, 255, 255, 0.30) 8px,
-                    rgba(255, 230, 0, 0.26) 8px,
-                    rgba(255, 230, 0, 0.26) 12px,
-                    rgba(0,0,0,0.88) 12px,
-                    rgba(0,0,0,0.88) 18px
-                ),
-                radial-gradient(circle at 18% 20%, rgba(255,0,128,0.42), transparent 22%),
-                radial-gradient(circle at 78% 28%, rgba(0,255,255,0.40), transparent 22%),
-                radial-gradient(circle at 42% 74%, rgba(255,230,0,0.34), transparent 18%),
-                linear-gradient(
-                    135deg,
-                    rgba(255, 0, 128, 0.24),
-                    rgba(0, 255, 255, 0.22),
-                    rgba(255,255,255,0.16)
-                );
-            background-size: auto, auto, auto, auto, auto, auto;
-            transition: opacity 0.16s ease;
-        }
+        #glitchLayer {
+    pointer-events: none;
+    opacity: 0;
+    z-index: 95;
+
+    position: fixed;
+    top: -10vh;
+    left: -10vw;
+    width: 120vw;
+    height: 120vh;
+    overflow: hidden;
+
+    background-color: #000;
+    background-image:
+        linear-gradient(
+            0deg,
+            rgba(255,255,255,0.08) 0%,
+            rgba(255,255,255,0.08) 50%,
+            rgba(0,0,0,0.12) 50%,
+            rgba(0,0,0,0.12) 100%
+        ),
+        linear-gradient(
+            90deg,
+            rgba(255, 0, 110, 0.92) 0%,
+            rgba(255, 0, 110, 0.92) 16.66%,
+            rgba(0, 255, 255, 0.92) 16.66%,
+            rgba(0, 255, 255, 0.92) 33.33%,
+            rgba(120, 80, 255, 0.92) 33.33%,
+            rgba(120, 80, 255, 0.92) 50%,
+            rgba(255, 255, 255, 0.92) 50%,
+            rgba(255, 255, 255, 0.92) 66.66%,
+            rgba(40, 140, 255, 0.92) 66.66%,
+            rgba(40, 140, 255, 0.92) 83.33%,
+            rgba(255, 60, 60, 0.92) 83.33%,
+            rgba(255, 60, 60, 0.92) 100%
+        ),
+        repeating-linear-gradient(
+            0deg,
+            rgba(255,255,255,0.18) 0px,
+            rgba(255,255,255,0.18) 1px,
+            rgba(0,0,0,0.22) 1px,
+            rgba(0,0,0,0.22) 3px
+        );
+
+    background-size:
+        100% 4px,
+        100% 100%,
+        100% 3px;
+
+    background-position:
+        0 0,
+        center center,
+        0 0;
+
+    image-rendering: pixelated;
+    filter: contrast(1.5) saturate(1.8) brightness(1.02);
+    transform: translate3d(0, 0, 0) scale(1.04);
+    will-change: opacity, transform, filter, background-position;
+}
+
+        #glitchLayer::before,
+#glitchLayer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    mix-blend-mode: screen;
+}
+
+#glitchLayer::before {
+    background-image:
+        repeating-linear-gradient(
+            90deg,
+            rgba(255,255,255,0.00) 0px,
+            rgba(255,255,255,0.00) 6px,
+            rgba(255,255,255,0.12) 6px,
+            rgba(255,255,255,0.12) 8px,
+            rgba(0,0,0,0.00) 8px,
+            rgba(0,0,0,0.00) 14px
+        ),
+        repeating-linear-gradient(
+            0deg,
+            rgba(255, 0, 128, 0.00) 0px,
+            rgba(255, 0, 128, 0.00) 8px,
+            rgba(255, 0, 128, 0.22) 8px,
+            rgba(255, 0, 128, 0.22) 12px,
+            rgba(0, 255, 255, 0.00) 12px,
+            rgba(0, 255, 255, 0.00) 20px,
+            rgba(0, 255, 255, 0.20) 20px,
+            rgba(0, 255, 255, 0.20) 24px
+        );
+    opacity: 0.85;
+}
+
+#glitchLayer::after {
+    background-image:
+        radial-gradient(circle at 12% 18%, rgba(255,255,255,0.24), transparent 10%),
+        radial-gradient(circle at 76% 24%, rgba(255,0,120,0.28), transparent 12%),
+        radial-gradient(circle at 58% 78%, rgba(0,255,255,0.24), transparent 12%),
+        radial-gradient(circle at 26% 70%, rgba(80,120,255,0.24), transparent 10%);
+    opacity: 0.75;
+}
 
         #glitchLayer.active {
-            opacity: 1;
-            animation: fullScreenCasinoGlitch 2s linear forwards;
-        }
+    opacity: 1;
+    animation: fullScreenCasinoGlitch 2s steps(1, end) forwards;
+}
 
         #playerWhiteScreen {
             z-index: 100;
@@ -784,58 +849,107 @@
             font-weight: 700;
         }
 
-                @keyframes fullScreenCasinoGlitch {
-            0% {
-                opacity: 0;
-                transform: translate(0, 0) scale(1);
-                filter: hue-rotate(0deg) saturate(1.45) contrast(1.28) brightness(0.88);
-            }
-            8% {
-                opacity: 1;
-                transform: translate(-18px, 6px) scale(1.02);
-                filter: hue-rotate(40deg) saturate(2.1) contrast(1.55) brightness(0.95);
-            }
-            16% {
-                opacity: 1;
-                transform: translate(16px, -10px) scale(1.03);
-                filter: hue-rotate(95deg) saturate(2.2) contrast(1.62) brightness(1);
-            }
-            24% {
-                opacity: 1;
-                transform: translate(-12px, 12px) scale(1.01);
-                filter: hue-rotate(155deg) saturate(2.3) contrast(1.58) brightness(0.98);
-            }
-            34% {
-                opacity: 1;
-                transform: translate(20px, -8px) scale(1.02);
-                filter: hue-rotate(225deg) saturate(2.25) contrast(1.66) brightness(1);
-            }
-            46% {
-                opacity: 1;
-                transform: translate(-22px, 10px) scale(1.025);
-                filter: hue-rotate(285deg) saturate(2.15) contrast(1.6) brightness(0.96);
-            }
-            58% {
-                opacity: 1;
-                transform: translate(14px, -12px) scale(1.01);
-                filter: hue-rotate(330deg) saturate(1.95) contrast(1.46) brightness(0.94);
-            }
-            74% {
-                opacity: 1;
-                transform: translate(-8px, 5px) scale(1.005);
-                filter: hue-rotate(60deg) saturate(1.6) contrast(1.28) brightness(0.92);
-            }
-            88% {
-                opacity: 0.55;
-                transform: translate(5px, -3px) scale(1);
-                filter: hue-rotate(20deg) saturate(1.3) contrast(1.14) brightness(0.9);
-            }
-            100% {
-                opacity: 0;
-                transform: translate(0, 0) scale(1);
-                filter: hue-rotate(0deg) saturate(1) contrast(1) brightness(1);
-            }
-        }
+        @keyframes fullScreenCasinoGlitch {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 0, 0) scale(1.08);
+        filter: contrast(1.75) saturate(2.3) brightness(1.06) hue-rotate(0deg);
+        background-position:
+            0 0,
+            center center,
+            0 0;
+    }
+    6% {
+        opacity: 1;
+        transform: translate3d(-18px, 10px, 0) scale(1.08);
+        filter: contrast(1.95) saturate(2.7) brightness(1.1) hue-rotate(18deg);
+        background-position:
+            0 6px,
+            -14px 0,
+            0 2px;
+    }
+    12% {
+        opacity: 1;
+        transform: translate3d(20px, -12px, 0) scale(1.09);
+        filter: contrast(2.05) saturate(2.9) brightness(1.1) hue-rotate(42deg);
+        background-position:
+            0 -8px,
+            16px 0,
+            0 -2px;
+    }
+    18% {
+        opacity: 1;
+        transform: translate3d(-24px, 8px, 0) scale(1.07);
+        filter: contrast(2.1) saturate(3) brightness(1.08) hue-rotate(74deg);
+        background-position:
+            0 10px,
+            -20px 0,
+            0 3px;
+    }
+    28% {
+        opacity: 1;
+        transform: translate3d(26px, -14px, 0) scale(1.08);
+        filter: contrast(2.2) saturate(3.1) brightness(1.08) hue-rotate(116deg);
+        background-position:
+            0 -12px,
+            22px 0,
+            0 -4px;
+    }
+    38% {
+        opacity: 1;
+        transform: translate3d(-16px, 16px, 0) scale(1.06);
+        filter: contrast(2.08) saturate(2.85) brightness(1.04) hue-rotate(164deg);
+        background-position:
+            0 14px,
+            -18px 0,
+            0 4px;
+    }
+    50% {
+        opacity: 1;
+        transform: translate3d(12px, -8px, 0) scale(1.05);
+        filter: contrast(1.98) saturate(2.55) brightness(1.02) hue-rotate(220deg);
+        background-position:
+            0 -6px,
+            12px 0,
+            0 -2px;
+    }
+    64% {
+        opacity: 1;
+        transform: translate3d(-8px, 6px, 0) scale(1.035);
+        filter: contrast(1.8) saturate(2.2) brightness(0.98) hue-rotate(278deg);
+        background-position:
+            0 5px,
+            -8px 0,
+            0 1px;
+    }
+    76% {
+        opacity: 0.92;
+        transform: translate3d(6px, -4px, 0) scale(1.02);
+        filter: contrast(1.55) saturate(1.8) brightness(0.96) hue-rotate(326deg);
+        background-position:
+            0 -3px,
+            6px 0,
+            0 -1px;
+    }
+    88% {
+        opacity: 0.5;
+        transform: translate3d(-2px, 2px, 0) scale(1.01);
+        filter: contrast(1.25) saturate(1.3) brightness(0.94) hue-rotate(360deg);
+        background-position:
+            0 1px,
+            -2px 0,
+            0 0;
+    }
+    100% {
+        opacity: 0;
+        transform: translate3d(0, 0, 0) scale(1);
+        filter: contrast(1) saturate(1) brightness(1) hue-rotate(0deg);
+        background-position:
+            0 0,
+            center center,
+            0 0;
+    }
+}
 
         @media (max-width: 1180px) {
             .app-shell {
@@ -1329,7 +1443,7 @@ const isHost = params.get("host") === "1";
             window.addEventListener("resize", schedulePlayerBulbBorderBuild);
         }
 
-        introVideo.addEventListener("timeupdate", () => {
+        introVideo.addEventListener("timeupdate", async () => {
             if (isHost) return;
             if (!introVideo.duration) return;
             if (glitchStarted) return;
@@ -1339,16 +1453,9 @@ const isHost = params.get("host") === "1";
             if (timeLeft <= 2) {
                 glitchStarted = true;
 
-                preloadMainGameUnderGlitch("Waiting for others to watch the intro.");
+                startGlitchVisual();
                 playBackgroundMusic();
-
-                glitchLayer.classList.remove("active");
-                void glitchLayer.offsetWidth;
-                glitchLayer.classList.add("active");
-
-                setTimeout(() => {
-                    hide(playerVideoLayer);
-                }, 900);
+                revealMainGameUnderFullGlitch("Waiting for others to watch the intro.");
             }
         });
 
@@ -1437,6 +1544,26 @@ const isHost = params.get("host") === "1";
 
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function startGlitchVisual() {
+    glitchLayer.classList.remove("active");
+
+    glitchLayer.style.opacity = "0";
+    glitchLayer.style.transform = "translate3d(0, 0, 0) scale(1.08)";
+    glitchLayer.style.filter = "contrast(1.9) saturate(2.6) brightness(1.08)";
+
+    void glitchLayer.offsetWidth;
+    glitchLayer.classList.add("active");
+}
+
+        async function revealMainGameUnderFullGlitch(preloadMessage = "Waiting for others to watch the intro.") {
+            if (isHost) return;
+
+            await sleep(220);
+
+            preloadMainGameUnderGlitch(preloadMessage);
+            hide(playerVideoLayer);
         }
 
         function setPhase(title, desc) {
@@ -1720,38 +1847,14 @@ const isHost = params.get("host") === "1";
             schedulePlayerBulbBorderBuild();
         }
 
-        function preloadMainGameUnderGlitch(message = "Waiting for others to watch the intro.") {
-            if (isHost) return;
-
-            currentState = "agreement";
-
-            showNormalApp();
-            hideMainBoxes();
-            show(agreementBox);
-            show(introWaitInlineBox);
-            show(agreementRulesPanel);
-
-            setPhase(
-                "Agreement / Transition",
-                "You finished. Wait for the other teams."
-            );
-
-            agreementStatus.textContent = message;
-            setIntroProgress(message);
-            schedulePlayerBulbBorderBuild();
-        }
-
         async function playGlitchOnly(preloadMessage = "Waiting for others to watch the intro.") {
             if (isHost) return;
 
             glitchStarted = true;
 
-            preloadMainGameUnderGlitch(preloadMessage);
+            startGlitchVisual();
             await playBackgroundMusic();
-
-            glitchLayer.classList.remove("active");
-            void glitchLayer.offsetWidth;
-            glitchLayer.classList.add("active");
+            await revealMainGameUnderFullGlitch(preloadMessage);
 
             await sleep(GLITCH_DURATION_MS);
 
@@ -1835,10 +1938,8 @@ const isHost = params.get("host") === "1";
         });
 
         introVideo.addEventListener("ended", async () => {
-            hide(playerVideoLayer);
-
             if (glitchStarted) {
-                await sleep(1100);
+                await sleep(Math.max(0, GLITCH_DURATION_MS - 1100));
                 glitchLayer.classList.remove("active");
                 await sleep(180);
                 glitchStarted = false;
@@ -2080,14 +2181,8 @@ const isHost = params.get("host") === "1";
 
             hidePlayerWhiteScreen();
             stopIntroVideo();
-            await playGlitchOnly();
-            await playBackgroundMusic();
+            await playGlitchOnly("Intro skipped. Host can continue when ready.");
             introFinishedOnClient = true;
-            showInlineIntroWaiting({
-                message: "Intro skipped. Host can continue when ready.",
-                finished_count: null,
-                total_teams: null
-            });
         });
 
         socket.on("agreement_phase", (data) => {
