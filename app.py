@@ -11,15 +11,57 @@ app.config["SECRET_KEY"] = "impostor-secret-key"
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
-WORD_LIST = [
-    "Algorithm", "Binary", "Compiler", "Database", "Encryption",
-    "Function", "Interface", "Kernel", "Loop", "Memory",
-    "Network", "Object", "Packet", "Queue", "Recursion",
-    "Server", "Stack", "Syntax", "Thread", "Variable",
-    "Array", "Boolean", "Cache", "Class", "Cloud",
-    "Debugging", "Framework", "Frontend", "Backend", "Hash",
-    "Integer", "Iteration", "Library", "Machine Learning", "Pointer",
-    "Runtime", "Script", "Search", "Sorting", "Terminal"
+WORD_CATEGORIES = {
+    "computer_science": [
+        "Algorithm", "Binary", "Compiler", "Database", "Encryption",
+        "Function", "Interface", "Kernel", "Loop", "Memory",
+        "Network", "Object", "Packet", "Queue", "Recursion",
+        "Server", "Stack", "Syntax", "Thread", "Variable",
+        "Array", "Boolean", "Cache", "Class", "Cloud",
+        "Debugging", "Framework", "Frontend", "Backend", "Hash",
+        "Integer", "Iteration", "Library", "Machine Learning", "Pointer",
+        "Runtime", "Script", "Search", "Sorting", "Terminal"
+    ],
+    "general": [
+        "Apple", "Bridge", "Camera", "Candle", "Castle",
+        "Cloud", "Coffee", "Desert", "Dragon", "Feather",
+        "Forest", "Garden", "Guitar", "Island", "Jacket",
+        "Lantern", "Library", "Mirror", "Mountain", "Ocean",
+        "Pencil", "Planet", "Puzzle", "River", "Rocket",
+        "Shadow", "Silver", "Snowflake", "Sunrise", "Treasure"
+    ],
+    "animals": [
+        "Alligator", "Antelope", "Bat", "Bear", "Cheetah",
+        "Dolphin", "Eagle", "Falcon", "Fox", "Frog",
+        "Giraffe", "Hamster", "Jaguar", "Koala", "Leopard",
+        "Lion", "Otter", "Panda", "Penguin", "Rabbit",
+        "Raven", "Shark", "Tiger", "Turtle", "Whale",
+        "Wolf", "Zebra", "Octopus", "Peacock", "Squirrel"
+    ],
+    "olympic_sports": [
+        "Archery", "Badminton", "Boxing", "Canoeing", "Curling",
+        "Cycling", "Diving", "Fencing", "Gymnastics", "Handball",
+        "Hockey", "Judo", "Luge", "Rowing", "Rugby",
+        "Sailing", "Shooting", "Skateboarding", "Skiing", "Snowboarding",
+        "Surfing", "Swimming", "Taekwondo", "Tennis", "Triathlon",
+        "Volleyball", "Water Polo", "Weightlifting", "Wrestling", "Biathlon"
+    ],
+    "devices": [
+        "Calculator", "Camera", "Drone", "Earbuds", "Flashlight",
+        "Game Console", "Headphones", "Keyboard", "Laptop", "Microphone",
+        "Monitor", "Mouse", "Phone", "Printer", "Projector",
+        "Remote", "Router", "Scanner", "Smartwatch", "Speaker",
+        "Tablet", "Television", "Thermostat", "Walkie Talkie", "Webcam",
+        "VR Headset", "Joystick", "Modem", "Hard Drive", "Charger"
+    ],
+}
+
+DEFAULT_SELECTED_CATEGORIES = [
+    "computer_science",
+    "general",
+    "animals",
+    "olympic_sports",
+    "devices",
 ]
 
 PHRASE_TIME_LIMIT = 30
@@ -39,6 +81,35 @@ def sanitize_phrase(phrase):
     if phrase is None:
         return ""
     return " ".join(str(phrase).strip().split())
+
+def sanitize_selected_categories(raw_categories):
+    if not isinstance(raw_categories, list):
+        return DEFAULT_SELECTED_CATEGORIES[:]
+
+    clean = []
+    for category in raw_categories:
+        key = str(category).strip().lower()
+        if key in WORD_CATEGORIES and key not in clean:
+            clean.append(key)
+
+    return clean or DEFAULT_SELECTED_CATEGORIES[:]
+
+
+def get_word_pool_for_categories(selected_categories):
+    pool = []
+    for category in sanitize_selected_categories(selected_categories):
+        pool.extend(WORD_CATEGORIES.get(category, []))
+
+    deduped = []
+    seen = set()
+    for word in pool:
+        lower = word.lower()
+        if lower in seen:
+            continue
+        seen.add(lower)
+        deduped.append(word)
+
+    return deduped or WORD_CATEGORIES["general"][:]
 
 
 def get_max_impostors_for_team_count(team_count):
@@ -75,6 +146,9 @@ def create_game_state():
         "max_rounds": 3,
 
         "impostor_count": 1,
+        "selected_categories": DEFAULT_SELECTED_CATEGORIES[:],
+        "word_pool": get_word_pool_for_categories(DEFAULT_SELECTED_CATEGORIES),
+        "word_category": None,
         "impostors": [],
         "word": None,
         "order": [],
@@ -124,6 +198,7 @@ def emit_roster_update(code):
         "round": game["round"],
         "max_rounds": game["max_rounds"],
         "impostor_count": game["impostor_count"],
+        "selected_categories": game["selected_categories"],
         "max_impostors_allowed": get_max_impostors_for_team_count(team_count),
         "intro_ready": sorted(list(game["intro_ready"])),
         "intro_finished": sorted(list(game["intro_finished"])),
@@ -181,6 +256,7 @@ def emit_private_role_info(code):
                 "max_rounds": game["max_rounds"],
                 "order": game["order"],
                 "impostor_count": game["impostor_count"],
+                "selected_categories": game["selected_categories"],
             }, to=sid)
         else:
             socketio.emit("role_assignment", {
@@ -190,6 +266,7 @@ def emit_private_role_info(code):
                 "max_rounds": game["max_rounds"],
                 "order": game["order"],
                 "impostor_count": game["impostor_count"],
+                "selected_categories": game["selected_categories"],
             }, to=sid)
 
     if game["host_sid"]:
@@ -197,6 +274,8 @@ def emit_private_role_info(code):
             "round": game["round"],
             "max_rounds": game["max_rounds"],
             "word": game["word"],
+            "word_category": game["word_category"],
+            "selected_categories": game["selected_categories"],
             "impostor_count": game["impostor_count"],
             "impostors": game["impostors"],
             "order": game["order"],
@@ -227,8 +306,15 @@ def begin_round(code, preserved=False, preserve_order=False):
 
     if not preserved:
         game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
+        game["selected_categories"] = sanitize_selected_categories(game.get("selected_categories"))
+        game["word_pool"] = get_word_pool_for_categories(game["selected_categories"])
         game["impostors"] = random.sample(game["teams"], game["impostor_count"])
-        game["word"] = random.choice(WORD_LIST)
+        game["word"] = random.choice(game["word_pool"])
+        game["word_category"] = None
+        for category in game["selected_categories"]:
+            if game["word"] in WORD_CATEGORIES.get(category, []):
+                game["word_category"] = category
+                break
 
     if not preserved or not preserve_order or not game["order"]:
         game["order"] = game["teams"][:]
@@ -469,6 +555,7 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
         "round": game["round"],
         "max_rounds": game["max_rounds"],
         "impostor_count": game["impostor_count"],
+        "selected_categories": game["selected_categories"],
         "max_impostors_allowed": get_max_impostors_for_team_count(len(game["teams"])),
         "intro_ready": sorted(list(game["intro_ready"])),
         "intro_finished": sorted(list(game["intro_finished"])),
@@ -582,6 +669,9 @@ def reset_to_round_one_new_game(code):
     game["state"] = "role"
 
     game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
+    game["selected_categories"] = sanitize_selected_categories(game.get("selected_categories"))
+    game["word_pool"] = get_word_pool_for_categories(game["selected_categories"])
+    game["word_category"] = None
     game["impostors"] = []
     game["word"] = None
     game["order"] = []
@@ -746,6 +836,8 @@ def start_game_request(data):
         return
 
     game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
+    game["selected_categories"] = sanitize_selected_categories(data.get("selected_categories"))
+    game["word_pool"] = get_word_pool_for_categories(game["selected_categories"])
 
     game["intro_ready"] = set()
     game["intro_finished"] = set()

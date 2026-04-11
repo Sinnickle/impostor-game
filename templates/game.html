@@ -433,6 +433,28 @@
             accent-color: #ffcf5c;
         }
 
+        .category-group {
+            width: 100%;
+            border: 1px solid rgba(255, 222, 130, 0.18);
+            border-radius: 16px;
+            padding: 14px;
+            background: rgba(255,255,255,0.04);
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px 14px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .category-summary {
+            margin-top: 10px;
+            color: #ffe39d;
+            font-weight: 700;
+        }
+
         .intro-inline-panel {
             margin-top: 14px;
             border: 1px solid rgba(255,255,255,0.14);
@@ -1123,6 +1145,21 @@
                             1 impostor maximum with the current number of teams.
                         </div>
 
+                        <div class="category-group">
+                            <div><strong>Word Categories</strong></div>
+                            <div class="muted small-note" style="margin-top: 6px;">
+                                Host chooses which word pools can appear in this game.
+                            </div>
+                            <div class="category-grid" id="wordCategoryGrid">
+                                <label class="checkbox-row"><input type="checkbox" class="word-category-checkbox" value="computer_science" checked><span>Computer Science</span></label>
+                                <label class="checkbox-row"><input type="checkbox" class="word-category-checkbox" value="general" checked><span>General</span></label>
+                                <label class="checkbox-row"><input type="checkbox" class="word-category-checkbox" value="animals" checked><span>Animals</span></label>
+                                <label class="checkbox-row"><input type="checkbox" class="word-category-checkbox" value="olympic_sports" checked><span>Olympic Sports</span></label>
+                                <label class="checkbox-row"><input type="checkbox" class="word-category-checkbox" value="devices" checked><span>Devices</span></label>
+                            </div>
+                            <div id="categorySummary" class="category-summary">Selected categories: Computer Science, General, Animals, Olympic Sports, Devices</div>
+                        </div>
+
                         <label id="skipIntroOptionWrap" class="checkbox-row">
                             <input id="skipIntroCheckbox" type="checkbox">
                             <span>Skip intro video and go straight to glitch + ready state</span>
@@ -1272,6 +1309,13 @@ const isHost = params.get("host") === "1";
         let skipIntroChosen = false;
         let hostControlsLockedAfterStart = false;
         let bgMusicStarted = false;
+        const CATEGORY_LABELS = {
+            computer_science: "Computer Science",
+            general: "General",
+            animals: "Animals",
+            olympic_sports: "Olympic Sports",
+            devices: "Devices"
+        };
 
         const body = document.body;
         const appShell = document.getElementById("appShell");
@@ -1489,6 +1533,8 @@ const isHost = params.get("host") === "1";
         const restartActionBtn = document.getElementById("restartActionBtn");
         const skipIntroCheckbox = document.getElementById("skipIntroCheckbox");
         const skipIntroOptionWrap = document.getElementById("skipIntroOptionWrap");
+        const wordCategoryCheckboxes = Array.from(document.querySelectorAll(".word-category-checkbox"));
+        const categorySummary = document.getElementById("categorySummary");
 
         const agreementBox = document.getElementById("agreementBox");
         const agreementStatus = document.getElementById("agreementStatus");
@@ -1527,6 +1573,7 @@ const isHost = params.get("host") === "1";
 
         roomCodeText.textContent = code || "-----";
         updateImpostorControls(1, 1);
+        syncCategoryCheckboxes(Object.keys(CATEGORY_LABELS));
 
         if (!isHost) {
             body.classList.add("player-mode");
@@ -1641,6 +1688,34 @@ const isHost = params.get("host") === "1";
             impostorCountInput.max = String(safeMax);
             impostorCountInput.value = String(safeValue);
             impostorCountHint.textContent = `${safeMax} impostor${safeMax === 1 ? "" : "s"} maximum with the current number of teams.`;
+        }
+
+        function getSelectedCategoryValues() {
+            return wordCategoryCheckboxes
+                .filter(box => box.checked)
+                .map(box => box.value);
+        }
+
+        function syncCategoryCheckboxes(selectedCategories) {
+            const safeSelected = Array.isArray(selectedCategories) && selectedCategories.length
+                ? selectedCategories
+                : Object.keys(CATEGORY_LABELS);
+
+            wordCategoryCheckboxes.forEach(box => {
+                box.checked = safeSelected.includes(box.value);
+            });
+
+            updateCategorySummary();
+        }
+
+        function updateCategorySummary() {
+            if (!categorySummary) return;
+
+            const selected = getSelectedCategoryValues();
+            const labels = selected.map(key => CATEGORY_LABELS[key] || key);
+            categorySummary.textContent = labels.length
+                ? `Selected categories: ${labels.join(", ")}`
+                : "Select at least one category before starting the game.";
         }
 
         function renderTeams(teams) {
@@ -1977,6 +2052,7 @@ const isHost = params.get("host") === "1";
             }
 
             updateImpostorControls(data.impostor_count, data.max_impostors_allowed);
+            syncCategoryCheckboxes(data.selected_categories);
         }
 
         function buildRoundResultHtml(data = {}) {
@@ -2116,6 +2192,11 @@ const isHost = params.get("host") === "1";
         socket.on("impostor_count_updated", (data) => {
             updateImpostorControls(data?.impostor_count, data?.max_impostors_allowed);
         });
+
+        wordCategoryCheckboxes.forEach(box => {
+            box.addEventListener("change", updateCategorySummary);
+        });
+        updateCategorySummary();
 
         socket.on("roster_update", (data) => {
             renderTeams(data.teams || []);
@@ -2402,11 +2483,19 @@ const isHost = params.get("host") === "1";
 
         startGameBtn?.addEventListener("click", () => {
             if (!isHost) return;
+
+            const selectedCategories = getSelectedCategoryValues();
+            if (!selectedCategories.length) {
+                alert("Select at least one word category before starting the game.");
+                return;
+            }
+
             hostControlsLockedAfterStart = true;
             hide(skipIntroOptionWrap);
             socket.emit("start_game_request", {
                 code,
-                skip_intro: !!skipIntroCheckbox.checked
+                skip_intro: !!skipIntroCheckbox.checked,
+                selected_categories: selectedCategories
             });
         });
 
