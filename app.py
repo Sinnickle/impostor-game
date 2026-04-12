@@ -139,6 +139,8 @@ def create_game_state():
 
         "teams": [],
         "team_sids": {},
+        "waitlisted_teams": [],
+        "waitlisted_sids": {},
         "players_by_sid": {},
 
         # lobby, intro_wait, intro_playing, agreement, role, phrase, voting, paused_after_result, game_over
@@ -194,6 +196,7 @@ def emit_roster_update(code):
     socketio.emit("roster_update", {
         "code": code,
         "teams": game["teams"],
+        "waitlisted_teams": game["waitlisted_teams"],
         "scores": game["scores"],
         "state": game["state"],
         "round": game["round"],
@@ -214,8 +217,12 @@ def emit_roster_update(code):
     }, room=code)
 
 
-def emit_waiting_screen_to_player(sid, team_name):
-    socketio.emit("player_waiting_screen", {"team_name": team_name}, to=sid)
+def emit_waiting_screen_to_player(sid, team_name, title="Waiting for host.", message=""):
+    socketio.emit("player_waiting_screen", {
+        "team_name": team_name,
+        "title": title,
+        "message": message,
+    }, to=sid)
 
 
 def emit_ready_screen_to_player(sid, team_name):
@@ -239,6 +246,75 @@ def move_all_players_to_ready(code):
         sid = game["team_sids"].get(team)
         if sid:
             emit_ready_screen_to_player(sid, team)
+
+def promote_waitlisted_teams(game):
+    promoted = []
+
+    for team in list(game["waitlisted_teams"]):
+        if team in game["teams"]:
+            continue
+
+        game["teams"].append(team)
+        game["scores"][team] = 0
+        promoted.append(team)
+
+        sid = game["waitlisted_sids"].get(team)
+        if sid:
+            game["team_sids"][team] = sid
+
+    for team in promoted:
+        if team in game["waitlisted_teams"]:
+            game["waitlisted_teams"].remove(team)
+        game["waitlisted_sids"].pop(team, None)
+
+    if promoted:
+        game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
+
+    return promoted
+
+
+def remove_team_everywhere(game, team):
+    game["team_sids"].pop(team, None)
+    game["waitlisted_sids"].pop(team, None)
+
+    if team in game["teams"]:
+        game["teams"].remove(team)
+
+    if team in game["waitlisted_teams"]:
+        game["waitlisted_teams"].remove(team)
+
+    game["scores"].pop(team, None)
+    game["intro_ready"].discard(team)
+    game["intro_finished"].discard(team)
+    game["agreement_ready"].discard(team)
+    game["additional_round_voters"].discard(team)
+    game["votes"].pop(team, None)
+    game["responses"].pop(team, None)
+
+    if team in game["impostors"]:
+        game["impostors"] = [name for name in game["impostors"] if name != team]
+
+    remove_team_from_active_round(game, team)
+    game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
+
+
+def restart_current_round_without_team(code, removed_team):
+    game = games[code]
+
+    if game["state"] not in {"role", "phrase", "voting", "paused_after_result"}:
+        emit_roster_update(code)
+        emit_status(code, f"{removed_team} left the game.")
+        return
+
+    if len(game["teams"]) < 3:
+        reset_room_to_lobby_due_to_low_teams(
+            code,
+            "There are fewer than 3 teams left. The game has been stopped and returned to the lobby."
+        )
+        return
+
+    emit_status(code, f"{removed_team} left the game. Restarting the round without them.")
+    begin_round(code, preserved=False, preserve_order=False)
 
 
 def emit_private_role_info(code):
@@ -791,20 +867,62 @@ def register_view(data):
         emit("error", "Team name required.")
         return
 
+    active_old_sid = game["team_sids"].get(team_name)
+    if active_old_sid and active_old_sid != sid:
+        game["players_by_sid"].pop(active_old_sid, None)
+
+    waitlisted_old_sid = game["waitlisted_sids"].get(team_name)
+    if waitlisted_old_sid and waitlisted_old_sid != sid:
+        game["players_by_sid"].pop(waitlisted_old_sid, None)
+
+    game["players_by_sid"][sid] = team_name
+
+    if team_name in game["waitlisted_teams"]:
+        game["waitlisted_sids"][team_name] = sid
+        emit("registered", {
+            "role_type": "TEAM",
+            "code": code,
+            "team_name": team_name,
+            "state": game["state"],
+        }, to=sid)
+        emit_roster_update(code)
+        emit_waiting_screen_to_player(
+            sid,
+            team_name,
+            title="Waitlisted",
+            message="You joined while a game is already in progress. Your team is waitlisted and will join when the host restarts the game."
+        )
+        emit("status_message", {
+            "message": "You are currently waitlisted for the next game."
+        }, to=sid)
+        return
+
     if team_name not in game["teams"]:
         if game["state"] != "lobby":
-            emit("error", "Cannot join after the game has already started.")
+            game["waitlisted_teams"].append(team_name)
+            game["waitlisted_sids"][team_name] = sid
+            emit("registered", {
+                "role_type": "TEAM",
+                "code": code,
+                "team_name": team_name,
+                "state": game["state"],
+            }, to=sid)
+            emit_roster_update(code)
+            emit_waiting_screen_to_player(
+                sid,
+                team_name,
+                title="Waitlisted",
+                message="You joined while a game is already in progress. Your team is waitlisted and will join when the host restarts the game."
+            )
+            emit_status(code, f"{team_name} joined mid-game and was added to the waitlist.")
             return
+
         game["teams"].append(team_name)
         game["scores"][team_name] = 0
         game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
 
-    old_sid = game["team_sids"].get(team_name)
-    if old_sid and old_sid != sid:
-        game["players_by_sid"].pop(old_sid, None)
-
     game["team_sids"][team_name] = sid
-    game["players_by_sid"][sid] = team_name
+    game["waitlisted_sids"].pop(team_name, None)
 
     emit_roster_update(code)
     send_full_sync_to_sid(code, sid, False, team_name)
@@ -885,6 +1003,10 @@ def start_game_request(data):
     if game["state"] != "lobby":
         emit("error", "Start Game is only available from the lobby.")
         return
+
+    promoted_waitlisted = promote_waitlisted_teams(game)
+    if promoted_waitlisted:
+        emit_status(code, f"Waitlisted teams joined the game: {', '.join(promoted_waitlisted)}.")
 
     if len(game["teams"]) < 3:
         emit("error", "At least 3 teams are required.")
@@ -1113,9 +1235,16 @@ def restart_game(data):
         emit("error", "Restart Game is only available after the game ends.")
         return
 
+    promoted_waitlisted = promote_waitlisted_teams(game)
     reset_to_round_one_new_game(code)
-    emit_status(code, "Game restarted. Starting again from Round 1.")
 
+    if promoted_waitlisted:
+        emit_status(
+            code,
+            f"Game restarted. Starting again from Round 1. Waitlisted teams joined: {', '.join(promoted_waitlisted)}."
+        )
+    else:
+        emit_status(code, "Game restarted. Starting again from Round 1.")
 
 @socketio.on("restart_action")
 def restart_action(data):
@@ -1247,24 +1376,18 @@ def handle_disconnect():
             if not team:
                 return
 
-            game["team_sids"].pop(team, None)
+            was_waitlisted = team in game["waitlisted_teams"]
+            was_active = team in game["teams"]
 
-            if team in game["teams"]:
-                game["teams"].remove(team)
+            remove_team_everywhere(game, team)
 
-            game["scores"].pop(team, None)
-            game["intro_ready"].discard(team)
-            game["intro_finished"].discard(team)
-            game["agreement_ready"].discard(team)
-            game["additional_round_voters"].discard(team)
-            game["votes"].pop(team, None)
-            game["responses"].pop(team, None)
+            if was_waitlisted:
+                emit_roster_update(code)
+                emit_status(code, f"Waitlisted team {team} left and was removed from the waitlist.")
+                return
 
-            if team in game["impostors"]:
-                game["impostors"] = [name for name in game["impostors"] if name != team]
-
-            remove_team_from_active_round(game, team)
-            game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
+            if not was_active:
+                return
 
             if game["state"] != "lobby" and len(game["teams"]) < 3:
                 reset_room_to_lobby_due_to_low_teams(
@@ -1273,34 +1396,12 @@ def handle_disconnect():
                 )
                 return
 
+            if game["state"] in {"role", "phrase", "voting", "paused_after_result"}:
+                restart_current_round_without_team(code, team)
+                return
+
             emit_status(code, f"{team} left the game.")
             emit_roster_update(code)
-
-            if game["state"] == "phrase":
-                if not game["order"]:
-                    begin_voting_phase(code)
-                    return
-
-                if game["current_turn_index"] >= len(game["order"]):
-                    begin_voting_phase(code)
-                    return
-
-                current_team = game["order"][game["current_turn_index"]]
-                socketio.emit("start_turn", {
-                    "current_team": current_team,
-                    "turn_index": game["current_turn_index"] + 1,
-                    "total_turns": len(game["order"]),
-                    "seconds": PHRASE_TIME_LIMIT,
-                    "responses": game["responses"],
-                }, room=code)
-                return
-
-            if game["state"] == "voting":
-                if len(game["votes"]) >= len(game["teams"]):
-                    game["vote_token"] += 1
-                    calculate_round_result(code)
-                return
-
             return
 
 

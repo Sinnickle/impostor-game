@@ -2392,32 +2392,36 @@ const r = Math.max(
             }
         });
 
-        socket.on("player_waiting_screen", () => {
-            if (isHost) return;
+        socket.on("player_waiting_screen", (data) => {
+    if (isHost) return;
 
-            currentState = "lobby";
-            myRole = null;
-            myWord = null;
-            currentImpostorCount = 1;
-            currentTurnTeam = null;
-            currentOrder = [];
-            roundResponses = {};
-            hasVotedThisRound = false;
+    currentState = "lobby";
+    myRole = null;
+    myWord = null;
+    currentImpostorCount = 1;
+    currentTurnTeam = null;
+    currentOrder = [];
+    roundResponses = {};
+    hasVotedThisRound = false;
+    introFinishedOnClient = false;
+    glitchStarted = false;
 
-            updateIdentityText();
-            updatePlayerRoleBanner();
-            renderOrder([]);
-            renderResponses({});
-            setCurrentTurn(null);
-            hideMainBoxes();
-            stopIntroVideo();
+    updateIdentityText();
+    updatePlayerRoleBanner();
+    renderOrder([]);
+    renderResponses({});
+    setCurrentTurn(null);
+    hideMainBoxes();
+    stopIntroVideo();
 
-            showPlayerWhiteScreen({
-                title: "Waiting for host...",
-                subtext: "",
-                showReadyButton: false
-            });
-        });
+    showPlayerWhiteScreen({
+        title: data?.title || "Waiting for host.",
+        subtext: data?.message || "",
+        showReadyButton: false
+    });
+
+    statusDiv.textContent = data?.message || "Waiting for host.";
+});
 
         socket.on("game_stopped_low_teams", (data) => {
             currentState = "lobby";
