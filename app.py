@@ -82,6 +82,7 @@ def sanitize_phrase(phrase):
         return ""
     return " ".join(str(phrase).strip().split())
 
+
 def sanitize_selected_categories(raw_categories):
     if not isinstance(raw_categories, list):
         return DEFAULT_SELECTED_CATEGORIES[:]
@@ -293,6 +294,56 @@ def emit_round_started(code, preserved=False):
     }, room=code)
 
 
+def reset_room_to_lobby_due_to_low_teams(code, message):
+    game = games[code]
+
+    game["state"] = "lobby"
+    game["round"] = 1
+
+    game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
+    game["selected_categories"] = sanitize_selected_categories(game.get("selected_categories"))
+    game["word_pool"] = get_word_pool_for_categories(game["selected_categories"])
+    game["word_category"] = None
+    game["impostors"] = []
+    game["word"] = None
+    game["order"] = []
+    game["current_turn_index"] = 0
+
+    game["responses"] = {}
+    game["votes"] = {}
+    game["scores"] = {team: 0 for team in game["teams"]}
+
+    game["agreement_ready"] = set()
+    game["intro_ready"] = set()
+    game["intro_finished"] = set()
+    game["additional_round_voters"] = set()
+
+    game["turn_token"] += 1
+    game["vote_token"] += 1
+
+    emit_roster_update(code)
+    socketio.emit("game_stopped_low_teams", {"message": message}, room=code)
+
+    for team in game["teams"]:
+        sid = game["team_sids"].get(team)
+        if sid:
+            emit_waiting_screen_to_player(sid, team)
+
+    emit_status(code, message)
+
+
+def remove_team_from_active_round(game, team):
+    if team in game["order"]:
+        removed_index = game["order"].index(team)
+        game["order"].remove(team)
+
+        if removed_index < game["current_turn_index"]:
+            game["current_turn_index"] = max(0, game["current_turn_index"] - 1)
+        elif removed_index == game["current_turn_index"]:
+            if game["current_turn_index"] >= len(game["order"]):
+                game["current_turn_index"] = len(game["order"])
+
+
 def begin_round(code, preserved=False, preserve_order=False):
     game = games[code]
 
@@ -374,6 +425,8 @@ def run_phrase_timer(code, team_name, token, seconds):
             return
         if game["turn_token"] != token:
             return
+        if game["current_turn_index"] >= len(game["order"]):
+            return
 
         current_team = game["order"][game["current_turn_index"]]
         if current_team != team_name:
@@ -392,6 +445,8 @@ def run_phrase_timer(code, team_name, token, seconds):
     if game["state"] != "phrase":
         return
     if game["turn_token"] != token:
+        return
+    if game["current_turn_index"] >= len(game["order"]):
         return
 
     current_team = game["order"][game["current_turn_index"]]
@@ -1099,6 +1154,10 @@ def submit_phrase(data):
         emit("error", "Only players can submit phrases.")
         return
 
+    if game["current_turn_index"] >= len(game["order"]):
+        emit("error", "There is no active turn.")
+        return
+
     current_team = game["order"][game["current_turn_index"]]
     if team_name != current_team:
         emit("error", "It is not your turn.")
@@ -1185,26 +1244,62 @@ def handle_disconnect():
         if sid in game["players_by_sid"]:
             team = game["players_by_sid"].pop(sid, None)
 
-            if team and team in game["teams"]:
+            if not team:
+                return
+
+            game["team_sids"].pop(team, None)
+
+            if team in game["teams"]:
                 game["teams"].remove(team)
-                game["team_sids"].pop(team, None)
-                game["scores"].pop(team, None)
 
-                game["intro_ready"].discard(team)
-                game["intro_finished"].discard(team)
-                game["agreement_ready"].discard(team)
-                game["additional_round_voters"].discard(team)
+            game["scores"].pop(team, None)
+            game["intro_ready"].discard(team)
+            game["intro_finished"].discard(team)
+            game["agreement_ready"].discard(team)
+            game["additional_round_voters"].discard(team)
+            game["votes"].pop(team, None)
+            game["responses"].pop(team, None)
 
-                if team in game["impostors"]:
-                    game["impostors"] = [name for name in game["impostors"] if name != team]
+            if team in game["impostors"]:
+                game["impostors"] = [name for name in game["impostors"] if name != team]
 
-                game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
+            remove_team_from_active_round(game, team)
+            game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
 
-                game["votes"].pop(team, None)
-                game["responses"].pop(team, None)
+            if game["state"] != "lobby" and len(game["teams"]) < 3:
+                reset_room_to_lobby_due_to_low_teams(
+                    code,
+                    "There are fewer than 3 teams left. The game has been stopped and returned to the lobby."
+                )
+                return
 
-                emit_status(code, f"{team} left the game.")
-                emit_roster_update(code)
+            emit_status(code, f"{team} left the game.")
+            emit_roster_update(code)
+
+            if game["state"] == "phrase":
+                if not game["order"]:
+                    begin_voting_phase(code)
+                    return
+
+                if game["current_turn_index"] >= len(game["order"]):
+                    begin_voting_phase(code)
+                    return
+
+                current_team = game["order"][game["current_turn_index"]]
+                socketio.emit("start_turn", {
+                    "current_team": current_team,
+                    "turn_index": game["current_turn_index"] + 1,
+                    "total_turns": len(game["order"]),
+                    "seconds": PHRASE_TIME_LIMIT,
+                    "responses": game["responses"],
+                }, room=code)
+                return
+
+            if game["state"] == "voting":
+                if len(game["votes"]) >= len(game["teams"]):
+                    game["vote_token"] += 1
+                    calculate_round_result(code)
+                return
 
             return
 
