@@ -1,15 +1,23 @@
 import os
 import random
 import string
+import re
 from collections import Counter
 
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, join_room
+from google import genai
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "impostor-secret-key"
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+gemini_client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+
+SMART_AI_BASE_NAME = "SMART AI"
+SMART_AI_MODEL = "gemini-2.5-flash"
 
 WORD_CATEGORIES = {
     "computer_science": [
@@ -168,7 +176,371 @@ def create_game_state():
 
         "turn_token": 0,
         "vote_token": 0,
+
+        "smart_ai_added": False,
+        "smart_ai_team": None,
     }
+
+
+def is_smart_ai_team(game, team_name):
+    return bool(team_name) and team_name == game.get("smart_ai_team")
+
+
+def make_unique_smart_ai_name(game):
+    base = SMART_AI_BASE_NAME
+    if base not in game["teams"] and base not in game["waitlisted_teams"]:
+        return base
+
+    index = 2
+    while True:
+        candidate = f"{base} {index}"
+        if candidate not in game["teams"] and candidate not in game["waitlisted_teams"]:
+            return candidate
+        index += 1
+
+
+def contains_forbidden_word(phrase, word):
+    if not phrase or not word:
+        return False
+
+    phrase_words = re.findall(r"[A-Za-z0-9]+", phrase.lower())
+    word_words = re.findall(r"[A-Za-z0-9]+", word.lower())
+
+    if not phrase_words or not word_words:
+        return False
+
+    phrase_set = set(phrase_words)
+    for token in word_words:
+        if token in phrase_set:
+            return True
+    return False
+
+
+def normalize_ai_phrase(raw_text, fallback):
+    text = sanitize_phrase(raw_text)
+    text = re.sub(r"[\r\n\t]+", " ", text).strip()
+    text = text.strip("\"'`.,:;!?-_/\\|[]{}()")
+
+    words = text.split()
+    if not words:
+        return fallback
+
+    phrase = " ".join(words[:3]).strip()
+    if not phrase:
+        return fallback
+
+    return phrase
+
+
+def normalize_vote_choice(raw_text, valid_choices):
+    if not raw_text:
+        return None
+
+    cleaned = sanitize_phrase(raw_text).strip()
+    lowered = cleaned.lower()
+
+    for choice in valid_choices:
+        if lowered == choice.lower():
+            return choice
+
+    for choice in valid_choices:
+        if choice.lower() in lowered:
+            return choice
+
+    return None
+
+
+def get_ai_human_fallback_phrase():
+    return random.choice([
+        "deep range",
+        "arc shot",
+        "quick click",
+        "sharp logic",
+        "inner memory",
+        "clean code",
+        "core link",
+        "fast process",
+    ])
+
+
+def get_ai_impostor_fallback_phrase(previous_phrases):
+    if previous_phrases:
+        seed = sanitize_phrase(previous_phrases[0])
+        seed_words = seed.split()
+        if seed_words:
+            return " ".join(seed_words[:3])
+    return random.choice([
+        "seems useful",
+        "pretty common",
+        "kind of technical",
+        "widely used",
+        "good clue",
+    ])
+
+
+def get_previous_phrases_for_round(game, current_team):
+    phrases = []
+    for team in game["order"]:
+        if team == current_team:
+            break
+        phrase = game["responses"].get(team)
+        if phrase:
+            phrases.append({"team": team, "phrase": phrase})
+    return phrases
+
+
+def build_ai_phrase_prompt(game, ai_team):
+    is_human = ai_team not in game["impostors"]
+    previous = get_previous_phrases_for_round(game, ai_team)
+
+    if is_human:
+        return f"""
+You are playing a social deduction word game as a HUMAN.
+Your secret word is: {game['word']}
+
+Rules:
+- You MUST NOT say the secret word.
+- You MUST return ONLY one phrase.
+- That phrase must be NO LONGER THAN 3 WORDS.
+- Do not explain.
+- Do not use quotes.
+- Do not use bullet points.
+- Be clever and subtle.
+- Your phrase should make other teams feel that you know the word without directly saying it.
+
+Creativity example:
+If the word were Pointer, a clever response could be: Three
+
+Return only the phrase.
+""".strip()
+
+    if previous:
+        previous_lines = "\n".join(
+            f"- {item['team']}: {item['phrase']}"
+            for item in previous
+        )
+        return f"""
+You are playing a social deduction word game as the IMPOSTOR.
+You do NOT know the secret word.
+Your goal is to blend in.
+
+Rules:
+- You MUST return ONLY one phrase.
+- That phrase must be NO LONGER THAN 3 WORDS.
+- Do not explain.
+- Do not use quotes.
+- Do not use bullet points.
+- Match the style and likely meaning of the previous team phrases.
+- Be clever and subtle.
+
+Previous phrases this round:
+{previous_lines}
+
+Return only the phrase.
+""".strip()
+
+    return """
+You are playing a social deduction word game as the IMPOSTOR.
+You do NOT know the secret word.
+You are going first, so there are no previous phrases.
+Your goal is to blend in with a general phrase.
+
+Rules:
+- You MUST return ONLY one phrase.
+- That phrase must be NO LONGER THAN 3 WORDS.
+- Do not explain.
+- Do not use quotes.
+- Do not use bullet points.
+- Keep it general but believable.
+
+Return only the phrase.
+""".strip()
+
+
+def generate_smart_ai_phrase(game, ai_team):
+    prompt = build_ai_phrase_prompt(game, ai_team)
+    is_human = ai_team not in game["impostors"]
+
+    fallback = (
+        get_ai_human_fallback_phrase()
+        if is_human
+        else get_ai_impostor_fallback_phrase(
+            [item["phrase"] for item in get_previous_phrases_for_round(game, ai_team)]
+        )
+    )
+
+    if not gemini_client:
+        raise RuntimeError("Gemini client is not configured.")
+
+    try:
+        response = gemini_client.models.generate_content(
+            model=SMART_AI_MODEL,
+            contents=prompt,
+        )
+        text = getattr(response, "text", "") or ""
+        phrase = normalize_ai_phrase(text, fallback)
+
+        if is_human and contains_forbidden_word(phrase, game["word"]):
+            retry_prompt = prompt + "\n\nYour first answer incorrectly included the secret word. Try again and do NOT say the word."
+            retry_response = gemini_client.models.generate_content(
+                model=SMART_AI_MODEL,
+                contents=retry_prompt,
+            )
+            retry_text = getattr(retry_response, "text", "") or ""
+            phrase = normalize_ai_phrase(retry_text, fallback)
+
+        if is_human and contains_forbidden_word(phrase, game["word"]):
+            phrase = fallback
+
+        return normalize_ai_phrase(phrase, fallback)
+    except Exception as exc:
+        raise RuntimeError(f"Failed to generate smart AI phrase: {exc}") from exc
+
+
+def build_ai_vote_prompt(game, ai_team):
+    visible_responses = "\n".join(
+        f"- {team}: {phrase}"
+        for team, phrase in game["responses"].items()
+    )
+    valid_targets = [team for team in game["teams"] if team != ai_team]
+    valid_choices = valid_targets + ["ADDITIONAL_ROUND"]
+
+    role_text = (
+        f"You are HUMAN. The real word is: {game['word']}."
+        if ai_team not in game["impostors"]
+        else "You are IMPOSTOR. You do not know the real word."
+    )
+
+    return f"""
+You are voting in a social deduction game.
+
+{role_text}
+
+Visible phrases:
+{visible_responses}
+
+Valid vote choices:
+{", ".join(valid_choices)}
+
+Rules:
+- Return ONLY one exact valid choice from the list above.
+- No explanation.
+- No extra words.
+- If uncertain, choose the single most believable option.
+
+Return only the vote choice.
+""".strip(), valid_choices
+
+
+def generate_smart_ai_vote(game, ai_team):
+    valid_targets = [team for team in game["teams"] if team != ai_team]
+    valid_choices = valid_targets + ["ADDITIONAL_ROUND"]
+
+    if not valid_targets:
+        return "ADDITIONAL_ROUND"
+
+    fallback = random.choice(valid_targets)
+
+    if not gemini_client:
+        raise RuntimeError("Gemini client is not configured.")
+
+    try:
+        prompt, valid_choices = build_ai_vote_prompt(game, ai_team)
+        response = gemini_client.models.generate_content(
+            model=SMART_AI_MODEL,
+            contents=prompt,
+        )
+        text = getattr(response, "text", "") or ""
+        vote = normalize_vote_choice(text, valid_choices)
+        return vote or fallback
+    except Exception as exc:
+        raise RuntimeError(f"Failed to generate smart AI vote: {exc}") from exc
+
+
+def auto_submit_smart_ai_phrase(code, ai_team, token):
+    socketio.sleep(1.0)
+
+    game = games.get(code)
+    if not game:
+        return
+    if game["state"] != "phrase":
+        return
+    if game["turn_token"] != token:
+        return
+    if game["current_turn_index"] >= len(game["order"]):
+        return
+
+    current_team = game["order"][game["current_turn_index"]]
+    if current_team != ai_team:
+        return
+
+    try:
+        phrase = generate_smart_ai_phrase(game, ai_team)
+    except Exception:
+        fallback = (
+            get_ai_human_fallback_phrase()
+            if ai_team not in game["impostors"]
+            else get_ai_impostor_fallback_phrase(
+                [item["phrase"] for item in get_previous_phrases_for_round(game, ai_team)]
+            )
+        )
+        phrase = fallback
+
+    phrase = normalize_ai_phrase(
+        phrase,
+        get_ai_human_fallback_phrase() if ai_team not in game["impostors"] else "good clue"
+    )
+
+    game["responses"][ai_team] = phrase
+    socketio.emit("phrase_locked", {
+        "team": ai_team,
+        "phrase": phrase,
+        "auto_submitted": False,
+        "responses": game["responses"]
+    }, room=code)
+
+    emit_status(code, f"{ai_team} submitted a phrase.")
+
+    game["current_turn_index"] += 1
+    socketio.sleep(1)
+    start_next_turn(code)
+
+
+def auto_submit_smart_ai_vote(code, ai_team, token):
+    socketio.sleep(1.2)
+
+    game = games.get(code)
+    if not game:
+        return
+    if game["state"] != "voting":
+        return
+    if game["vote_token"] != token:
+        return
+    if ai_team not in game["teams"]:
+        return
+    if ai_team in game["votes"]:
+        return
+
+    try:
+        voted_team = generate_smart_ai_vote(game, ai_team)
+    except Exception:
+        valid_targets = [team for team in game["teams"] if team != ai_team]
+        voted_team = random.choice(valid_targets) if valid_targets else "ADDITIONAL_ROUND"
+
+    valid_targets = [team for team in game["teams"] if team != ai_team] + ["ADDITIONAL_ROUND"]
+    if voted_team not in valid_targets:
+        remaining = [team for team in game["teams"] if team != ai_team]
+        voted_team = random.choice(remaining) if remaining else "ADDITIONAL_ROUND"
+
+    game["votes"][ai_team] = voted_team
+    socketio.emit("vote_received", {
+        "team": ai_team,
+        "message": f"{ai_team} voted."
+    }, room=code)
+
+    if len(game["votes"]) >= len(game["teams"]):
+        game["vote_token"] += 1
+        calculate_round_result(code)
 
 
 def all_teams_intro_finished(game):
@@ -214,6 +586,8 @@ def emit_roster_update(code):
             (game["state"] == "role") or
             (game["state"] == "paused_after_result")
         ),
+        "smart_ai_added": game["smart_ai_added"],
+        "smart_ai_team": game["smart_ai_team"],
     }, room=code)
 
 
@@ -246,6 +620,7 @@ def move_all_players_to_ready(code):
         sid = game["team_sids"].get(team)
         if sid:
             emit_ready_screen_to_player(sid, team)
+
 
 def promote_waitlisted_teams(game):
     promoted = []
@@ -293,6 +668,9 @@ def remove_team_everywhere(game, team):
 
     if team in game["impostors"]:
         game["impostors"] = [name for name in game["impostors"] if name != team]
+
+    if is_smart_ai_team(game, team):
+        game["smart_ai_team"] = None
 
     remove_team_from_active_round(game, team)
     game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
@@ -489,6 +867,10 @@ def start_next_turn(code):
         "responses": game["responses"],
     }, room=code)
 
+    if is_smart_ai_team(game, current_team):
+        socketio.start_background_task(auto_submit_smart_ai_phrase, code, current_team, token)
+        return
+
     socketio.start_background_task(run_phrase_timer, code, current_team, token, PHRASE_TIME_LIMIT)
 
 
@@ -558,6 +940,9 @@ def begin_voting_phase(code):
         "responses": game["responses"],
         "time_limit": VOTING_TIME_LIMIT,
     }, room=code)
+
+    if game.get("smart_ai_added") and game.get("smart_ai_team") in game["teams"]:
+        socketio.start_background_task(auto_submit_smart_ai_vote, code, game["smart_ai_team"], token)
 
     socketio.start_background_task(run_vote_timer, code, token, VOTING_TIME_LIMIT)
 
@@ -698,6 +1083,8 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
             (game["state"] == "role") or
             (game["state"] == "paused_after_result")
         ),
+        "smart_ai_added": game["smart_ai_added"],
+        "smart_ai_team": game["smart_ai_team"],
     }, to=sid)
 
     if is_host:
@@ -984,6 +1371,73 @@ def set_impostor_count(data):
     }, room=code)
 
 
+@socketio.on("add_smart_ai")
+def add_smart_ai(data):
+    code = str(data.get("code", "")).strip().upper()
+    sid = request.sid
+
+    if code not in games:
+        emit("smart_ai_add_failed", {"message": "Game code not found."}, to=sid)
+        return
+
+    game = games[code]
+
+    if sid != game["host_sid"]:
+        emit("smart_ai_add_failed", {"message": "Only the host can add the smart AI."}, to=sid)
+        return
+
+    if game["state"] != "lobby":
+        emit("smart_ai_add_failed", {"message": "Smart AI can only be added in the lobby."}, to=sid)
+        return
+
+    if game["smart_ai_added"]:
+        emit("smart_ai_add_failed", {"message": "Smart AI has already been added to this game."}, to=sid)
+        return
+
+    if not GEMINI_API_KEY or not gemini_client:
+        emit("smart_ai_add_failed", {"message": "Gemini API is not configured correctly on the server."}, to=sid)
+        return
+
+    bot_team = None
+
+    try:
+        bot_team = make_unique_smart_ai_name(game)
+
+        test_response = gemini_client.models.generate_content(
+            model=SMART_AI_MODEL,
+            contents="Reply with exactly: OK"
+        )
+        test_text = getattr(test_response, "text", "") or ""
+        if "ok" not in test_text.strip().lower():
+            raise RuntimeError("Gemini connection test returned an invalid response.")
+
+        game["smart_ai_added"] = True
+        game["smart_ai_team"] = bot_team
+        game["teams"].append(bot_team)
+        game["scores"][bot_team] = 0
+        game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
+
+        emit_roster_update(code)
+        socketio.emit("smart_ai_added", {
+            "team_name": bot_team,
+            "message": f"{bot_team} joined the game."
+        }, room=code)
+        emit_status(code, f"{bot_team} was added to the game.")
+
+    except Exception:
+        if bot_team:
+            game["teams"] = [team for team in game["teams"] if team != bot_team]
+            game["scores"].pop(bot_team, None)
+
+        game["smart_ai_added"] = False
+        game["smart_ai_team"] = None
+        game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
+
+        emit_roster_update(code)
+        emit("smart_ai_add_failed", {
+            "message": "There was an error creating the smart AI. The action was stopped."
+        }, to=sid)
+
 @socketio.on("start_game_request")
 def start_game_request(data):
     code = str(data.get("code", "")).strip().upper()
@@ -1110,7 +1564,7 @@ def player_intro_finished(data):
 
     if all_teams_intro_finished(game):
         socketio.emit("agreement_phase", {
-            "message": "All teams finished the intro. Host can press Continue to begin Round 1."
+            "message": "Please wait for the host to press Continue to begin Round 1."
         }, room=code)
 
 
@@ -1246,6 +1700,7 @@ def restart_game(data):
     else:
         emit_status(code, "Game restarted. Starting again from Round 1.")
 
+
 @socketio.on("restart_action")
 def restart_action(data):
     mode = str(data.get("mode", "")).strip()
@@ -1281,6 +1736,10 @@ def submit_phrase(data):
     team_name = game["players_by_sid"].get(sid)
     if not team_name or team_name == "HOST":
         emit("error", "Only players can submit phrases.")
+        return
+
+    if is_smart_ai_team(game, team_name):
+        emit("error", "Smart AI phrases are server-managed.")
         return
 
     if game["current_turn_index"] >= len(game["order"]):
@@ -1334,6 +1793,10 @@ def submit_vote(data):
     voter_team = game["players_by_sid"].get(sid)
     if not voter_team or voter_team == "HOST":
         emit("error", "Only players can vote.")
+        return
+
+    if is_smart_ai_team(game, voter_team):
+        emit("error", "Smart AI votes are server-managed.")
         return
 
     if voter_team in game["votes"]:

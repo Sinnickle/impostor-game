@@ -1263,14 +1263,15 @@
 
                     <div id="hostControls" class="host-lobby-options hidden">
                         <div class="row">
-                            <input id="roundCountInput" type="number" min="1" max="20" value="3" style="width: 110px;">
-                            <button id="saveRoundsBtn">Save Rounds</button>
-                            <input id="impostorCountInput" type="number" min="1" max="4" value="1" style="width: 130px;">
-                            <button id="saveImpostorsBtn">Save Impostors</button>
-                            <button id="startGameBtn">Start Game</button>
-                            <button id="continueBtn" class="hidden">Continue</button>
-                            <button id="restartActionBtn" class="hidden">Restart Round</button>
-                        </div>
+    <input id="roundCountInput" type="number" min="1" max="20" value="3" style="width: 110px;">
+    <button id="saveRoundsBtn">Save Rounds</button>
+    <input id="impostorCountInput" type="number" min="1" max="4" value="1" style="width: 130px;">
+    <button id="saveImpostorsBtn">Save Impostors</button>
+    <button id="addSmartAiBtn">Add smart AI (Irreversible)</button>
+    <button id="startGameBtn">Start Game</button>
+    <button id="continueBtn" class="hidden">Continue</button>
+    <button id="restartActionBtn" class="hidden">Restart Round</button>
+</div>
                         <div id="impostorCountHint" class="muted small-note">
                             1 impostor maximum with the current number of teams.
                         </div>
@@ -1467,19 +1468,20 @@
         const orderList = document.getElementById("orderList");
         const responsesList = document.getElementById("responsesList");
 
-        const hostControls = document.getElementById("hostControls");
-        const roundCountInput = document.getElementById("roundCountInput");
-        const saveRoundsBtn = document.getElementById("saveRoundsBtn");
-        const impostorCountInput = document.getElementById("impostorCountInput");
-        const saveImpostorsBtn = document.getElementById("saveImpostorsBtn");
-        const impostorCountHint = document.getElementById("impostorCountHint");
-        const startGameBtn = document.getElementById("startGameBtn");
-        const continueBtn = document.getElementById("continueBtn");
-        const restartActionBtn = document.getElementById("restartActionBtn");
-        const skipIntroCheckbox = document.getElementById("skipIntroCheckbox");
-        const skipIntroOptionWrap = document.getElementById("skipIntroOptionWrap");
-        const wordCategoryCheckboxes = Array.from(document.querySelectorAll(".word-category-checkbox"));
-        const categorySummary = document.getElementById("categorySummary");
+const hostControls = document.getElementById("hostControls");
+const roundCountInput = document.getElementById("roundCountInput");
+const saveRoundsBtn = document.getElementById("saveRoundsBtn");
+const impostorCountInput = document.getElementById("impostorCountInput");
+const saveImpostorsBtn = document.getElementById("saveImpostorsBtn");
+const impostorCountHint = document.getElementById("impostorCountHint");
+const addSmartAiBtn = document.getElementById("addSmartAiBtn");
+const startGameBtn = document.getElementById("startGameBtn");
+const continueBtn = document.getElementById("continueBtn");
+const restartActionBtn = document.getElementById("restartActionBtn");
+const skipIntroCheckbox = document.getElementById("skipIntroCheckbox");
+const skipIntroOptionWrap = document.getElementById("skipIntroOptionWrap");
+const wordCategoryCheckboxes = Array.from(document.querySelectorAll(".word-category-checkbox"));
+const categorySummary = document.getElementById("categorySummary");
 
         const agreementBox = document.getElementById("agreementBox");
         const agreementStatus = document.getElementById("agreementStatus");
@@ -2243,6 +2245,21 @@ const r = Math.max(
             socket.emit("set_impostor_count", { code, impostor_count: impostorCount });
         });
 
+        addSmartAiBtn?.addEventListener("click", () => {
+    if (!isHost) return;
+    if (!code) return;
+    if (addSmartAiBtn.disabled) return;
+
+    const confirmed = window.confirm(
+        "Add smart AI to this game? This action is irreversible for this room."
+    );
+    if (!confirmed) return;
+
+    addSmartAiBtn.disabled = true;
+
+    socket.emit("add_smart_ai", { code });
+});
+
         startGameBtn?.addEventListener("click", () => {
             if (!isHost) return;
 
@@ -2334,11 +2351,16 @@ const r = Math.max(
         });
 
         socket.on("error", (message) => {
-            statusDiv.textContent = message || "An error occurred.";
-            if (isHost) {
-                setHostLobbyDefaults();
-            }
-        });
+    statusDiv.textContent = message || "An error occurred.";
+    if (isHost) {
+        setHostLobbyDefaults();
+
+        if (addSmartAiBtn && currentState === "lobby") {
+            addSmartAiBtn.disabled = false;
+            addSmartAiBtn.textContent = "Add smart AI (Irreversible)";
+        }
+    }
+});
 
         socket.on("registered", (data) => {
             currentState = data.state || currentState;
@@ -2367,30 +2389,68 @@ const r = Math.max(
             updateImpostorControls(data?.impostor_count, data?.max_impostors_allowed);
         });
 
+        socket.on("smart_ai_added", (data) => {
+    if (!isHost) return;
+
+    if (addSmartAiBtn) {
+        addSmartAiBtn.disabled = true;
+        addSmartAiBtn.textContent = data?.team_name
+            ? `${data.team_name} Added`
+            : "Smart AI Added";
+    }
+
+    statusDiv.textContent = data?.message || "Smart AI added.";
+});
+
+socket.on("smart_ai_add_failed", (data) => {
+    if (!isHost) return;
+
+    const msg = data?.message || "There was an error creating the smart AI.";
+
+    if (addSmartAiBtn) {
+        addSmartAiBtn.disabled = false;
+        addSmartAiBtn.textContent = "Add smart AI (Irreversible)";
+    }
+
+    statusDiv.textContent = msg;
+    alert(msg);
+});
+
         socket.on("roster_update", (data) => {
-            renderTeams(data.teams || []);
-            renderScoreboard(data.scores || {});
+    renderTeams(data.teams || []);
+    renderScoreboard(data.scores || {});
 
-            if (typeof data.round === "number" && typeof data.max_rounds === "number") {
-                roundInfoText.textContent = `${data.round} / ${data.max_rounds}`;
-            }
+    if (typeof data.round === "number" && typeof data.max_rounds === "number") {
+        roundInfoText.textContent = `${data.round} / ${data.max_rounds}`;
+    }
 
-            if (Array.isArray(data.intro_finished) && Array.isArray(data.teams) && currentState === "agreement") {
-                setIntroProgress(
-                    `Waiting for all teams to finish the intro before Round ${data.round || 1} begins.`,
-                    data.intro_finished.length,
-                    data.teams.length
-                );
-            }
+    if (Array.isArray(data.intro_finished) && Array.isArray(data.teams) && currentState === "agreement") {
+        setIntroProgress(
+            `Waiting for all teams to finish the intro before Round ${data.round || 1} begins.`,
+            data.intro_finished.length,
+            data.teams.length
+        );
+    }
 
-            currentState = data.state || currentState;
-            updateImpostorControls(data.impostor_count, data.max_impostors_allowed);
-            syncHostControlsFromRoster(data);
+    currentState = data.state || currentState;
+    updateImpostorControls(data.impostor_count, data.max_impostors_allowed);
+    syncHostControlsFromRoster(data);
 
-            if (isHost && currentState === "lobby") {
-                statusDiv.textContent = `Connected to room ${code}. ${data.teams?.length || 0} team(s) in lobby.`;
-            }
-        });
+    if (isHost && addSmartAiBtn) {
+        const smartAiAlreadyAdded = !!data.smart_ai_added;
+        const smartAiTeam = data.smart_ai_team || "Smart AI";
+
+        addSmartAiBtn.textContent = smartAiAlreadyAdded
+            ? `${smartAiTeam} Added`
+            : "Add smart AI (Irreversible)";
+
+        addSmartAiBtn.disabled = smartAiAlreadyAdded || currentState !== "lobby";
+    }
+
+    if (isHost && currentState === "lobby") {
+        statusDiv.textContent = `Connected to room ${code}. ${data.teams?.length || 0} team(s) in lobby.`;
+    }
+});
 
         socket.on("player_waiting_screen", (data) => {
     if (isHost) return;
