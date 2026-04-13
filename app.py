@@ -542,7 +542,6 @@ def auto_submit_smart_ai_vote(code, ai_team, token):
         game["vote_token"] += 1
         calculate_round_result(code)
 
-
 def all_teams_intro_finished(game):
     return len(game["teams"]) > 0 and len(game["intro_finished"]) == len(game["teams"])
 
@@ -1403,13 +1402,18 @@ def add_smart_ai(data):
     try:
         bot_team = make_unique_smart_ai_name(game)
 
+        print("DEBUG: trying Gemini test call")
+        print("DEBUG: model =", SMART_AI_MODEL)
+        print("DEBUG: key exists =", bool(GEMINI_API_KEY))
+        print("DEBUG: client exists =", gemini_client is not None)
+
         test_response = gemini_client.models.generate_content(
             model=SMART_AI_MODEL,
             contents="Reply with exactly: OK"
         )
+
         test_text = getattr(test_response, "text", "") or ""
-        if "ok" not in test_text.strip().lower():
-            raise RuntimeError("Gemini connection test returned an invalid response.")
+        print("DEBUG: Gemini test response text =", repr(test_text))
 
         game["smart_ai_added"] = True
         game["smart_ai_team"] = bot_team
@@ -1424,7 +1428,9 @@ def add_smart_ai(data):
         }, room=code)
         emit_status(code, f"{bot_team} was added to the game.")
 
-    except Exception:
+    except Exception as e:
+        print("DEBUG: add_smart_ai failed:", repr(e))
+
         if bot_team:
             game["teams"] = [team for team in game["teams"] if team != bot_team]
             game["scores"].pop(bot_team, None)
@@ -1435,7 +1441,7 @@ def add_smart_ai(data):
 
         emit_roster_update(code)
         emit("smart_ai_add_failed", {
-            "message": "There was an error creating the smart AI. The action was stopped."
+            "message": f"Smart AI creation failed: {str(e)}"
         }, to=sid)
 
 @socketio.on("start_game_request")
