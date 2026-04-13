@@ -2727,9 +2727,10 @@ socket.on("smart_ai_add_failed", (data) => {
         });
 
         socket.on("vote_received", (data) => {
-            hasVotedThisRound = true;
-            votingText.textContent = data?.message || "Vote received.";
-        });
+    hasVotedThisRound = true;
+    votingText.textContent = data?.message || "Vote received.";
+    Array.from(voteOptions.querySelectorAll("button")).forEach(button => button.disabled = true);
+});
 
         socket.on("round_result", (data) => {
             currentState = "paused_after_result";

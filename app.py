@@ -533,8 +533,8 @@ def auto_submit_smart_ai_vote(code, ai_team, token):
         voted_team = random.choice(remaining) if remaining else "ADDITIONAL_ROUND"
 
     game["votes"][ai_team] = voted_team
-    socketio.emit("vote_received", {
-        "team": ai_team,
+
+    socketio.emit("status_message", {
         "message": f"{ai_team} voted."
     }, room=code)
 
