@@ -31,6 +31,9 @@
             --bulb-edge: rgba(126, 73, 17, 0.95);
             --bulb-glow: rgba(255, 211, 92, 0.80);
             --bulb-glow-pink: rgba(255, 78, 147, 0.32);
+
+            /* Adjust this to move PLAYER UI down/up */
+            --player-ui-offset-y: 22px;
         }
 
         html, body {
@@ -718,7 +721,7 @@
             min-height: 100vh;
             height: auto;
             margin: 0 auto;
-            padding-top: clamp(110px, 13vh, 150px);
+            padding-top: calc(clamp(110px, 13vh, 150px) + var(--player-ui-offset-y));
             padding-left: clamp(10px, 1vw, 16px);
             padding-right: clamp(10px, 1vw, 16px);
             padding-bottom: clamp(16px, 2vh, 24px);
@@ -764,7 +767,6 @@
             display: none;
         }
 
-        .player-mode .scoreboard-host-only,
         .player-mode .hero-host-only,
         .player-mode .host-only {
             display: none !important;
@@ -987,14 +989,14 @@
         }
 
         .player-mode #playerRoleBanner::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: 20px;
-    pointer-events: none;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
-    background: none;
-}
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            pointer-events: none;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+            background: none;
+        }
 
         .player-role-banner.active {
             display: block;
@@ -1118,7 +1120,7 @@
                 height: auto;
                 min-height: 100vh;
                 overflow-y: auto;
-                padding-top: 92px;
+                padding-top: calc(92px + var(--player-ui-offset-y));
                 gap: 12px;
             }
 
@@ -1165,7 +1167,7 @@
                 height: auto;
                 min-height: 100vh;
                 overflow-y: auto;
-                padding-top: 150px;
+                padding-top: calc(150px + var(--player-ui-offset-y));
                 padding-left: 5px;
                 padding-right: 5px;
                 gap: 10px;
@@ -1245,7 +1247,7 @@
                 </ul>
             </div>
 
-            <div class="card bulb-card scoreboard-host-only">
+            <div class="card bulb-card">
                 <h3>Scoreboard</h3>
                 <ul id="scoreboardList" class="clean-list">
                     <li>No scores yet.</li>
@@ -1263,15 +1265,15 @@
 
                     <div id="hostControls" class="host-lobby-options hidden">
                         <div class="row">
-    <input id="roundCountInput" type="number" min="1" max="20" value="3" style="width: 110px;">
-    <button id="saveRoundsBtn">Save Rounds</button>
-    <input id="impostorCountInput" type="number" min="1" max="4" value="1" style="width: 130px;">
-    <button id="saveImpostorsBtn">Save Impostors</button>
-    <button id="addSmartAiBtn">Add smart AI (Irreversible)</button>
-    <button id="startGameBtn">Start Game</button>
-    <button id="continueBtn" class="hidden">Continue</button>
-    <button id="restartActionBtn" class="hidden">Restart Round</button>
-</div>
+                            <input id="roundCountInput" type="number" min="1" max="20" value="3" style="width: 110px;">
+                            <button id="saveRoundsBtn">Save Rounds</button>
+                            <input id="impostorCountInput" type="number" min="1" max="4" value="1" style="width: 130px;">
+                            <button id="saveImpostorsBtn">Save Impostors</button>
+                            <button id="addSmartAiBtn">Add smart AI (Irreversible)</button>
+                            <button id="startGameBtn">Start Game</button>
+                            <button id="continueBtn" class="hidden">Continue</button>
+                            <button id="restartActionBtn" class="hidden">Restart Round</button>
+                        </div>
                         <div id="impostorCountHint" class="muted small-note">
                             1 impostor maximum with the current number of teams.
                         </div>
@@ -1468,20 +1470,20 @@
         const orderList = document.getElementById("orderList");
         const responsesList = document.getElementById("responsesList");
 
-const hostControls = document.getElementById("hostControls");
-const roundCountInput = document.getElementById("roundCountInput");
-const saveRoundsBtn = document.getElementById("saveRoundsBtn");
-const impostorCountInput = document.getElementById("impostorCountInput");
-const saveImpostorsBtn = document.getElementById("saveImpostorsBtn");
-const impostorCountHint = document.getElementById("impostorCountHint");
-const addSmartAiBtn = document.getElementById("addSmartAiBtn");
-const startGameBtn = document.getElementById("startGameBtn");
-const continueBtn = document.getElementById("continueBtn");
-const restartActionBtn = document.getElementById("restartActionBtn");
-const skipIntroCheckbox = document.getElementById("skipIntroCheckbox");
-const skipIntroOptionWrap = document.getElementById("skipIntroOptionWrap");
-const wordCategoryCheckboxes = Array.from(document.querySelectorAll(".word-category-checkbox"));
-const categorySummary = document.getElementById("categorySummary");
+        const hostControls = document.getElementById("hostControls");
+        const roundCountInput = document.getElementById("roundCountInput");
+        const saveRoundsBtn = document.getElementById("saveRoundsBtn");
+        const impostorCountInput = document.getElementById("impostorCountInput");
+        const saveImpostorsBtn = document.getElementById("saveImpostorsBtn");
+        const impostorCountHint = document.getElementById("impostorCountHint");
+        const addSmartAiBtn = document.getElementById("addSmartAiBtn");
+        const startGameBtn = document.getElementById("startGameBtn");
+        const continueBtn = document.getElementById("continueBtn");
+        const restartActionBtn = document.getElementById("restartActionBtn");
+        const skipIntroCheckbox = document.getElementById("skipIntroCheckbox");
+        const skipIntroOptionWrap = document.getElementById("skipIntroOptionWrap");
+        const wordCategoryCheckboxes = Array.from(document.querySelectorAll(".word-category-checkbox"));
+        const categorySummary = document.getElementById("categorySummary");
 
         const agreementBox = document.getElementById("agreementBox");
         const agreementStatus = document.getElementById("agreementStatus");
@@ -1562,28 +1564,24 @@ const categorySummary = document.getElementById("categorySummary");
             bulbLayer.className = "border-bulbs";
 
             const bulbSize = 16;
-const step = 26;
-const radius = 24;
+            const step = 26;
+            const radius = 24;
 
-/*
-    Push bulbs outward so their centers sit on the visible border,
-    not inside the card.
-*/
-const borderOffset = 8;
+            const borderOffset = 8;
 
-const left = bulbSize / 2 - borderOffset;
-const top = bulbSize / 2 - borderOffset;
-const right = width - (bulbSize / 2) + borderOffset;
-const bottom = height - (bulbSize / 2) + borderOffset;
+            const left = bulbSize / 2 - borderOffset;
+            const top = bulbSize / 2 - borderOffset;
+            const right = width - (bulbSize / 2) + borderOffset;
+            const bottom = height - (bulbSize / 2) + borderOffset;
 
-const r = Math.max(
-    0,
-    Math.min(
-        radius,
-        (width / 2) - bulbSize / 2,
-        (height / 2) - bulbSize / 2
-    )
-);
+            const r = Math.max(
+                0,
+                Math.min(
+                    radius,
+                    (width / 2) - bulbSize / 2,
+                    (height / 2) - bulbSize / 2
+                )
+            );
 
             let bulbIndex = 0;
 
@@ -2246,19 +2244,19 @@ const r = Math.max(
         });
 
         addSmartAiBtn?.addEventListener("click", () => {
-    if (!isHost) return;
-    if (!code) return;
-    if (addSmartAiBtn.disabled) return;
+            if (!isHost) return;
+            if (!code) return;
+            if (addSmartAiBtn.disabled) return;
 
-    const confirmed = window.confirm(
-        "Add smart AI to this game? This action is irreversible for this room."
-    );
-    if (!confirmed) return;
+            const confirmed = window.confirm(
+                "Add smart AI to this game? This action is irreversible for this room."
+            );
+            if (!confirmed) return;
 
-    addSmartAiBtn.disabled = true;
+            addSmartAiBtn.disabled = true;
 
-    socket.emit("add_smart_ai", { code });
-});
+            socket.emit("add_smart_ai", { code });
+        });
 
         startGameBtn?.addEventListener("click", () => {
             if (!isHost) return;
@@ -2351,16 +2349,16 @@ const r = Math.max(
         });
 
         socket.on("error", (message) => {
-    statusDiv.textContent = message || "An error occurred.";
-    if (isHost) {
-        setHostLobbyDefaults();
+            statusDiv.textContent = message || "An error occurred.";
+            if (isHost) {
+                setHostLobbyDefaults();
 
-        if (addSmartAiBtn && currentState === "lobby") {
-            addSmartAiBtn.disabled = false;
-            addSmartAiBtn.textContent = "Add smart AI (Irreversible)";
-        }
-    }
-});
+                if (addSmartAiBtn && currentState === "lobby") {
+                    addSmartAiBtn.disabled = false;
+                    addSmartAiBtn.textContent = "Add smart AI (Irreversible)";
+                }
+            }
+        });
 
         socket.on("registered", (data) => {
             currentState = data.state || currentState;
@@ -2390,98 +2388,98 @@ const r = Math.max(
         });
 
         socket.on("smart_ai_added", (data) => {
-    if (!isHost) return;
+            if (!isHost) return;
 
-    if (addSmartAiBtn) {
-        addSmartAiBtn.disabled = true;
-        addSmartAiBtn.textContent = data?.team_name
-            ? `${data.team_name} Added`
-            : "Smart AI Added";
-    }
+            if (addSmartAiBtn) {
+                addSmartAiBtn.disabled = true;
+                addSmartAiBtn.textContent = data?.team_name
+                    ? `${data.team_name} Added`
+                    : "Smart AI Added";
+            }
 
-    statusDiv.textContent = data?.message || "Smart AI added.";
-});
+            statusDiv.textContent = data?.message || "Smart AI added.";
+        });
 
-socket.on("smart_ai_add_failed", (data) => {
-    if (!isHost) return;
+        socket.on("smart_ai_add_failed", (data) => {
+            if (!isHost) return;
 
-    const msg = data?.message || "There was an error creating the smart AI.";
+            const msg = data?.message || "There was an error creating the smart AI.";
 
-    if (addSmartAiBtn) {
-        addSmartAiBtn.disabled = false;
-        addSmartAiBtn.textContent = "Add smart AI (Irreversible)";
-    }
+            if (addSmartAiBtn) {
+                addSmartAiBtn.disabled = false;
+                addSmartAiBtn.textContent = "Add smart AI (Irreversible)";
+            }
 
-    statusDiv.textContent = msg;
-    alert(msg);
-});
+            statusDiv.textContent = msg;
+            alert(msg);
+        });
 
         socket.on("roster_update", (data) => {
-    renderTeams(data.teams || []);
-    renderScoreboard(data.scores || {});
+            renderTeams(data.teams || []);
+            renderScoreboard(data.scores || {});
 
-    if (typeof data.round === "number" && typeof data.max_rounds === "number") {
-        roundInfoText.textContent = `${data.round} / ${data.max_rounds}`;
-    }
+            if (typeof data.round === "number" && typeof data.max_rounds === "number") {
+                roundInfoText.textContent = `${data.round} / ${data.max_rounds}`;
+            }
 
-    if (Array.isArray(data.intro_finished) && Array.isArray(data.teams) && currentState === "agreement") {
-        setIntroProgress(
-            `Waiting for all teams to finish the intro before Round ${data.round || 1} begins.`,
-            data.intro_finished.length,
-            data.teams.length
-        );
-    }
+            if (Array.isArray(data.intro_finished) && Array.isArray(data.teams) && currentState === "agreement") {
+                setIntroProgress(
+                    `Waiting for all teams to finish the intro before Round ${data.round || 1} begins.`,
+                    data.intro_finished.length,
+                    data.teams.length
+                );
+            }
 
-    currentState = data.state || currentState;
-    updateImpostorControls(data.impostor_count, data.max_impostors_allowed);
-    syncHostControlsFromRoster(data);
+            currentState = data.state || currentState;
+            updateImpostorControls(data.impostor_count, data.max_impostors_allowed);
+            syncHostControlsFromRoster(data);
 
-    if (isHost && addSmartAiBtn) {
-        const smartAiAlreadyAdded = !!data.smart_ai_added;
-        const smartAiTeam = data.smart_ai_team || "Smart AI";
+            if (isHost && addSmartAiBtn) {
+                const smartAiAlreadyAdded = !!data.smart_ai_added;
+                const smartAiTeam = data.smart_ai_team || "Smart AI";
 
-        addSmartAiBtn.textContent = smartAiAlreadyAdded
-            ? `${smartAiTeam} Added`
-            : "Add smart AI (Irreversible)";
+                addSmartAiBtn.textContent = smartAiAlreadyAdded
+                    ? `${smartAiTeam} Added`
+                    : "Add smart AI (Irreversible)";
 
-        addSmartAiBtn.disabled = smartAiAlreadyAdded || currentState !== "lobby";
-    }
+                addSmartAiBtn.disabled = smartAiAlreadyAdded || currentState !== "lobby";
+            }
 
-    if (isHost && currentState === "lobby") {
-        statusDiv.textContent = `Connected to room ${code}. ${data.teams?.length || 0} team(s) in lobby.`;
-    }
-});
+            if (isHost && currentState === "lobby") {
+                statusDiv.textContent = `Connected to room ${code}. ${data.teams?.length || 0} team(s) in lobby.`;
+            }
+        });
 
         socket.on("player_waiting_screen", (data) => {
-    if (isHost) return;
+            if (isHost) return;
 
-    currentState = "lobby";
-    myRole = null;
-    myWord = null;
-    currentImpostorCount = 1;
-    currentTurnTeam = null;
-    currentOrder = [];
-    roundResponses = {};
-    hasVotedThisRound = false;
-    introFinishedOnClient = false;
-    glitchStarted = false;
+            currentState = "lobby";
+            myRole = null;
+            myWord = null;
+            currentImpostorCount = 1;
+            currentTurnTeam = null;
+            currentOrder = [];
+            roundResponses = {};
+            hasVotedThisRound = false;
+            introFinishedOnClient = false;
+            glitchStarted = false;
 
-    updateIdentityText();
-    updatePlayerRoleBanner();
-    renderOrder([]);
-    renderResponses({});
-    setCurrentTurn(null);
-    hideMainBoxes();
-    stopIntroVideo();
+            updateIdentityText();
+            updatePlayerRoleBanner();
+            renderOrder([]);
+            renderResponses({});
+            setCurrentTurn(null);
+            hideMainBoxes();
+            stopIntroVideo();
 
-    showPlayerWhiteScreen({
-        title: data?.title || "Waiting for host.",
-        subtext: data?.message || "",
-        showReadyButton: false
-    });
+            showPlayerWhiteScreen({
+                title: data?.title || "Waiting for host.",
+                subtext: data?.message || "",
+                showReadyButton: false
+            });
 
-    statusDiv.textContent = data?.message || "Waiting for host.";
-});
+            statusDiv.textContent = data?.message || "Waiting for host.";
+        });
 
         socket.on("game_stopped_low_teams", (data) => {
             currentState = "lobby";
@@ -2727,10 +2725,10 @@ socket.on("smart_ai_add_failed", (data) => {
         });
 
         socket.on("vote_received", (data) => {
-    hasVotedThisRound = true;
-    votingText.textContent = data?.message || "Vote received.";
-    Array.from(voteOptions.querySelectorAll("button")).forEach(button => button.disabled = true);
-});
+            hasVotedThisRound = true;
+            votingText.textContent = data?.message || "Vote received.";
+            Array.from(voteOptions.querySelectorAll("button")).forEach(button => button.disabled = true);
+        });
 
         socket.on("round_result", (data) => {
             currentState = "paused_after_result";
