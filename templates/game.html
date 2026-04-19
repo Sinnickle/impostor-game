@@ -7,7 +7,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         * { box-sizing: border-box; }
@@ -32,8 +32,18 @@
             --bulb-glow: rgba(255, 211, 92, 0.80);
             --bulb-glow-pink: rgba(255, 78, 147, 0.32);
 
+            --forest-panel-top: rgba(24, 62, 33, 0.90);
+            --forest-panel-bottom: rgba(10, 28, 16, 0.92);
+            --forest-line: rgba(181, 255, 182, 0.22);
+            --forest-text-soft: rgba(240, 255, 238, 0.82);
+            --forest-glow: rgba(173, 255, 170, 0.22);
+            --forest-gold: #dfffa6;
+            --forest-green-bright: #a7f28d;
+            --forest-green-mid: #73c96b;
+            --forest-green-deep: #295c31;
+
             /* Adjust this to move PLAYER UI down/up */
-            --player-ui-offset-y: 22px;
+            --player-ui-offset-y: 20px;
         }
 
         html, body {
@@ -112,7 +122,7 @@
             pointer-events: none;
         }
 
-        .player-mode .bulb-card::after {
+        .player-mode.theme-casino .bulb-card::after {
             display: none;
         }
 
@@ -193,7 +203,7 @@
             align-items: center;
         }
 
-        button, input, textarea { font: inherit; }
+        button, input, textarea, select { font: inherit; }
 
         button {
             position: relative;
@@ -223,7 +233,7 @@
             filter: none;
         }
 
-        input, textarea {
+        input, textarea, select {
             width: 100%;
             border: 1px solid rgba(255, 222, 130, 0.20);
             border-radius: 14px;
@@ -232,6 +242,39 @@
             color: #fffaf1;
             outline: none;
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: pointer;
+            color: #fffaf1;
+            background-color: rgba(32, 12, 18, 0.94);
+        }
+
+        select option {
+            color: #fffaf1;
+            background: #1a0d12;
+        }
+
+        select option:hover,
+        select option:checked,
+        select option:focus {
+            color: #fffaf1;
+            background: #2a1118;
+        }
+
+        .player-mode.theme-forest select option {
+            color: #f4fff2;
+            background: #14311a;
+        }
+
+        .player-mode.theme-forest select option:hover,
+        .player-mode.theme-forest select option:checked,
+        .player-mode.theme-forest select option:focus {
+            color: #f4fff2;
+            background: #1d4524;
         }
 
         input::placeholder,
@@ -795,16 +838,15 @@
         }
 
         .player-mode .card {
-            padding: 14px;
-            position: relative;
-            border: 1px solid rgba(255, 224, 136, 0.22);
-            box-shadow:
-                0 20px 40px rgba(0, 0, 0, 0.42),
-                0 0 0 1px rgba(255, 214, 120, 0.06),
-                inset 0 1px 0 rgba(255,255,255,0.08),
-                inset 0 -16px 24px rgba(0,0,0,0.10);
-            backdrop-filter: blur(10px);
-        }
+    padding: 14px;
+    position: relative;
+    border: 1px solid rgba(255, 224, 136, 0.18);
+    box-shadow:
+        0 12px 24px rgba(0, 0, 0, 0.30),
+        0 0 0 1px rgba(255, 214, 120, 0.04),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+    backdrop-filter: none;
+}
 
         .player-mode .card::after {
             content: "";
@@ -814,6 +856,12 @@
             pointer-events: none;
             border: 1px solid rgba(255, 233, 163, 0.07);
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+            z-index: 0;
+        }
+
+        .player-mode .card > * {
+            position: relative;
+            z-index: 3;
         }
 
         .player-mode h3 {
@@ -920,7 +968,8 @@
         }
 
         .player-mode textarea,
-        .player-mode input {
+        .player-mode input,
+        .player-mode select {
             background:
                 linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.06));
             border: 1px solid rgba(255, 223, 140, 0.18);
@@ -1034,6 +1083,377 @@
             border: 1px solid rgba(255, 226, 147, 0.12);
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
             color: #fff1c6;
+        }
+
+        .player-mode.theme-casino {
+            background-image: url("/static/casino-bg.png");
+        }
+
+        .player-mode.theme-forest {
+            background-image: url("/static/forest-bg.png");
+            background-color: #0d2211;
+            color: #f2fff0;
+        }
+
+        .player-mode.theme-forest .forest-lotus {
+            position: absolute;
+            top: -42px;
+            right: 10px;
+            width: 172px;
+            height: 132px;
+            pointer-events: none;
+            z-index: 8;
+            opacity: 0.99;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 170'%3E%3Cdefs%3E%3ClinearGradient id='lotusA' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23ffe8cd'/%3E%3Cstop offset='50%25' stop-color='%23dcaeff'/%3E%3Cstop offset='100%25' stop-color='%235c67ff'/%3E%3C/linearGradient%3E%3ClinearGradient id='lotusB' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23fff0df'/%3E%3Cstop offset='52%25' stop-color='%23efc1ff'/%3E%3Cstop offset='100%25' stop-color='%238175ff'/%3E%3C/linearGradient%3E%3ClinearGradient id='lotusC' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23ffd6b6'/%3E%3Cstop offset='52%25' stop-color='%23ca93ff'/%3E%3Cstop offset='100%25' stop-color='%234d5dff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M120 18 C104 38 103 60 120 98 C137 60 136 38 120 18 Z' fill='url(%23lotusA)'/%3E%3Cpath d='M84 28 C69 46 72 69 98 104 C105 77 100 50 84 28 Z' fill='url(%23lotusB)'/%3E%3Cpath d='M156 28 C140 50 135 77 142 104 C168 69 171 46 156 28 Z' fill='url(%23lotusB)'/%3E%3Cpath d='M52 46 C40 64 47 88 82 118 C87 89 78 64 52 46 Z' fill='url(%23lotusC)'/%3E%3Cpath d='M188 46 C162 64 153 89 158 118 C193 88 200 64 188 46 Z' fill='url(%23lotusC)'/%3E%3Cpath d='M26 76 C26 95 43 113 86 133 C80 104 65 84 26 76 Z' fill='url(%23lotusA)'/%3E%3Cpath d='M214 76 C175 84 160 104 154 133 C197 113 214 95 214 76 Z' fill='url(%23lotusA)'/%3E%3Cpath d='M92 68 C82 86 88 106 110 130 C117 107 111 86 92 68 Z' fill='url(%23lotusB)'/%3E%3Cpath d='M148 68 C129 86 123 107 130 130 C152 106 158 86 148 68 Z' fill='url(%23lotusB)'/%3E%3Cellipse cx='120' cy='108' rx='18' ry='12' fill='%23ffe384'/%3E%3Cellipse cx='120' cy='108' rx='8' ry='5' fill='%23fff7ca'/%3E%3C/svg%3E");
+            filter:
+                drop-shadow(0 0 10px rgba(255, 213, 130, 0.30))
+                drop-shadow(0 0 18px rgba(220, 136, 255, 0.46))
+                drop-shadow(0 0 30px rgba(120, 102, 255, 0.28));
+            animation: lotusPulse 6.2s ease-in-out infinite;
+        }
+
+        .player-mode.theme-forest .forest-lotus::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -6px;
+            width: 42px;
+            height: 12px;
+            transform: translateX(-50%);
+            border-radius: 50%;
+            background: radial-gradient(ellipse at center, rgba(126, 216, 112, 0.72) 0 52%, transparent 53%);
+            filter: blur(0.4px);
+        }
+
+        .player-mode.theme-forest::before {
+            background:
+                radial-gradient(circle at 14% 10%, rgba(255, 246, 184, 0.28), transparent 18%),
+                radial-gradient(circle at 50% 14%, rgba(222, 255, 187, 0.14), transparent 26%),
+                radial-gradient(circle at 84% 18%, rgba(181, 255, 177, 0.13), transparent 20%),
+                radial-gradient(circle at 52% 78%, rgba(170, 255, 149, 0.08), transparent 32%);
+        }
+
+        .player-mode.theme-forest::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 1;
+            background-image:
+                radial-gradient(circle, rgba(255,255,220,1) 0 2px, rgba(255,244,155,0.60) 8px, rgba(255,235,118,0.20) 14px, transparent 28px),
+                radial-gradient(circle, rgba(255,250,195,0.98) 0 2px, rgba(255,233,102,0.54) 7px, rgba(255,227,94,0.18) 13px, transparent 24px),
+                radial-gradient(circle, rgba(255,253,218,0.96) 0 2px, rgba(255,239,132,0.44) 7px, rgba(255,233,120,0.14) 12px, transparent 22px),
+                radial-gradient(circle, rgba(255,247,182,0.94) 0 2px, rgba(255,225,90,0.38) 6px, rgba(255,221,86,0.12) 11px, transparent 20px),
+                radial-gradient(circle, rgba(255,251,204,0.92) 0 2px, rgba(255,234,110,0.32) 6px, rgba(255,229,106,0.10) 10px, transparent 18px),
+                radial-gradient(circle, rgba(255,255,226,0.90) 0 2px, rgba(255,243,136,0.28) 6px, rgba(255,238,130,0.10) 10px, transparent 18px),
+                radial-gradient(circle, rgba(255,255,224,0.88) 0 2px, rgba(255,244,145,0.22) 6px, transparent 16px),
+                radial-gradient(circle, rgba(255,247,170,0.84) 0 2px, rgba(255,227,92,0.18) 5px, transparent 14px);
+            background-size:
+                160px 110px,
+                210px 150px,
+                270px 190px,
+                340px 240px,
+                430px 300px,
+                560px 380px,
+                700px 480px,
+                900px 620px;
+            background-position:
+                4% 8%,
+                15% 26%,
+                34% 14%,
+                56% 34%,
+                74% 16%,
+                24% 70%,
+                82% 62%,
+                60% 82%;
+            filter: saturate(1.12);
+            animation:
+                forestParticlesGlow 4.8s ease-in-out infinite alternate,
+                forestParticlesDriftSoft 18s ease-in-out infinite alternate;
+        }
+
+        .player-mode.theme-forest .main-panel > .card,
+        .player-mode.theme-forest .left-player-panel > .card,
+        .player-mode.theme-forest .right-player-panel > .card,
+        .player-mode.theme-forest #playerRoleBanner {
+            background:
+                linear-gradient(180deg, rgba(31, 82, 42, 0.90) 0%, rgba(12, 33, 18, 0.93) 100%),
+                radial-gradient(circle at 20% 14%, rgba(210,255,190,0.08), transparent 30%),
+                radial-gradient(circle at 82% 24%, rgba(160,255,170,0.06), transparent 28%);
+            border: 1px solid rgba(181, 255, 182, 0.22);
+            box-shadow:
+                0 16px 30px rgba(0,0,0,0.30),
+                0 0 0 1px rgba(170, 255, 170, 0.05),
+                inset 0 1px 0 rgba(255,255,255,0.08),
+                0 0 20px rgba(118, 214, 118, 0.08);
+        }
+
+        .player-mode.theme-forest .card::after {
+            border: 1px solid rgba(218, 255, 199, 0.07);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+            z-index: 2;
+        }
+
+        .player-mode.theme-forest .bulb-card::before {
+            content: "";
+            position: absolute;
+            inset: -6px;
+            border-radius: 30px;
+            pointer-events: none;
+            z-index: 2;
+            border: 1px solid rgba(186, 255, 184, 0.16);
+            box-shadow:
+                0 0 10px rgba(123, 215, 120, 0.08),
+                0 0 18px rgba(116, 197, 110, 0.05);
+            background:
+                linear-gradient(180deg, rgba(236,255,225,0.06), rgba(236,255,225,0.02));
+        }
+
+        .player-mode.theme-forest .bulb-card::after {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            border-radius: 30px;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 1;
+            background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+            background-size:
+                74px calc(100% + 4px),
+                74px calc(100% + 4px),
+                74px 74px,
+                82px 82px,
+                64px 64px,
+                64px 64px;
+            background-position:
+                left -22px top -2px,
+                right -22px top -2px,
+                left -8px top -10px,
+                right -10px bottom -12px,
+                right -18px top 34px,
+                left -18px bottom 34px;
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 74 420'%3E%3Cpath d='M69 8 C47 32 43 58 28 92 C17 119 17 149 27 181 C36 211 35 246 26 280 C19 307 20 340 30 373 C37 389 46 402 56 414' fill='none' stroke='%233b873a' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M48 48 C35 57 28 67 25 82' fill='none' stroke='%234ea84f' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M20 84 C33 75 47 76 58 88 C45 99 31 99 20 84 Z' fill='%237bd66e'/%3E%3Cpath d='M28 145 C41 136 55 137 64 149 C51 160 37 160 28 145 Z' fill='%236bbf61'/%3E%3Cpath d='M29 228 C17 237 13 248 14 262' fill='none' stroke='%234ea84f' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M11 265 C24 256 37 256 48 268 C36 278 23 278 11 265 Z' fill='%2389dd7c'/%3E%3Cpath d='M28 320 C41 311 55 312 64 324 C51 335 37 334 28 320 Z' fill='%2372c967'/%3E%3Cpath d='M35 372 C47 364 58 366 65 379 C52 388 40 387 35 372 Z' fill='%2384d878'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 74 420'%3E%3Cpath d='M5 8 C27 32 31 58 46 92 C57 119 57 149 47 181 C38 211 39 246 48 280 C55 307 54 340 44 373 C37 389 28 402 18 414' fill='none' stroke='%233b873a' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M26 48 C39 57 46 67 49 82' fill='none' stroke='%234ea84f' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M54 84 C41 75 27 76 16 88 C29 99 43 99 54 84 Z' fill='%237bd66e'/%3E%3Cpath d='M46 145 C33 136 19 137 10 149 C23 160 37 160 46 145 Z' fill='%236bbf61'/%3E%3Cpath d='M45 228 C57 237 61 248 60 262' fill='none' stroke='%234ea84f' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M63 265 C50 256 37 256 26 268 C38 278 51 278 63 265 Z' fill='%2389dd7c'/%3E%3Cpath d='M46 320 C33 311 19 312 10 324 C23 335 37 334 46 320 Z' fill='%2372c967'/%3E%3Cpath d='M39 372 C27 364 16 366 9 379 C22 388 34 387 39 372 Z' fill='%2384d878'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 84 84'%3E%3Cpath d='M6 77 C15 58 29 44 48 31 C60 22 69 15 80 6' fill='none' stroke='%233f8f3e' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M32 48 C20 50 10 58 6 71' fill='none' stroke='%2352aa50' stroke-width='2.1' stroke-linecap='round'/%3E%3Cpath d='M2 74 C15 65 28 65 39 75 C27 84 14 84 2 74 Z' fill='%2380da75'/%3E%3Cpath d='M44 33 C56 24 67 23 79 31 C68 42 55 42 44 33 Z' fill='%236ec663'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 92 92'%3E%3Cpath d='M86 15 C77 34 64 48 46 62 C32 72 21 81 9 90' fill='none' stroke='%233f8f3e' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M53 58 C66 59 77 66 84 79' fill='none' stroke='%2352aa50' stroke-width='2.1' stroke-linecap='round'/%3E%3Cpath d='M58 56 C69 46 81 45 91 54 C81 65 68 65 58 56 Z' fill='%2378d16d'/%3E%3Cpath d='M8 88 C20 77 34 76 47 84 C35 94 21 95 8 88 Z' fill='%2388de7d'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M10 58 C15 45 24 36 35 27 C45 19 52 13 59 5' fill='none' stroke='%23418f3f' stroke-width='2.9' stroke-linecap='round'/%3E%3Cpath d='M31 30 C40 23 49 22 58 28 C49 37 39 38 31 30 Z' fill='%2375ce6a'/%3E%3C/svg%3E"),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M54 6 C49 19 40 28 29 37 C19 45 12 51 5 59' fill='none' stroke='%23418f3f' stroke-width='2.9' stroke-linecap='round'/%3E%3Cpath d='M33 34 C24 41 15 42 6 36 C15 28 25 27 33 34 Z' fill='%2375ce6a'/%3E%3C/svg%3E");
+            filter:
+                drop-shadow(0 0 8px rgba(152, 255, 142, 0.16))
+                drop-shadow(0 0 18px rgba(152, 255, 142, 0.07));
+            animation: forestVineSway 11s ease-in-out infinite alternate;
+        }
+
+        .player-mode.theme-forest .border-bulbs {
+            display: none !important;
+        }
+
+        .player-mode.theme-forest h1,
+        .player-mode.theme-forest h2,
+        .player-mode.theme-forest h3,
+        .player-mode.theme-forest .big-role,
+        .player-mode.theme-forest .player-role-banner-title,
+        .player-mode.theme-forest .white-screen-big-button {
+            font-family: "Cormorant Garamond", serif;
+            letter-spacing: 0.6px;
+        }
+
+        .player-mode.theme-forest h3 {
+            color: #e6ffd0;
+            text-shadow: 0 0 12px rgba(171, 255, 170, 0.16);
+        }
+
+        .player-mode.theme-forest h3::after {
+            background:
+                linear-gradient(90deg,
+                    rgba(182, 255, 151, 0.92) 0%,
+                    rgba(182, 255, 151, 0.36) 48%,
+                    rgba(182, 255, 151, 0.05) 100%);
+        }
+
+        .player-mode.theme-forest p,
+        .player-mode.theme-forest .muted,
+        .player-mode.theme-forest .small-note,
+        .player-mode.theme-forest .player-role-banner-sub {
+            color: rgba(242, 255, 240, 0.86);
+        }
+
+        .player-mode.theme-forest button {
+            color: #143017;
+            background:
+                linear-gradient(180deg, #efffc8 0%, #b9ef8d 48%, #6daf59 100%);
+            box-shadow:
+                0 10px 20px rgba(0,0,0,0.24),
+                0 0 16px rgba(167, 242, 141, 0.18),
+                inset 0 1px 0 rgba(255,255,255,0.60);
+        }
+
+        .player-mode.theme-forest button:hover {
+            filter: brightness(1.04);
+            box-shadow:
+                0 12px 24px rgba(0,0,0,0.26),
+                0 0 18px rgba(167, 242, 141, 0.22),
+                inset 0 1px 0 rgba(255,255,255,0.64);
+        }
+
+        .player-mode.theme-forest textarea,
+        .player-mode.theme-forest input,
+        .player-mode.theme-forest select {
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.05));
+            border: 1px solid rgba(181, 255, 182, 0.18);
+            color: #f4fff2;
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.05),
+                0 4px 10px rgba(0,0,0,0.10);
+        }
+
+        .player-mode.theme-forest textarea::placeholder,
+        .player-mode.theme-forest input::placeholder {
+            color: rgba(242, 255, 240, 0.56);
+        }
+
+        .player-mode.theme-forest .result-box,
+        .player-mode.theme-forest .word-box,
+        .player-mode.theme-forest .intro-inline-panel,
+        .player-mode.theme-forest #responsesCenterBox,
+        .player-mode.theme-forest #votingText,
+        .player-mode.theme-forest #roundResultContent,
+        .player-mode.theme-forest #agreementStatus {
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04)),
+                linear-gradient(135deg, rgba(179, 255, 153, 0.06), rgba(128, 222, 115, 0.05));
+            border: 1px solid rgba(181, 255, 182, 0.16);
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.05),
+                0 10px 18px rgba(0,0,0,0.14);
+        }
+
+        .player-mode.theme-forest .status-pill {
+            background: linear-gradient(180deg, rgba(185, 239, 141, 0.18), rgba(109, 175, 89, 0.14));
+            color: #f0ffe4;
+            border: 1px solid rgba(181, 255, 182, 0.20);
+        }
+
+        .player-mode.theme-forest .score-badge,
+        .player-mode.theme-forest .pill {
+            border: 1px solid rgba(181, 255, 182, 0.20);
+            background: linear-gradient(180deg, rgba(185, 239, 141, 0.14), rgba(109, 175, 89, 0.12));
+            color: #efffe4;
+        }
+
+        .player-mode.theme-forest .response-team,
+        .player-mode.theme-forest .timer,
+        .player-mode.theme-forest .place-badge {
+            color: #e7ffd3;
+            text-shadow: 0 0 12px rgba(171, 255, 170, 0.12);
+        }
+
+        .player-mode.theme-forest .response-phrase,
+        .player-mode.theme-forest #statusDiv,
+        .player-mode.theme-forest .champion-banner {
+            color: #f7fff5;
+        }
+
+        .player-mode.theme-forest .clean-list li,
+        .player-mode.theme-forest .leaderboard-item {
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04));
+            border: 1px solid rgba(181, 255, 182, 0.12);
+        }
+
+        .player-mode.theme-forest .impostor-role,
+        .player-mode.theme-forest .player-role-banner.impostor .player-role-banner-title {
+            color: #ff9ea8;
+            text-shadow: 0 0 18px rgba(255, 120, 145, 0.20);
+        }
+
+        @keyframes forestBloomPulse {
+            0%, 100% {
+                opacity: 0.78;
+                filter: brightness(1) saturate(1);
+            }
+            50% {
+                opacity: 1;
+                filter: brightness(1.2) saturate(1.08);
+            }
+        }
+
+        @keyframes forestParticlesDriftA {
+            0% {
+                transform: translate3d(0px, 0px, 0px) scale(1);
+            }
+            100% {
+                transform: translate3d(26px, -18px, 0px) scale(1.04);
+            }
+        }
+
+        @keyframes forestParticlesDriftB {
+            0% {
+                background-position:
+                    3% 12%,
+                    18% 34%,
+                    42% 20%,
+                    63% 44%,
+                    76% 17%,
+                    22% 72%,
+                    54% 78%,
+                    88% 66%;
+            }
+            100% {
+                background-position:
+                    8% 6%,
+                    24% 27%,
+                    48% 26%,
+                    58% 38%,
+                    82% 10%,
+                    28% 66%,
+                    60% 72%,
+                    92% 58%;
+            }
+        }
+
+        @keyframes forestParticlesGlow {
+            0%, 100% {
+                opacity: 0.88;
+                filter: brightness(1.04) saturate(1.06);
+            }
+            50% {
+                opacity: 1;
+                filter: brightness(1.60) saturate(1.18);
+            }
+        }
+
+        @keyframes forestParticlesDriftSoft {
+            0% {
+                transform: translate3d(0px, 0px, 0px);
+            }
+            100% {
+                transform: translate3d(18px, -14px, 0px);
+            }
+        }
+
+        @keyframes forestVineSway {
+            0% {
+                transform: rotate(-0.7deg) scale(1);
+            }
+            100% {
+                transform: rotate(0.9deg) scale(1.012);
+            }
+        }
+
+        @keyframes lotusPulse {
+            0%, 100% {
+                transform: translateY(0px) scale(1);
+            }
+            50% {
+                transform: translateY(-1px) scale(1.025);
+            }
         }
 
         @keyframes fullScreenCasinoGlitch {
@@ -1189,10 +1609,11 @@
         <video id="introVideo" playsinline preload="auto">
             <source src="/static/intro.mp4" type="video/mp4">
         </video>
-        <audio id="bgMusic" preload="auto" loop>
-            <source src="/static/bg-music.mp3" type="audio/mpeg">
-        </audio>
     </div>
+
+    <audio id="bgMusic" preload="auto" loop></audio>
+    <audio id="forestAmbience" preload="auto" loop src="/static/bg-forestsounds.mp3"></audio>
+    <audio id="glitchSound" preload="auto" src="/static/glitch-sound.mp3"></audio>
 
     <div id="glitchLayer"></div>
 
@@ -1265,6 +1686,12 @@
 
                     <div id="hostControls" class="host-lobby-options hidden">
                         <div class="row">
+                            <label for="themeSelect" class="muted small-note" style="font-weight: 800;">Theme</label>
+                            <select id="themeSelect" style="width: 150px;">
+                                <option value="casino" selected>Casino</option>
+                                <option value="forest">Forest</option>
+                            </select>
+
                             <input id="roundCountInput" type="number" min="1" max="20" value="3" style="width: 110px;">
                             <button id="saveRoundsBtn">Save Rounds</button>
                             <input id="impostorCountInput" type="number" min="1" max="4" value="1" style="width: 130px;">
@@ -1302,11 +1729,13 @@
             </div>
 
             <div id="playerRoleBanner" class="player-role-banner bulb-card">
+                <div class="forest-lotus hidden"></div>
                 <div id="playerRoleBannerTitle" class="player-role-banner-title">ROLE</div>
                 <div id="playerRoleBannerSub" class="player-role-banner-sub">Waiting for your assignment.</div>
             </div>
 
             <div id="agreementBox" class="card main-stage bulb-card hidden">
+                <div class="forest-lotus hidden"></div>
                 <h3>Agreement / Transition</h3>
                 <div id="agreementStatus" class="result-box">Waiting...</div>
 
@@ -1327,12 +1756,14 @@
             </div>
 
             <div id="roleBox" class="card main-stage bulb-card hidden">
+                <div class="forest-lotus hidden"></div>
                 <h3>Role Reveal</h3>
                 <div id="roleText">Waiting for role reveal.</div>
                 <div id="hostRoleInfo" style="margin-top: 14px;"></div>
             </div>
 
             <div id="phraseBox" class="card main-stage bulb-card hidden">
+                <div class="forest-lotus hidden"></div>
                 <h3>Phrase Submission</h3>
                 <p id="turnLabel">Current Team: --</p>
                 <p id="phraseTimerText" class="timer">Timer: --</p>
@@ -1346,6 +1777,7 @@
             </div>
 
             <div id="responsesCenterBox" class="card main-stage bulb-card hidden">
+                <div class="forest-lotus hidden"></div>
                 <div class="responses-header-row">
                     <h3>Submitted Phrases</h3>
                     <span class="status-pill">Live Round Feed</span>
@@ -1359,17 +1791,20 @@
             </div>
 
             <div id="votingBox" class="card main-stage bulb-card hidden">
+                <div class="forest-lotus hidden"></div>
                 <h3>Voting Phase</h3>
                 <div id="votingText" class="result-box">Voting has not started yet.</div>
                 <div id="voteOptions" class="vote-button-grid"></div>
             </div>
 
             <div id="roundResultBox" class="card main-stage bulb-card hidden">
+                <div class="forest-lotus hidden"></div>
                 <h3>Round Result</h3>
                 <div id="roundResultContent" class="result-box">Round result will appear here.</div>
             </div>
 
             <div id="finalLeaderboardBox" class="card main-stage bulb-card hidden">
+                <div class="forest-lotus hidden"></div>
                 <h3>Final Leaderboard</h3>
                 <div id="championBanner"></div>
                 <div id="topThreeList"></div>
@@ -1406,6 +1841,13 @@
         const INTRO_AUDIO_DELAY_MS = 250;
         const GLITCH_DURATION_MS = 2000;
         const PLAYER_BG_MUSIC_VOLUME = 0.09;
+        const PLAYER_FOREST_MUSIC_VOLUME = 0.12;
+        const PLAYER_FOREST_AMBIENCE_VOLUME = 0.22;
+
+        const THEME_AUDIO_MAP = {
+            casino: "/static/bg-music.mp3",
+            forest: "/static/forest-music.mp3"
+        };
 
         const params = new URLSearchParams(window.location.search);
         const code = (params.get("code") || localStorage.getItem("code") || "").trim().toUpperCase();
@@ -1431,7 +1873,9 @@
         let skipIntroChosen = false;
         let hostControlsLockedAfterStart = false;
         let bgMusicStarted = false;
+        let forestAmbienceStarted = false;
         let glitchStarted = false;
+        let currentTheme = "casino";
 
         const CATEGORY_LABELS = {
             computer_science: "Computer Science",
@@ -1446,6 +1890,8 @@
         const playerVideoLayer = document.getElementById("playerVideoLayer");
         const introVideo = document.getElementById("introVideo");
         const bgMusic = document.getElementById("bgMusic");
+        const forestAmbience = document.getElementById("forestAmbience");
+        const glitchSound = document.getElementById("glitchSound");
         const glitchLayer = document.getElementById("glitchLayer");
 
         let playerBulbResizeObserver = null;
@@ -1471,6 +1917,7 @@
         const responsesList = document.getElementById("responsesList");
 
         const hostControls = document.getElementById("hostControls");
+        const themeSelect = document.getElementById("themeSelect");
         const roundCountInput = document.getElementById("roundCountInput");
         const saveRoundsBtn = document.getElementById("saveRoundsBtn");
         const impostorCountInput = document.getElementById("impostorCountInput");
@@ -1526,6 +1973,7 @@
 
         if (!isHost) {
             body.classList.add("player-mode");
+            applyPlayerTheme("casino");
         }
 
         function show(el) {
@@ -1542,6 +1990,150 @@
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
+        function normalizeTheme(theme) {
+            return theme === "forest" ? "forest" : "casino";
+        }
+
+        function updateThemedAudioSources() {
+            const safeTheme = normalizeTheme(currentTheme);
+            const desiredMusicSrc = THEME_AUDIO_MAP[safeTheme];
+
+            if (bgMusic.getAttribute("src") !== desiredMusicSrc) {
+                bgMusic.setAttribute("src", desiredMusicSrc);
+                bgMusic.load();
+                bgMusicStarted = false;
+            }
+
+            if (forestAmbience.getAttribute("src") !== "/static/bg-forestsounds.mp3") {
+                forestAmbience.setAttribute("src", "/static/bg-forestsounds.mp3");
+                forestAmbience.load();
+                forestAmbienceStarted = false;
+            }
+        }
+
+        function applyPlayerTheme(theme) {
+            currentTheme = normalizeTheme(theme);
+            updateThemedAudioSources();
+            updateForestLotusVisibility();
+
+            if (isHost) {
+                if (themeSelect) {
+                    themeSelect.value = currentTheme;
+                }
+                return;
+            }
+
+            body.classList.remove("theme-casino", "theme-forest");
+            body.classList.add(`theme-${currentTheme}`);
+
+            if (currentTheme === "forest") {
+                clearPlayerBulbBorders();
+            } else {
+                schedulePlayerBulbBorderBuild();
+            }
+        }
+
+        function updateForestLotusVisibility() {
+    const lotuses = document.querySelectorAll(".forest-lotus");
+
+    lotuses.forEach(el => {
+        el.classList.add("hidden");
+    });
+
+    if (isHost || currentTheme !== "forest") return;
+
+    const singleLotus = document.querySelector("#playerRoleBanner .forest-lotus");
+    if (singleLotus) {
+        singleLotus.classList.remove("hidden");
+    }
+}
+
+        function stopThemeAudio() {
+            try {
+                bgMusic.pause();
+                bgMusic.currentTime = 0;
+            } catch (e) {}
+
+            try {
+                forestAmbience.pause();
+                forestAmbience.currentTime = 0;
+            } catch (e) {}
+
+            bgMusicStarted = false;
+            forestAmbienceStarted = false;
+        }
+
+        function playGlitchSound() {
+            try {
+                glitchSound.pause();
+                glitchSound.currentTime = 0;
+                glitchSound.volume = 0.26;
+                const playPromise = glitchSound.play();
+                if (playPromise && typeof playPromise.catch === "function") {
+                    playPromise.catch(() => {});
+                }
+            } catch (e) {}
+        }
+
+        async function playThemeAudio() {
+            if (isHost) return;
+
+            updateThemedAudioSources();
+            updateForestLotusVisibility();
+
+            if (currentTheme === "forest") {
+                try {
+                    forestAmbience.muted = false;
+                    forestAmbience.volume = PLAYER_FOREST_AMBIENCE_VOLUME;
+
+                    if (!forestAmbienceStarted || forestAmbience.paused) {
+                        forestAmbience.pause();
+                        forestAmbience.currentTime = 0;
+                        await forestAmbience.play();
+                        forestAmbienceStarted = true;
+                    }
+                } catch (e) {
+                    console.log("Forest ambience could not start yet.", e);
+                }
+
+                try {
+                    bgMusic.muted = false;
+                    bgMusic.volume = PLAYER_FOREST_MUSIC_VOLUME;
+
+                    if (!bgMusicStarted || bgMusic.paused) {
+                        bgMusic.pause();
+                        bgMusic.currentTime = 0;
+                        await bgMusic.play();
+                        bgMusicStarted = true;
+                    }
+                } catch (e) {
+                    console.log("Forest music could not start yet.", e);
+                }
+
+                return;
+            }
+
+            try {
+                forestAmbience.pause();
+                forestAmbience.currentTime = 0;
+            } catch (e) {}
+            forestAmbienceStarted = false;
+
+            try {
+                bgMusic.muted = false;
+                bgMusic.volume = PLAYER_BG_MUSIC_VOLUME;
+
+                if (!bgMusicStarted || bgMusic.paused) {
+                    bgMusic.pause();
+                    bgMusic.currentTime = 0;
+                    await bgMusic.play();
+                    bgMusicStarted = true;
+                }
+            } catch (e) {
+                console.log("Theme music could not start yet.", e);
+            }
+        }
+
         function clearPlayerBulbBorders() {
             document.querySelectorAll(".border-bulbs").forEach(el => el.remove());
         }
@@ -1549,6 +2141,7 @@
         function buildPlayerBulbBorderForCard(card) {
             if (isHost) return;
             if (!body.classList.contains("player-mode")) return;
+            if (currentTheme !== "casino") return;
             if (!card) return;
 
             const old = card.querySelector(".border-bulbs");
@@ -1563,16 +2156,16 @@
             const bulbLayer = document.createElement("div");
             bulbLayer.className = "border-bulbs";
 
-            const bulbSize = 16;
-            const step = 26;
+            const bulbSize = 15;
+            const step = 24;
             const radius = 24;
 
-            const borderOffset = 8;
+            const borderInset = 2;
 
-            const left = bulbSize / 2 - borderOffset;
-            const top = bulbSize / 2 - borderOffset;
-            const right = width - (bulbSize / 2) + borderOffset;
-            const bottom = height - (bulbSize / 2) + borderOffset;
+            const left = bulbSize / 2 + borderInset;
+            const top = bulbSize / 2 + borderInset;
+            const right = width - (bulbSize / 2) - borderInset;
+            const bottom = height - (bulbSize / 2) - borderInset;
 
             const r = Math.max(
                 0,
@@ -1652,6 +2245,10 @@
             if (isHost) return;
             if (!body.classList.contains("player-mode")) return;
 
+            clearPlayerBulbBorders();
+
+            if (currentTheme !== "casino") return;
+
             const cards = document.querySelectorAll(".bulb-card");
             cards.forEach(card => buildPlayerBulbBorderForCard(card));
         }
@@ -1690,6 +2287,7 @@
         }
 
         function startGlitchVisual() {
+            playGlitchSound();
             glitchLayer.classList.remove("active");
             glitchLayer.style.opacity = "0";
             glitchLayer.style.transform = "translate3d(0, 0, 0) scale(1.08)";
@@ -1967,28 +2565,12 @@
                 introVideo.currentTime = 0;
             } catch (e) {}
 
+            stopThemeAudio();
+
             try {
-                bgMusic.pause();
-                bgMusic.currentTime = 0;
-                bgMusicStarted = false;
+                glitchSound.pause();
+                glitchSound.currentTime = 0;
             } catch (e) {}
-        }
-
-        async function playBackgroundMusic() {
-            if (isHost) return;
-            if (bgMusicStarted) return;
-
-            try { bgMusic.pause(); } catch (e) {}
-            try { bgMusic.currentTime = 0; } catch (e) {}
-
-            try {
-                bgMusic.muted = false;
-                bgMusic.volume = PLAYER_BG_MUSIC_VOLUME;
-                await bgMusic.play();
-                bgMusicStarted = true;
-            } catch (e) {
-                console.log("Background music could not start yet.", e);
-            }
         }
 
         function preloadMainGameUnderGlitch(message = "Waiting for others to watch the intro.") {
@@ -2018,13 +2600,14 @@
             glitchStarted = true;
 
             startGlitchVisual();
-            await playBackgroundMusic();
             await revealMainGameUnderFullGlitch(preloadMessage);
 
             await sleep(GLITCH_DURATION_MS);
 
             glitchLayer.classList.remove("active");
             await sleep(180);
+
+            await playThemeAudio();
 
             glitchStarted = false;
         }
@@ -2050,6 +2633,7 @@
 
             hidePlayerWhiteScreen();
             hideMainBoxes();
+            stopThemeAudio();
             setPhase("Introduction", "Watch the intro video. After it ends, your team will be marked finished.");
             show(playerVideoLayer);
 
@@ -2104,6 +2688,10 @@
 
             if (typeof data?.max_rounds === "number") {
                 roundCountInput.value = data.max_rounds;
+            }
+
+            if (themeSelect && data?.theme) {
+                themeSelect.value = normalizeTheme(data.theme);
             }
 
             updateImpostorControls(data?.impostor_count, data?.max_impostors_allowed);
@@ -2207,14 +2795,18 @@
             if (timeLeft <= 2) {
                 glitchStarted = true;
                 startGlitchVisual();
-                playBackgroundMusic();
                 revealMainGameUnderFullGlitch("Waiting for others to watch the intro.");
             }
         });
 
-        introVideo.addEventListener("ended", () => {
+        introVideo.addEventListener("ended", async () => {
             if (isHost) return;
             if (introFinishedOnClient) return;
+
+            await sleep(GLITCH_DURATION_MS);
+            glitchLayer.classList.remove("active");
+            await sleep(180);
+            await playThemeAudio();
 
             introFinishedOnClient = true;
             socket.emit("player_intro_finished", { code });
@@ -2229,6 +2821,15 @@
             }
 
             socket.emit("player_intro_ready", { code });
+        });
+
+        themeSelect?.addEventListener("change", () => {
+            if (!isHost) return;
+            currentTheme = normalizeTheme(themeSelect.value);
+            socket.emit("set_theme", {
+                code,
+                theme: currentTheme
+            });
         });
 
         saveRoundsBtn?.addEventListener("click", () => {
@@ -2272,6 +2873,7 @@
 
             socket.emit("start_game_request", {
                 code,
+                theme: normalizeTheme(themeSelect?.value || currentTheme),
                 skip_intro: skipIntroChosen,
                 selected_categories: selectedCategories
             });
@@ -2363,6 +2965,8 @@
         socket.on("registered", (data) => {
             currentState = data.state || currentState;
             roomCodeText.textContent = data.code || code || "-----";
+            currentTheme = normalizeTheme(data?.theme || currentTheme);
+            applyPlayerTheme(currentTheme);
 
             if (isHost) {
                 identityText.textContent = "HOST";
@@ -2431,6 +3035,8 @@
             }
 
             currentState = data.state || currentState;
+            currentTheme = normalizeTheme(data?.theme || currentTheme);
+            applyPlayerTheme(currentTheme);
             updateImpostorControls(data.impostor_count, data.max_impostors_allowed);
             syncHostControlsFromRoster(data);
 

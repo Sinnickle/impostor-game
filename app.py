@@ -91,6 +91,11 @@ def sanitize_phrase(phrase):
     return " ".join(str(phrase).strip().split())
 
 
+def sanitize_theme(raw_theme):
+    theme = str(raw_theme or "casino").strip().lower()
+    return theme if theme in {"casino", "forest"} else "casino"
+
+
 def sanitize_selected_categories(raw_categories):
     if not isinstance(raw_categories, list):
         return DEFAULT_SELECTED_CATEGORIES[:]
@@ -157,6 +162,7 @@ def create_game_state():
         "max_rounds": 3,
 
         "impostor_count": 1,
+        "theme": "casino",
         "selected_categories": DEFAULT_SELECTED_CATEGORIES[:],
         "word_pool": get_word_pool_for_categories(DEFAULT_SELECTED_CATEGORIES),
         "word_category": None,
@@ -542,6 +548,7 @@ def auto_submit_smart_ai_vote(code, ai_team, token):
         game["vote_token"] += 1
         calculate_round_result(code)
 
+
 def all_teams_intro_finished(game):
     return len(game["teams"]) > 0 and len(game["intro_finished"]) == len(game["teams"])
 
@@ -573,6 +580,7 @@ def emit_roster_update(code):
         "round": game["round"],
         "max_rounds": game["max_rounds"],
         "impostor_count": game["impostor_count"],
+        "theme": game["theme"],
         "selected_categories": game["selected_categories"],
         "max_impostors_allowed": get_max_impostors_for_team_count(team_count),
         "intro_ready": sorted(list(game["intro_ready"])),
@@ -729,6 +737,7 @@ def emit_private_role_info(code):
             "max_rounds": game["max_rounds"],
             "word": game["word"],
             "word_category": game["word_category"],
+            "theme": game["theme"],
             "selected_categories": game["selected_categories"],
             "impostor_count": game["impostor_count"],
             "impostors": game["impostors"],
@@ -753,6 +762,7 @@ def reset_room_to_lobby_due_to_low_teams(code, message):
     game["state"] = "lobby"
     game["round"] = 1
 
+    game["theme"] = sanitize_theme(game.get("theme"))
     game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
     game["selected_categories"] = sanitize_selected_categories(game.get("selected_categories"))
     game["word_pool"] = get_word_pool_for_categories(game["selected_categories"])
@@ -809,6 +819,7 @@ def begin_round(code, preserved=False, preserve_order=False):
     game["vote_token"] += 1
 
     if not preserved:
+        game["theme"] = sanitize_theme(game.get("theme"))
         game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
         game["selected_categories"] = sanitize_selected_categories(game.get("selected_categories"))
         game["word_pool"] = get_word_pool_for_categories(game["selected_categories"])
@@ -1059,7 +1070,8 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
         "role_type": "HOST" if is_host else "TEAM",
         "code": code,
         "team_name": team_name,
-        "state": game["state"]
+        "state": game["state"],
+        "theme": game["theme"],
     }, to=sid)
 
     emit("roster_update", {
@@ -1070,6 +1082,7 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
         "round": game["round"],
         "max_rounds": game["max_rounds"],
         "impostor_count": game["impostor_count"],
+        "theme": game["theme"],
         "selected_categories": game["selected_categories"],
         "max_impostors_allowed": get_max_impostors_for_team_count(len(game["teams"])),
         "intro_ready": sorted(list(game["intro_ready"])),
@@ -1185,6 +1198,7 @@ def reset_to_round_one_new_game(code):
     game["round"] = 1
     game["state"] = "role"
 
+    game["theme"] = sanitize_theme(game.get("theme"))
     game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
     game["selected_categories"] = sanitize_selected_categories(game.get("selected_categories"))
     game["word_pool"] = get_word_pool_for_categories(game["selected_categories"])
@@ -1270,6 +1284,7 @@ def register_view(data):
             "code": code,
             "team_name": team_name,
             "state": game["state"],
+            "theme": game["theme"],
         }, to=sid)
         emit_roster_update(code)
         emit_waiting_screen_to_player(
@@ -1292,6 +1307,7 @@ def register_view(data):
                 "code": code,
                 "team_name": team_name,
                 "state": game["state"],
+                "theme": game["theme"],
             }, to=sid)
             emit_roster_update(code)
             emit_waiting_screen_to_player(
@@ -1370,6 +1386,29 @@ def set_impostor_count(data):
     }, room=code)
 
 
+@socketio.on("set_theme")
+def set_theme(data):
+    code = str(data.get("code", "")).strip().upper()
+    sid = request.sid
+
+    if code not in games:
+        emit("error", "Game code not found.")
+        return
+
+    game = games[code]
+
+    if sid != game["host_sid"]:
+        emit("error", "Only the host can change the theme.")
+        return
+
+    if game["state"] != "lobby":
+        emit("error", "Theme can only be changed in the lobby.")
+        return
+
+    game["theme"] = sanitize_theme(data.get("theme"))
+    emit_roster_update(code)
+
+
 @socketio.on("add_smart_ai")
 def add_smart_ai(data):
     code = str(data.get("code", "")).strip().upper()
@@ -1444,6 +1483,7 @@ def add_smart_ai(data):
             "message": f"Smart AI creation failed: {str(e)}"
         }, to=sid)
 
+
 @socketio.on("start_game_request")
 def start_game_request(data):
     code = str(data.get("code", "")).strip().upper()
@@ -1473,6 +1513,7 @@ def start_game_request(data):
         return
 
     game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
+    game["theme"] = sanitize_theme(data.get("theme"))
     game["selected_categories"] = sanitize_selected_categories(data.get("selected_categories"))
     game["word_pool"] = get_word_pool_for_categories(game["selected_categories"])
 
