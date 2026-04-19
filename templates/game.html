@@ -760,14 +760,14 @@
         }
 
         .player-mode .app-shell {
-            width: min(1380px, calc(100vw - 20px));
+            width: min(1428px, calc(100vw - 8px));
             min-height: 100vh;
             height: auto;
             margin: 0 auto;
             padding-top: calc(clamp(110px, 13vh, 150px) + var(--player-ui-offset-y));
-            padding-left: clamp(10px, 1vw, 16px);
-            padding-right: clamp(10px, 1vw, 16px);
-            padding-bottom: clamp(16px, 2vh, 24px);
+            padding-left: clamp(20px, 2.2vw, 34px);
+            padding-right: clamp(20px, 2.2vw, 34px);
+            padding-bottom: clamp(20px, 2.4vh, 30px);
             display: grid;
             grid-template-columns: minmax(200px, 240px) minmax(0, 1fr) minmax(200px, 240px);
             grid-template-areas: "left main right";
@@ -1144,23 +1144,23 @@
             z-index: 0;
             opacity: 1;
             background-image:
-                radial-gradient(circle, rgba(255,255,220,1) 0 2px, rgba(255,244,155,0.60) 8px, rgba(255,235,118,0.20) 14px, transparent 28px),
-                radial-gradient(circle, rgba(255,250,195,0.98) 0 2px, rgba(255,233,102,0.54) 7px, rgba(255,227,94,0.18) 13px, transparent 24px),
-                radial-gradient(circle, rgba(255,253,218,0.96) 0 2px, rgba(255,239,132,0.44) 7px, rgba(255,233,120,0.14) 12px, transparent 22px),
-                radial-gradient(circle, rgba(255,247,182,0.94) 0 2px, rgba(255,225,90,0.38) 6px, rgba(255,221,86,0.12) 11px, transparent 20px),
-                radial-gradient(circle, rgba(255,251,204,0.92) 0 2px, rgba(255,234,110,0.32) 6px, rgba(255,229,106,0.10) 10px, transparent 18px),
-                radial-gradient(circle, rgba(255,255,226,0.90) 0 2px, rgba(255,243,136,0.28) 6px, rgba(255,238,130,0.10) 10px, transparent 18px),
-                radial-gradient(circle, rgba(255,255,224,0.88) 0 2px, rgba(255,244,145,0.22) 6px, transparent 16px),
-                radial-gradient(circle, rgba(255,247,170,0.84) 0 2px, rgba(255,227,92,0.18) 5px, transparent 14px);
+                radial-gradient(circle, rgba(255,252,222,1) 0 2px, rgba(255,230,92,0.84) 8px, rgba(255,210,58,0.34) 16px, transparent 30px),
+                radial-gradient(circle, rgba(255,250,210,0.98) 0 2px, rgba(255,223,78,0.76) 7px, rgba(255,206,48,0.28) 14px, transparent 26px),
+                radial-gradient(circle, rgba(255,248,206,0.96) 0 2px, rgba(255,226,94,0.62) 7px, rgba(255,212,62,0.22) 13px, transparent 24px),
+                radial-gradient(circle, rgba(255,244,188,0.94) 0 2px, rgba(255,218,70,0.52) 6px, rgba(255,204,46,0.18) 12px, transparent 22px),
+                radial-gradient(circle, rgba(255,250,206,0.92) 0 2px, rgba(255,225,88,0.44) 6px, rgba(255,212,60,0.14) 11px, transparent 20px),
+                radial-gradient(circle, rgba(255,252,216,0.90) 0 2px, rgba(255,232,106,0.38) 6px, rgba(255,219,78,0.12) 11px, transparent 20px),
+                radial-gradient(circle, rgba(255,253,220,0.88) 0 2px, rgba(255,236,118,0.30) 6px, transparent 18px),
+                radial-gradient(circle, rgba(255,245,184,0.86) 0 2px, rgba(255,214,68,0.24) 5px, transparent 16px);
             background-size:
-                160px 110px,
-                210px 150px,
-                270px 190px,
-                340px 240px,
-                430px 300px,
-                560px 380px,
-                700px 480px,
-                900px 620px;
+                155px 108px,
+                205px 146px,
+                265px 186px,
+                334px 234px,
+                424px 294px,
+                548px 372px,
+                690px 470px,
+                885px 610px;
             background-position:
                 4% 8%,
                 15% 26%,
@@ -1170,9 +1170,9 @@
                 24% 70%,
                 82% 62%,
                 60% 82%;
-            filter: saturate(1.12);
+            filter: saturate(1.22) brightness(1.08);
             animation:
-                forestParticlesGlow 4.8s ease-in-out infinite alternate,
+                forestParticlesGlow 5.2s ease-in-out infinite alternate,
                 forestParticlesDriftSoft 18s ease-in-out infinite alternate;
         }
 
@@ -1216,22 +1216,22 @@
         .player-mode.theme-forest .bulb-card::after {
             content: "";
             position: absolute;
-            inset: -8px;
+            inset: -18px;
             border-radius: 0;
             pointer-events: none;
             z-index: 5;
             opacity: 1;
             background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
             background-size:
-                62px calc(100% + 14px),
-                62px calc(100% + 14px),
-                66px 66px,
-                72px 72px;
+                68px calc(100% + 34px),
+                68px calc(100% + 34px),
+                74px 74px,
+                80px 80px;
             background-position:
-                left -26px top -2px,
-                right -26px top -2px,
-                left -16px top -12px,
-                right -16px bottom -12px;
+                left -24px top -10px,
+                right -24px top -10px,
+                left -10px top -18px,
+                right -10px bottom -18px;
             background-image:
                 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 420'%3E%3Cpath d='M52 8 C38 31 35 57 26 92 C19 118 20 148 27 180 C33 211 33 245 26 279 C21 304 21 338 28 372 C33 388 39 401 45 414' fill='none' stroke='%233b873a' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M34 58 C24 66 20 76 19 88' fill='none' stroke='%234ea84f' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M16 91 C27 83 39 84 48 94 C38 103 26 103 16 91 Z' fill='%237bd66e'/%3E%3Cpath d='M26 160 C37 152 47 153 54 163 C44 171 33 171 26 160 Z' fill='%236bbf61'/%3E%3Cpath d='M27 260 C18 268 15 278 15 289' fill='none' stroke='%234ea84f' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M13 292 C23 284 34 284 43 294 C33 302 22 302 13 292 Z' fill='%2389dd7c'/%3E%3Cpath d='M28 348 C38 341 48 342 54 351 C44 360 33 360 28 348 Z' fill='%2372c967'/%3E%3C/svg%3E"),
                 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 420'%3E%3Cpath d='M4 8 C18 31 21 57 30 92 C37 118 36 148 29 180 C23 211 23 245 30 279 C35 304 35 338 28 372 C23 388 17 401 11 414' fill='none' stroke='%233b873a' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M22 58 C32 66 36 76 37 88' fill='none' stroke='%234ea84f' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M40 91 C29 83 17 84 8 94 C18 103 30 103 40 91 Z' fill='%237bd66e'/%3E%3Cpath d='M30 160 C19 152 9 153 2 163 C12 171 23 171 30 160 Z' fill='%236bbf61'/%3E%3Cpath d='M29 260 C38 268 41 278 41 289' fill='none' stroke='%234ea84f' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M43 292 C33 284 22 284 13 294 C23 302 34 302 43 292 Z' fill='%2389dd7c'/%3E%3Cpath d='M28 348 C18 341 8 342 2 351 C12 360 23 360 28 348 Z' fill='%2372c967'/%3E%3C/svg%3E"),
@@ -1245,31 +1245,31 @@
 
         .player-mode.theme-forest .left-player-panel .bulb-card::after {
             background-position:
-                left -28px top 2px,
-                right -22px top 6px,
-                left -18px top -10px,
-                right -12px bottom -14px;
+                left -18px top -8px,
+                right -18px top -4px,
+                left -8px top -18px,
+                right -6px bottom -18px;
         }
 
                 .player-mode.theme-forest .right-player-panel .bulb-card::after {
             background-position:
-                left -22px top 6px,
-                right -28px top 2px,
-                left -12px top -14px,
-                right -18px bottom -10px;
+                left -18px top -4px,
+                right -18px top -8px,
+                left -6px top -18px,
+                right -8px bottom -18px;
         }
 
         .player-mode.theme-forest .main-panel .bulb-card::after {
             background-size:
-                58px calc(100% + 12px),
-                58px calc(100% + 12px),
-                60px 60px,
-                66px 66px;
+                64px calc(100% + 28px),
+                64px calc(100% + 28px),
+                68px 68px,
+                74px 74px;
             background-position:
-                left -30px top 8px,
-                right -30px top 8px,
-                left -18px top -12px,
-                right -18px bottom -12px;
+                left -20px top -8px,
+                right -20px top -8px,
+                left -8px top -18px,
+                right -8px bottom -18px;
         }
 
         .player-mode.theme-forest .border-bulbs {
@@ -1443,12 +1443,12 @@
 
         @keyframes forestParticlesGlow {
             0%, 100% {
-                opacity: 0.9;
-                filter: brightness(1.08) saturate(1.08);
+                opacity: 0.92;
+                filter: brightness(1.12) saturate(1.16);
             }
             50% {
                 opacity: 1;
-                filter: brightness(1.78) saturate(1.22);
+                filter: brightness(1.9) saturate(1.32);
             }
         }
 
