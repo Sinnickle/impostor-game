@@ -533,6 +533,7 @@
 
         #playerVideoLayer,
         #glitchLayer,
+        #lotusFlashOverlay,
         #playerWhiteScreen {
             position: fixed;
             inset: 0;
@@ -651,6 +652,20 @@
         #glitchLayer.active {
             opacity: 1;
             animation: fullScreenCasinoGlitch 2s steps(1, end) forwards;
+        }
+
+                #lotusFlashOverlay {
+            pointer-events: none;
+            opacity: 0;
+            z-index: 97;
+            background: rgb(160, 40, 255);
+            will-change: opacity, filter, transform;
+            transform: scale(1);
+            filter: saturate(1.22) brightness(1.02) blur(0px);
+        }
+
+        #lotusFlashOverlay.active {
+            animation: lotusPurpleFlashDissipate 3.2s ease-out forwards;
         }
 
         #playerWhiteScreen {
@@ -1096,6 +1111,10 @@
         }
 
         .player-mode.theme-forest .forest-lotus {
+            --lotus-scale: 1;
+            --lotus-translate-y: 0px;
+            --lotus-rotate: 0deg;
+
             position: absolute;
             top: -42px;
             right: 10px;
@@ -1107,12 +1126,18 @@
             background-repeat: no-repeat;
             background-position: center;
             background-size: contain;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 170'%3E%3Cdefs%3E%3ClinearGradient id='lotusA' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23ffe8cd'/%3E%3Cstop offset='50%25' stop-color='%23dcaeff'/%3E%3Cstop offset='100%25' stop-color='%235c67ff'/%3E%3C/linearGradient%3E%3ClinearGradient id='lotusB' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23fff0df'/%3E%3Cstop offset='52%25' stop-color='%23efc1ff'/%3E%3Cstop offset='100%25' stop-color='%238175ff'/%3E%3C/linearGradient%3E%3ClinearGradient id='lotusC' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23ffd6b6'/%3E%3Cstop offset='52%25' stop-color='%23ca93ff'/%3E%3Cstop offset='100%25' stop-color='%234d5dff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M120 18 C104 38 103 60 120 98 C137 60 136 38 120 18 Z' fill='url(%23lotusA)'/%3E%3Cpath d='M84 28 C69 46 72 69 98 104 C105 77 100 50 84 28 Z' fill='url(%23lotusB)'/%3E%3Cpath d='M156 28 C140 50 135 77 142 104 C168 69 171 46 156 28 Z' fill='url(%23lotusB)'/%3E%3Cpath d='M52 46 C40 64 47 88 82 118 C87 89 78 64 52 46 Z' fill='url(%23lotusC)'/%3E%3Cpath d='M188 46 C162 64 153 89 158 118 C193 88 200 64 188 46 Z' fill='url(%23lotusC)'/%3E%3Cpath d='M26 76 C26 95 43 113 86 133 C80 104 65 84 26 76 Z' fill='url(%23lotusA)'/%3E%3Cpath d='M214 76 C175 84 160 104 154 133 C197 113 214 95 214 76 Z' fill='url(%23lotusA)'/%3E%3Cpath d='M92 68 C82 86 88 106 110 130 C117 107 111 86 92 68 Z' fill='url(%23lotusB)'/%3E%3Cpath d='M148 68 C129 86 123 107 130 130 C152 106 158 86 148 68 Z' fill='url(%23lotusB)'/%3E%3Cellipse cx='120' cy='108' rx='18' ry='12' fill='%23ffe384'/%3E%3Cellipse cx='120' cy='108' rx='8' ry='5' fill='%23fff7ca'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 170'%3E%3Cdefs%3E%3ClinearGradient id='lotusA' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23fff1dc'/%3E%3Cstop offset='48%25' stop-color='%23e0b9ff'/%3E%3Cstop offset='100%25' stop-color='%236170ff'/%3E%3C/linearGradient%3E%3ClinearGradient id='lotusB' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23fff8ec'/%3E%3Cstop offset='50%25' stop-color='%23f3cbff'/%3E%3Cstop offset='100%25' stop-color='%238886ff'/%3E%3C/linearGradient%3E%3ClinearGradient id='lotusC' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23ffe6cb'/%3E%3Cstop offset='50%25' stop-color='%23d29eff'/%3E%3Cstop offset='100%25' stop-color='%235968ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M120 18 C104 38 103 60 120 98 C137 60 136 38 120 18 Z' fill='url(%23lotusA)'/%3E%3Cpath d='M84 28 C69 46 72 69 98 104 C105 77 100 50 84 28 Z' fill='url(%23lotusB)'/%3E%3Cpath d='M156 28 C140 50 135 77 142 104 C168 69 171 46 156 28 Z' fill='url(%23lotusB)'/%3E%3Cpath d='M52 46 C40 64 47 88 82 118 C87 89 78 64 52 46 Z' fill='url(%23lotusC)'/%3E%3Cpath d='M188 46 C162 64 153 89 158 118 C193 88 200 64 188 46 Z' fill='url(%23lotusC)'/%3E%3Cpath d='M26 76 C26 95 43 113 86 133 C80 104 65 84 26 76 Z' fill='url(%23lotusA)'/%3E%3Cpath d='M214 76 C175 84 160 104 154 133 C197 113 214 95 214 76 Z' fill='url(%23lotusA)'/%3E%3Cpath d='M92 68 C82 86 88 106 110 130 C117 107 111 86 92 68 Z' fill='url(%23lotusB)'/%3E%3Cpath d='M148 68 C129 86 123 107 130 130 C152 106 158 86 148 68 Z' fill='url(%23lotusB)'/%3E%3Cellipse cx='120' cy='108' rx='18' ry='12' fill='%23ffe384'/%3E%3Cellipse cx='120' cy='108' rx='8' ry='5' fill='%23fff7ca'/%3E%3C/svg%3E");
+            transform: translateY(var(--lotus-translate-y)) scale(var(--lotus-scale)) rotate(var(--lotus-rotate));
+            transform-origin: 50% 72%;
             filter:
-                drop-shadow(0 0 10px rgba(255, 213, 130, 0.30))
-                drop-shadow(0 0 18px rgba(220, 136, 255, 0.46))
-                drop-shadow(0 0 30px rgba(120, 102, 255, 0.28));
+                drop-shadow(0 0 12px rgba(255, 219, 151, 0.34))
+                drop-shadow(0 0 20px rgba(222, 142, 255, 0.48))
+                drop-shadow(0 0 34px rgba(115, 120, 255, 0.30));
             animation: lotusPulse 6.2s ease-in-out infinite;
+            transition:
+                transform 0.35s ease,
+                filter 0.35s ease,
+                opacity 0.35s ease;
         }
 
         .player-mode.theme-forest .forest-lotus::before {
@@ -1126,6 +1151,150 @@
             border-radius: 50%;
             background: radial-gradient(ellipse at center, rgba(126, 216, 112, 0.72) 0 52%, transparent 53%);
             filter: blur(0.4px);
+            transition:
+                opacity 0.35s ease,
+                transform 0.35s ease,
+                filter 0.35s ease;
+        }
+
+        .player-mode.theme-forest .forest-lotus::after {
+            content: "";
+            position: absolute;
+            inset: 14px 24px 12px 24px;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+        }
+
+        .player-mode.theme-forest #playerRoleBanner > .forest-lotus {
+            display: none !important;
+        }
+
+        .player-mode.theme-forest .forest-lotus[data-lotus-stage="1"] {
+            --lotus-scale: 1.04;
+            --lotus-translate-y: -2px;
+            --lotus-rotate: 0deg;
+            opacity: 1;
+            filter:
+                drop-shadow(0 0 12px rgba(255, 219, 151, 0.40))
+                drop-shadow(0 0 24px rgba(222, 142, 255, 0.60))
+                drop-shadow(0 0 42px rgba(115, 120, 255, 0.38));
+        }
+
+        .player-mode.theme-forest .forest-lotus[data-lotus-stage="2"] {
+            --lotus-scale: 0.92;
+            --lotus-translate-y: 8px;
+            --lotus-rotate: -10deg;
+            opacity: 1;
+            animation:
+                lotusPulse 6.2s ease-in-out infinite,
+                lotusWeakFlicker 1.8s steps(1, end) infinite;
+        }
+
+        .player-mode.theme-forest .forest-lotus[data-lotus-stage="2"]::before {
+            opacity: 0.14;
+            transform: translateX(-50%) scale(0.82);
+            filter: blur(0.8px);
+        }
+
+        .player-mode.theme-forest .forest-lotus[data-lotus-stage="2"]::after {
+            opacity: 0.16;
+            background:
+                radial-gradient(circle at 48% 50%, rgba(112, 76, 41, 0.18), transparent 42%),
+                radial-gradient(circle at 58% 44%, rgba(44, 28, 18, 0.12), transparent 34%);
+        }
+
+        .player-mode.theme-forest .forest-lotus[data-lotus-stage="3"] {
+            --lotus-scale: 0.88;
+            --lotus-translate-y: 14px;
+            --lotus-rotate: -16deg;
+            opacity: 0.9;
+            animation: none;
+            filter:
+                grayscale(1)
+                saturate(0)
+                brightness(0.42)
+                contrast(1.05)
+                sepia(0.35)
+                drop-shadow(0 0 6px rgba(26, 18, 14, 0.28));
+        }
+
+        .player-mode.theme-forest .forest-lotus[data-lotus-stage="3"]::before {
+            opacity: 0;
+        }
+
+        .player-mode.theme-forest .forest-lotus[data-lotus-stage="3"]::after {
+            opacity: 0.72;
+            background:
+                radial-gradient(circle at 48% 50%, rgba(63, 39, 24, 0.44), transparent 40%),
+                radial-gradient(circle at 60% 42%, rgba(23, 16, 12, 0.40), transparent 28%),
+                radial-gradient(circle at 38% 62%, rgba(87, 58, 34, 0.26), transparent 24%);
+        }
+
+        .player-mode.theme-forest .lotus-button-shell {
+            position: absolute;
+            top: -42px;
+            right: 10px;
+            width: 172px;
+            height: 132px;
+            padding: 0;
+            margin: 0;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            z-index: 9;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .player-mode.theme-forest .lotus-button-shell::after {
+            display: none;
+        }
+
+        .player-mode.theme-forest .lotus-button-shell:hover {
+            transform: none;
+            filter: none;
+            box-shadow: none;
+        }
+
+        .player-mode.theme-forest .lotus-button-shell .forest-lotus {
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .player-mode.theme-forest .lotus-button-shell .lotus-x-badge {
+            position: absolute;
+            top: 24px;
+            right: 30px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            font-family: "Inter", Arial, sans-serif;
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: #fff;
+            background: rgba(65, 18, 18, 0.82);
+            border: 1px solid rgba(255, 180, 180, 0.34);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.28);
+            opacity: 0;
+            transition: opacity 0.18s ease;
+            pointer-events: none;
+        }
+
+        .player-mode.theme-forest .lotus-button-shell.locked,
+        .player-mode.theme-forest .lotus-button-shell:disabled {
+            cursor: not-allowed;
+        }
+
+        .player-mode.theme-forest .lotus-button-shell.locked:hover .lotus-x-badge,
+        .player-mode.theme-forest .lotus-button-shell:disabled:hover .lotus-x-badge {
+            opacity: 1;
         }
 
         .player-mode.theme-forest::before {
@@ -1479,6 +1648,87 @@
             }
         }
 
+        @keyframes lotusWeakFlicker {
+            0%, 100% {
+                filter:
+                    saturate(0.88)
+                    brightness(0.56)
+                    contrast(1.04)
+                    drop-shadow(0 0 3px rgba(170, 120, 255, 0.10));
+            }
+            18% {
+                filter:
+                    saturate(0.90)
+                    brightness(0.62)
+                    contrast(1.05)
+                    drop-shadow(0 0 7px rgba(170, 120, 255, 0.18));
+            }
+            36% {
+                filter:
+                    saturate(0.86)
+                    brightness(0.54)
+                    contrast(1.03)
+                    drop-shadow(0 0 2px rgba(170, 120, 255, 0.06));
+            }
+            54% {
+                filter:
+                    saturate(0.92)
+                    brightness(0.64)
+                    contrast(1.06)
+                    drop-shadow(0 0 9px rgba(170, 120, 255, 0.22));
+            }
+            72% {
+                filter:
+                    saturate(0.84)
+                    brightness(0.52)
+                    contrast(1.02)
+                    drop-shadow(0 0 2px rgba(170, 120, 255, 0.05));
+            }
+        }
+
+                @keyframes lotusPurpleFlashDissipate {
+            0% {
+                opacity: 0;
+                transform: scale(1.01);
+                filter: saturate(1.28) brightness(1.04) blur(0px);
+            }
+            4% {
+                opacity: 1;
+                transform: scale(1);
+                filter: saturate(1.32) brightness(1.08) blur(0px);
+            }
+            12% {
+                opacity: 1;
+                transform: scale(1);
+                filter: saturate(1.28) brightness(1.05) blur(0px);
+            }
+            24% {
+                opacity: 0.88;
+                transform: scale(1);
+                filter: saturate(1.22) brightness(1.01) blur(0.15px);
+            }
+            42% {
+                opacity: 0.62;
+                transform: scale(1);
+                filter: saturate(1.14) brightness(0.98) blur(0.35px);
+            }
+            64% {
+                opacity: 0.34;
+                transform: scale(1);
+                filter: saturate(1.06) brightness(0.95) blur(0.7px);
+            }
+            82% {
+                opacity: 0.14;
+                transform: scale(1);
+                filter: saturate(1) brightness(0.93) blur(1px);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1);
+                filter: saturate(1) brightness(0.91) blur(1.15px);
+            }
+        }
+
         @keyframes fullScreenCasinoGlitch {
             0% {
                 opacity: 0;
@@ -1637,8 +1887,10 @@
     <audio id="bgMusic" preload="auto" loop></audio>
     <audio id="forestAmbience" preload="auto" loop src="/static/bg-forestsounds.mp3"></audio>
     <audio id="glitchSound" preload="auto" src="/static/glitch-sound.mp3"></audio>
+    <audio id="lotusWarningAudio" preload="auto" src="/static/lotusdisturbed-warning.mp3"></audio>
 
     <div id="glitchLayer"></div>
+    <div id="lotusFlashOverlay"></div>
 
     <div id="playerWhiteScreen">
         <div class="white-screen-inner">
@@ -1752,6 +2004,10 @@
             </div>
 
             <div id="playerRoleBanner" class="player-role-banner bulb-card">
+                <button id="lotusButton" class="lotus-button-shell hidden" type="button" aria-label="Use lotus flower">
+                    <span id="lotusButtonVisual" class="forest-lotus"></span>
+                    <span class="lotus-x-badge">×</span>
+                </button>
                 <div class="forest-lotus hidden"></div>
                 <div id="playerRoleBannerTitle" class="player-role-banner-title">ROLE</div>
                 <div id="playerRoleBannerSub" class="player-role-banner-sub">Waiting for your assignment.</div>
@@ -1786,10 +2042,15 @@
             </div>
 
             <div id="phraseBox" class="card main-stage bulb-card hidden">
-                <div class="forest-lotus hidden"></div>
                 <h3>Phrase Submission</h3>
                 <p id="turnLabel">Current Team: --</p>
                 <p id="phraseTimerText" class="timer">Timer: --</p>
+
+                <div id="lotusHintBox" class="result-box hidden" style="margin-bottom: 12px;">
+                    <p style="margin: 0 0 6px 0;"><strong>Lotus Hint</strong></p>
+                    <div id="lotusHintText">--</div>
+                </div>
+
                 <textarea id="phraseInput" rows="3" maxlength="60" placeholder="Enter a phrase, max 3 words"></textarea>
                 <div class="row" style="margin-top: 12px;">
                     <button id="submitPhraseBtn">Submit Phrase</button>
@@ -1900,6 +2161,12 @@
         let glitchStarted = false;
         let currentTheme = "casino";
 
+        let lotusStage = 1;
+        let lotusTotalUses = 0;
+        let lotusDeathThreshold = 1;
+        let lotusIsDead = false;
+        let lotusUsedThisRound = new Set();
+
         const CATEGORY_LABELS = {
             computer_science: "Computer Science",
             general: "General",
@@ -1915,7 +2182,9 @@
         const bgMusic = document.getElementById("bgMusic");
         const forestAmbience = document.getElementById("forestAmbience");
         const glitchSound = document.getElementById("glitchSound");
+        const lotusWarningAudio = document.getElementById("lotusWarningAudio");
         const glitchLayer = document.getElementById("glitchLayer");
+        const lotusFlashOverlay = document.getElementById("lotusFlashOverlay");
 
         let playerBulbResizeObserver = null;
         let playerBulbBuildRaf = null;
@@ -1971,6 +2240,10 @@
         const phraseTimerText = document.getElementById("phraseTimerText");
         const phraseInput = document.getElementById("phraseInput");
         const submitPhraseBtn = document.getElementById("submitPhraseBtn");
+        const lotusButton = document.getElementById("lotusButton");
+        const lotusButtonVisual = document.getElementById("lotusButtonVisual");
+        const lotusHintBox = document.getElementById("lotusHintBox");
+        const lotusHintText = document.getElementById("lotusHintText");
 
         const responsesCenterBox = document.getElementById("responsesCenterBox");
 
@@ -2002,11 +2275,13 @@
         function show(el) {
             el.classList.remove("hidden");
             if (el === playerVideoLayer) el.style.display = "block";
+            if (!isHost) updateForestLotusVisibility();
         }
 
         function hide(el) {
             el.classList.add("hidden");
             if (el === playerVideoLayer) el.style.display = "none";
+            if (!isHost) updateForestLotusVisibility();
         }
 
         function sleep(ms) {
@@ -2056,20 +2331,104 @@
             }
         }
 
+        function getVisibleForestLotusElements() {
+            const visibleLotuses = [];
+
+            if (lotusButtonVisual) {
+                visibleLotuses.push(lotusButtonVisual);
+            }
+
+            return visibleLotuses;
+        }
+
+        function applyLotusStageVisual() {
+            document.querySelectorAll(".forest-lotus").forEach(el => {
+                el.setAttribute("data-lotus-stage", String(lotusStage));
+            });
+        }
+
+        function syncLotusButtonState() {
+            if (isHost || !lotusButton) return;
+
+            const shouldShowButton = currentTheme === "forest" && playerRoleBanner.classList.contains("active");
+            lotusButton.classList.toggle("hidden", !shouldShowButton);
+
+            if (!shouldShowButton) {
+                lotusButton.disabled = true;
+                lotusButton.classList.add("locked");
+                return;
+            }
+
+            const hasUsedThisRound = lotusUsedThisRound.has(teamName);
+            const isMyTurn = currentState === "phrase" && currentTurnTeam === teamName;
+            const canUseLotus = isMyTurn && !hasUsedThisRound && !lotusIsDead;
+
+            lotusButton.disabled = !canUseLotus;
+            lotusButton.classList.toggle("locked", !canUseLotus);
+        }
+
         function updateForestLotusVisibility() {
-    const lotuses = document.querySelectorAll(".forest-lotus");
+            const lotuses = document.querySelectorAll(".forest-lotus");
 
-    lotuses.forEach(el => {
-        el.classList.add("hidden");
-    });
+            lotuses.forEach(el => {
+                el.classList.add("hidden");
+            });
 
-    if (isHost || currentTheme !== "forest") return;
+            if (isHost || currentTheme !== "forest") {
+                if (lotusButton) {
+                    lotusButton.classList.add("hidden");
+                    lotusButton.disabled = true;
+                    lotusButton.classList.add("locked");
+                }
+                return;
+            }
 
-    const singleLotus = document.querySelector("#playerRoleBanner .forest-lotus");
-    if (singleLotus) {
-        singleLotus.classList.remove("hidden");
-    }
-}
+            getVisibleForestLotusElements().forEach(el => {
+                el.classList.remove("hidden");
+            });
+
+            applyLotusStageVisual();
+            syncLotusButtonState();
+        }
+
+        function playLotusWarningSound() {
+            try {
+                lotusWarningAudio.pause();
+                lotusWarningAudio.currentTime = 0;
+                lotusWarningAudio.volume = 0.45;
+
+                const playPromise = lotusWarningAudio.play();
+                if (playPromise && typeof playPromise.catch === "function") {
+                    playPromise.catch(() => {});
+                }
+            } catch (e) {}
+        }
+
+        function playLotusPurpleFlash() {
+            if (isHost) return;
+            if (currentTheme !== "forest") return;
+            if (!lotusFlashOverlay) return;
+
+            lotusFlashOverlay.classList.remove("active");
+            lotusFlashOverlay.style.opacity = "0";
+            lotusFlashOverlay.style.transform = "scale(1.01)";
+            lotusFlashOverlay.style.filter = "saturate(1.28) brightness(1.04) blur(0px)";
+
+            void lotusFlashOverlay.offsetWidth;
+
+            lotusFlashOverlay.classList.add("active");
+
+            window.setTimeout(() => {
+                lotusFlashOverlay.classList.remove("active");
+                lotusFlashOverlay.style.opacity = "0";
+            }, 3300);
+        }
+
+        function clearLotusHint() {
+            if (!lotusHintBox || !lotusHintText) return;
+            lotusHintText.textContent = "--";
+            lotusHintBox.classList.add("hidden");
+        }
 
         function stopThemeAudio() {
             try {
@@ -2392,6 +2751,7 @@
         function setCurrentTurn(team) {
             currentTurnTeam = team || null;
             currentTurnText.textContent = currentTurnTeam || "--";
+            syncLotusButtonState();
         }
 
         function updateImpostorControls(impostorCount, maxAllowed) {
@@ -2513,6 +2873,7 @@
             hide(votingBox);
             hide(roundResultBox);
             hide(finalLeaderboardBox);
+            updateForestLotusVisibility();
             schedulePlayerBulbBorderBuild();
         }
 
@@ -2540,6 +2901,7 @@
         function showNormalApp() {
             hidePlayerWhiteScreen();
             appShell.classList.remove("hidden");
+            updateForestLotusVisibility();
             schedulePlayerBulbBorderBuild();
         }
 
@@ -2924,6 +3286,15 @@
             });
         });
 
+        lotusButton?.addEventListener("click", () => {
+            if (isHost) return;
+            if (lotusButton.disabled) return;
+
+            socket.emit("use_lotus", {
+                code
+            });
+        });
+
         phraseInput?.addEventListener("keydown", (event) => {
             if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
@@ -3002,6 +3373,36 @@
 
         socket.on("status_message", (data) => {
             statusDiv.textContent = data?.message || "Connected.";
+        });
+
+                socket.on("lotus_state_updated", (data) => {
+            lotusStage = Math.max(1, Math.min(3, Number(data?.lotus_stage) || 1));
+            lotusTotalUses = Math.max(0, Number(data?.lotus_total_uses) || 0);
+            lotusDeathThreshold = Math.max(1, Number(data?.lotus_death_threshold) || 1);
+            lotusIsDead = !!data?.lotus_dead;
+            lotusUsedThisRound = new Set(
+                Array.isArray(data?.lotus_used_this_round) ? data.lotus_used_this_round : []
+            );
+
+            applyLotusStageVisual();
+            syncLotusButtonState();
+            updateForestLotusVisibility();
+        });
+
+        socket.on("lotus_disturbed", (data) => {
+            playLotusWarningSound();
+            statusDiv.textContent = data?.message || "The lotus flower was disturbed.";
+        });
+
+        socket.on("lotus_hint_received", (data) => {
+            if (!lotusHintBox || !lotusHintText) return;
+
+            lotusHintText.textContent = data?.hint || "--";
+            lotusHintBox.classList.remove("hidden");
+        });
+
+        socket.on("lotus_flash", () => {
+            playLotusPurpleFlash();
         });
 
         socket.on("round_count_updated", (data) => {
@@ -3283,6 +3684,7 @@
             phraseInput.value = "";
             phraseInput.disabled = !isMyTurn;
             submitPhraseBtn.disabled = !isMyTurn;
+            clearLotusHint();
 
             setPhase("Phrase Submission", isMyTurn ? "It is your turn to submit." : "Wait for the current team to submit.");
             statusDiv.textContent = data.current_team ? `${data.current_team} is submitting.` : "Phrase phase started.";

@@ -2,6 +2,7 @@ import os
 import random
 import string
 import re
+import math
 from collections import Counter
 
 from flask import Flask, render_template, request
@@ -75,6 +76,173 @@ DEFAULT_SELECTED_CATEGORIES = [
 PHRASE_TIME_LIMIT = 30
 VOTING_TIME_LIMIT = 120
 
+WORD_HINTS = {
+    "Algorithm": "A step-by-step method for solving a problem or completing a task.",
+    "Binary": "A system built from only two possible values, often used by computers.",
+    "Compiler": "A tool that turns code into a form a machine can run.",
+    "Database": "An organized collection of stored information that can be searched or updated.",
+    "Encryption": "A way of scrambling information so only intended people can read it.",
+    "Function": "A reusable block of instructions that performs a specific job.",
+    "Interface": "The point where a person or system interacts with another system.",
+    "Kernel": "The core part of an operating system that manages essential tasks.",
+    "Loop": "A structure that repeats instructions until a condition changes.",
+    "Memory": "The place where a computer temporarily or permanently stores information.",
+    "Network": "A group of connected systems that share information or resources.",
+    "Object": "A bundled unit of data and behavior used in programming.",
+    "Packet": "A small piece of data sent across a network.",
+    "Queue": "A structure where the first item added is the first one removed.",
+    "Recursion": "A process where something is defined or solved by referring to itself.",
+    "Server": "A system that provides data or services to other systems.",
+    "Stack": "A structure where the most recent item added is removed first.",
+    "Syntax": "The rules that determine how code must be written.",
+    "Thread": "A single path of execution inside a running program.",
+    "Variable": "A named place used to store a value that can change.",
+    "Array": "An ordered collection of multiple values stored together.",
+    "Boolean": "A type of value that can only be true or false.",
+    "Cache": "Fast storage used to quickly access frequently needed data.",
+    "Class": "A blueprint for creating similar objects in programming.",
+    "Cloud": "Remote computing resources accessed over the internet.",
+    "Debugging": "The process of finding and fixing mistakes in code.",
+    "Framework": "A structured set of tools and rules for building software.",
+    "Frontend": "The part of a program or site that users directly see and interact with.",
+    "Backend": "The behind-the-scenes logic, storage, and processing of a system.",
+    "Hash": "A fixed output created from input data, often for lookup or security.",
+    "Integer": "A whole number with no decimal part.",
+    "Iteration": "Repeating a process or set of instructions.",
+    "Library": "A collection of prewritten code that can be reused.",
+    "Machine Learning": "A method where systems improve by learning from data patterns.",
+    "Pointer": "A value that refers to a location in memory.",
+    "Runtime": "The period when a program is actively running.",
+    "Script": "Code usually written to automate or control a task.",
+    "Search": "The process of locating a target item, value, or answer.",
+    "Sorting": "Arranging items into a chosen order.",
+    "Terminal": "A text-based interface used to control a computer system.",
+
+    "Apple": "A common round fruit associated with orchards and crisp bites.",
+    "Bridge": "A structure built to help something cross over a gap.",
+    "Camera": "A device used to capture visual moments.",
+    "Candle": "A source of light that burns using wax and a wick.",
+    "Castle": "A fortified building often linked to royalty or defense.",
+    "Cloud": "Something seen in the sky, or metaphorically tied to floating storage.",
+    "Coffee": "A popular brewed drink often linked to energy and mornings.",
+    "Desert": "A dry environment with very little rainfall.",
+    "Dragon": "A legendary creature often shown as powerful and fearsome.",
+    "Feather": "A light body covering associated with birds.",
+    "Forest": "A large natural area filled with many trees.",
+    "Garden": "A space where plants are intentionally grown and cared for.",
+    "Guitar": "A stringed instrument often played by strumming or plucking.",
+    "Island": "A piece of land surrounded by water.",
+    "Jacket": "A layer of clothing worn over other clothes.",
+    "Lantern": "A portable source of light with a protective frame.",
+    "Library": "A place known for books, learning, and quiet research.",
+    "Mirror": "A surface that reflects what is in front of it.",
+    "Mountain": "A very large natural rise in the land.",
+    "Ocean": "A vast body of salt water covering much of Earth.",
+    "Pencil": "A simple writing tool often used for sketching or notes.",
+    "Planet": "A large body that travels around a star.",
+    "Puzzle": "A challenge that requires pieces or clues to solve.",
+    "River": "A natural stream of moving water.",
+    "Rocket": "A vehicle designed to launch with great force.",
+    "Shadow": "A dark shape formed when light is blocked.",
+    "Silver": "A shiny gray metal often linked to value or decoration.",
+    "Snowflake": "A tiny frozen crystal with delicate patterns.",
+    "Sunrise": "The daily moment when the sun appears at the horizon.",
+    "Treasure": "Something valuable that people seek or protect.",
+
+    "Alligator": "A large reptile with a powerful bite, usually linked to swamps or rivers.",
+    "Antelope": "A fast-running hoofed animal often found in open grasslands.",
+    "Bat": "A flying mammal known for wings and nighttime activity.",
+    "Bear": "A large mammal known for strength and heavy build.",
+    "Cheetah": "A big cat famous for extreme speed.",
+    "Dolphin": "An intelligent marine animal known for swimming and social behavior.",
+    "Eagle": "A bird of prey associated with sharp vision and soaring flight.",
+    "Falcon": "A swift hunting bird known for diving speed.",
+    "Fox": "A clever-looking animal with a bushy tail.",
+    "Frog": "A small jumping amphibian often linked to ponds.",
+    "Giraffe": "A tall animal recognized by its long neck.",
+    "Hamster": "A small furry pet often seen running on wheels.",
+    "Jaguar": "A powerful spotted big cat.",
+    "Koala": "A tree-dwelling marsupial associated with eucalyptus.",
+    "Leopard": "A spotted big cat known for stealth and climbing.",
+    "Lion": "A large cat strongly associated with pride and dominance.",
+    "Otter": "A playful water-loving mammal.",
+    "Panda": "A black-and-white bear associated with bamboo.",
+    "Penguin": "A bird that cannot fly but swims well in cold regions.",
+    "Rabbit": "A small fast animal known for long ears and hopping.",
+    "Raven": "A dark-feathered bird often linked to intelligence or mystery.",
+    "Shark": "A well-known ocean predator with rows of teeth.",
+    "Tiger": "A striped big cat associated with power and stealth.",
+    "Turtle": "A shelled reptile known for slow movement and protection.",
+    "Whale": "A huge marine mammal known for size and deep water.",
+    "Wolf": "A pack-oriented canine associated with hunting and wilderness.",
+    "Zebra": "A hoofed animal recognized by black-and-white stripes.",
+    "Octopus": "A sea creature with multiple arms and strong problem-solving ability.",
+    "Peacock": "A bird known for bright feathers and display.",
+    "Squirrel": "A small climbing animal often associated with trees and nuts.",
+
+    "Archery": "A sport based on aiming and releasing a projectile from a bow.",
+    "Badminton": "A racket sport where a light object is hit over a net.",
+    "Boxing": "A combat sport focused on punches and defense.",
+    "Canoeing": "A water sport involving paddling a narrow boat.",
+    "Curling": "A sport where players slide stones across ice toward a target.",
+    "Cycling": "A sport centered on speed and endurance using a bike.",
+    "Diving": "A sport involving controlled entry into water from height or springboard.",
+    "Fencing": "A sport of quick strikes and defense with blades.",
+    "Gymnastics": "A sport emphasizing control, flexibility, and precise movement.",
+    "Handball": "A fast team sport where players throw a ball to score.",
+    "Hockey": "A team sport using sticks to direct an object into a goal.",
+    "Judo": "A martial art and sport focused on throws and leverage.",
+    "Luge": "A winter sport involving racing on ice while lying on a sled.",
+    "Rowing": "A water sport powered by coordinated pulling strokes.",
+    "Rugby": "A contact team sport involving carrying and passing an oval ball.",
+    "Sailing": "A sport that uses wind to move a craft across water.",
+    "Shooting": "A precision sport focused on aim and control.",
+    "Skateboarding": "A sport built around balance, movement, and tricks on a board.",
+    "Skiing": "A sport involving movement over snow using long narrow equipment.",
+    "Snowboarding": "A snow sport where both feet are fixed to one board.",
+    "Surfing": "A water sport based on riding moving waves.",
+    "Swimming": "A race or activity involving movement through water.",
+    "Taekwondo": "A martial art and sport known for dynamic kicking techniques.",
+    "Tennis": "A racket sport where players exchange shots across a net.",
+    "Triathlon": "A multi-part endurance event combining three different activities.",
+    "Volleyball": "A team sport where players send a ball over a net without letting it drop.",
+    "Water Polo": "A swimming-based team sport involving passing and scoring in water.",
+    "Weightlifting": "A sport centered on lifting heavy loads with technique and strength.",
+    "Wrestling": "A combat sport focused on grappling and control.",
+    "Biathlon": "A winter event combining endurance movement with precision shooting.",
+
+    "Calculator": "A device used to quickly work with numbers and operations.",
+    "Camera": "A device used to record or capture images.",
+    "Drone": "A machine that can move through the air without a person on board.",
+    "Earbuds": "Small audio devices worn in the ears.",
+    "Flashlight": "A handheld source of directed light.",
+    "Game Console": "A device built mainly for playing digital games.",
+    "Headphones": "Audio equipment worn over or around the ears.",
+    "Keyboard": "An input device with keys used for typing or commands.",
+    "Laptop": "A portable computer that folds closed.",
+    "Microphone": "A device that captures sound.",
+    "Monitor": "A screen used to display digital output.",
+    "Mouse": "A handheld pointing device used to control a cursor.",
+    "Phone": "A device used for communication, often portable and multifunctional.",
+    "Printer": "A machine that puts digital content onto paper.",
+    "Projector": "A device that displays images onto a larger surface.",
+    "Remote": "A small controller used from a distance.",
+    "Router": "A device that directs network traffic between systems.",
+    "Scanner": "A device that turns physical documents or images into digital form.",
+    "Smartwatch": "A wearable device that combines timekeeping with digital features.",
+    "Speaker": "A device that produces audible sound.",
+    "Tablet": "A flat portable device with a touchscreen interface.",
+    "Television": "A screen-based device for watching broadcast or streamed media.",
+    "Thermostat": "A device used to regulate temperature settings.",
+    "Walkie Talkie": "A handheld device for two-way voice communication.",
+    "Webcam": "A camera meant mainly for live digital video.",
+    "VR Headset": "A device worn over the eyes for immersive digital environments.",
+    "Joystick": "A control device often used for movement in games or simulations.",
+    "Modem": "A device that connects a local system to an external network service.",
+    "Hard Drive": "A storage device used to keep digital files and data.",
+    "Charger": "A device or cable used to restore battery power.",
+}
+
 games = {}
 
 
@@ -144,6 +312,27 @@ def clamp_impostor_count(requested_count, team_count):
 
     return max(1, min(4, get_max_impostors_for_team_count(team_count), requested))
 
+def get_lotus_death_threshold(team_count):
+    return max(1, math.ceil(max(0, int(team_count)) / 3))
+
+
+def get_lotus_stage(total_uses, death_threshold):
+    safe_uses = max(0, int(total_uses or 0))
+    safe_threshold = max(1, int(death_threshold or 1))
+
+    if safe_uses >= safe_threshold:
+        return 3
+
+    if safe_uses >= 1:
+        return 2
+
+    return 1    
+
+def get_lotus_hint_for_word(word):
+    return WORD_HINTS.get(
+        word,
+        "Think about the thing’s purpose, role, or where it is commonly used."
+    )
 
 def create_game_state():
     return {
@@ -185,6 +374,14 @@ def create_game_state():
 
         "smart_ai_added": False,
         "smart_ai_team": None,
+
+        "lotus_total_uses": 0,
+        "lotus_death_threshold": 1,
+        "lotus_stage": 1,
+        "lotus_used_this_round": set(),
+        "lotus_starting_team_count": 0,
+        "lotus_time_halved_active": False,
+        "lotus_time_halved_pending": False,
     }
 
 
@@ -556,6 +753,47 @@ def all_teams_intro_finished(game):
 def emit_status(code, message):
     socketio.emit("status_message", {"message": message}, room=code)
 
+def get_phrase_time_limit(game):
+    return max(1, PHRASE_TIME_LIMIT // 2) if game.get("lotus_time_halved_active") else PHRASE_TIME_LIMIT
+
+def get_voting_time_limit(game):
+    return max(1, VOTING_TIME_LIMIT // 2) if game.get("lotus_time_halved_active") else VOTING_TIME_LIMIT
+
+def activate_lotus_time_halving(code):
+    game = games.get(code)
+    if not game:
+        return
+
+    if game.get("lotus_time_halved_active"):
+        game["lotus_time_halved_pending"] = False
+        return
+
+    game["lotus_time_halved_active"] = True
+    game["lotus_time_halved_pending"] = False
+
+    emit_status(
+        code,
+        "The lotus flower has fully died. All future phrase and voting timers are now cut in half for the rest of the game."
+    )
+
+def emit_lotus_state(code, to=None):
+    game = games[code]
+
+    payload = {
+        "theme": game["theme"],
+        "lotus_total_uses": game["lotus_total_uses"],
+        "lotus_death_threshold": game["lotus_death_threshold"],
+        "lotus_stage": game["lotus_stage"],
+        "lotus_used_this_round": sorted(list(game["lotus_used_this_round"])),
+        "lotus_dead": game["lotus_stage"] >= 3,
+        "lotus_starting_team_count": game["lotus_starting_team_count"],
+    }
+
+    if to:
+        socketio.emit("lotus_state_updated", payload, to=to)
+    else:
+        socketio.emit("lotus_state_updated", payload, room=code)
+
 
 def get_host_button_mode(game):
     if game["state"] == "lobby":
@@ -783,8 +1021,16 @@ def reset_room_to_lobby_due_to_low_teams(code, message):
 
     game["turn_token"] += 1
     game["vote_token"] += 1
+    game["lotus_total_uses"] = 0
+    game["lotus_death_threshold"] = 1
+    game["lotus_stage"] = 1
+    game["lotus_used_this_round"] = set()
+    game["lotus_starting_team_count"] = 0
+    game["lotus_time_halved_active"] = False
+    game["lotus_time_halved_pending"] = False
 
     emit_roster_update(code)
+    emit_lotus_state(code)
     socketio.emit("game_stopped_low_teams", {"message": message}, room=code)
 
     for team in game["teams"]:
@@ -815,6 +1061,7 @@ def begin_round(code, preserved=False, preserve_order=False):
     game["votes"] = {}
     game["additional_round_voters"] = set()
     game["current_turn_index"] = 0
+    game["lotus_used_this_round"] = set()
     game["turn_token"] += 1
     game["vote_token"] += 1
 
@@ -836,6 +1083,7 @@ def begin_round(code, preserved=False, preserve_order=False):
         random.shuffle(game["order"])
 
     emit_roster_update(code)
+    emit_lotus_state(code)
     emit_round_started(code, preserved=preserved)
     emit_private_role_info(code)
 
@@ -869,11 +1117,13 @@ def start_next_turn(code):
     game["turn_token"] += 1
     token = game["turn_token"]
 
+    phrase_time_limit = get_phrase_time_limit(game)
+
     socketio.emit("start_turn", {
         "current_team": current_team,
         "turn_index": game["current_turn_index"] + 1,
         "total_turns": len(game["order"]),
-        "seconds": PHRASE_TIME_LIMIT,
+        "seconds": phrase_time_limit,
         "responses": game["responses"],
     }, room=code)
 
@@ -881,7 +1131,7 @@ def start_next_turn(code):
         socketio.start_background_task(auto_submit_smart_ai_phrase, code, current_team, token)
         return
 
-    socketio.start_background_task(run_phrase_timer, code, current_team, token, PHRASE_TIME_LIMIT)
+    socketio.start_background_task(run_phrase_timer, code, current_team, token, phrase_time_limit)
 
 
 def run_phrase_timer(code, team_name, token, seconds):
@@ -930,6 +1180,9 @@ def run_phrase_timer(code, team_name, token, seconds):
             "responses": game["responses"]
         }, room=code)
 
+        if game.get("lotus_time_halved_pending") and game["lotus_stage"] >= 3:
+            activate_lotus_time_halving(code)
+
         game["current_turn_index"] += 1
         socketio.sleep(1)
         start_next_turn(code)
@@ -945,16 +1198,18 @@ def begin_voting_phase(code):
 
     emit_roster_update(code)
 
+    voting_time_limit = get_voting_time_limit(game)
+
     socketio.emit("start_voting", {
         "teams": game["teams"],
         "responses": game["responses"],
-        "time_limit": VOTING_TIME_LIMIT,
+        "time_limit": voting_time_limit,
     }, room=code)
 
     if game.get("smart_ai_added") and game.get("smart_ai_team") in game["teams"]:
         socketio.start_background_task(auto_submit_smart_ai_vote, code, game["smart_ai_team"], token)
 
-    socketio.start_background_task(run_vote_timer, code, token, VOTING_TIME_LIMIT)
+    socketio.start_background_task(run_vote_timer, code, token, voting_time_limit)
 
 
 def run_vote_timer(code, token, seconds):
@@ -1099,6 +1354,8 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
         "smart_ai_team": game["smart_ai_team"],
     }, to=sid)
 
+    emit_lotus_state(code, to=sid)
+
     if is_host:
         if game["state"] == "agreement":
             emit("agreement_phase", {
@@ -1220,6 +1477,14 @@ def reset_to_round_one_new_game(code):
 
     game["turn_token"] += 1
     game["vote_token"] += 1
+
+    game["lotus_total_uses"] = 0
+    game["lotus_death_threshold"] = get_lotus_death_threshold(len(game["teams"]))
+    game["lotus_stage"] = 1
+    game["lotus_used_this_round"] = set()
+    game["lotus_starting_team_count"] = len(game["teams"])
+    game["lotus_time_halved_active"] = False
+    game["lotus_time_halved_pending"] = False
 
     begin_round(code, preserved=False, preserve_order=False)
 
@@ -1517,6 +1782,14 @@ def start_game_request(data):
     game["selected_categories"] = sanitize_selected_categories(data.get("selected_categories"))
     game["word_pool"] = get_word_pool_for_categories(game["selected_categories"])
 
+    game["lotus_starting_team_count"] = len(game["teams"])
+    game["lotus_death_threshold"] = get_lotus_death_threshold(game["lotus_starting_team_count"])
+    game["lotus_total_uses"] = 0
+    game["lotus_stage"] = 1
+    game["lotus_used_this_round"] = set()
+    game["lotus_time_halved_active"] = False
+    game["lotus_time_halved_pending"] = False
+
     game["intro_ready"] = set()
     game["intro_finished"] = set()
     game["agreement_ready"] = set()
@@ -1763,6 +2036,79 @@ def restart_action(data):
 
     emit("error", "Invalid restart mode.")
 
+@socketio.on("use_lotus")
+def use_lotus(data):
+    code = str(data.get("code", "")).strip().upper()
+    sid = request.sid
+
+    if code not in games:
+        emit("error", "Game code not found.")
+        return
+
+    game = games[code]
+
+    if game["theme"] != "forest":
+        emit("error", "The lotus flower is only available in forest mode.")
+        return
+
+    if game["state"] != "phrase":
+        emit("error", "The lotus flower can only be used during phrase submission.")
+        return
+
+    team_name = game["players_by_sid"].get(sid)
+    if not team_name or team_name == "HOST":
+        emit("error", "Only players can use the lotus flower.")
+        return
+
+    if is_smart_ai_team(game, team_name):
+        emit("error", "Smart AI cannot use the lotus flower.")
+        return
+
+    if game["lotus_stage"] >= 3:
+        emit("error", "The lotus flower is already dead.")
+        return
+
+    if game["current_turn_index"] >= len(game["order"]):
+        emit("error", "There is no active turn.")
+        return
+
+    current_team = game["order"][game["current_turn_index"]]
+    if team_name != current_team:
+        emit("error", "You can only use the lotus flower during your own turn.")
+        return
+
+    if team_name in game["lotus_used_this_round"]:
+        emit("error", "Your team already used the lotus flower this round.")
+        return
+
+    hint_text = get_lotus_hint_for_word(game.get("word"))
+
+    game["lotus_used_this_round"].add(team_name)
+    game["lotus_total_uses"] += 1
+    game["lotus_stage"] = get_lotus_stage(
+        game["lotus_total_uses"],
+        game["lotus_death_threshold"]
+    )
+
+    if game["lotus_stage"] >= 3 and not game.get("lotus_time_halved_active"):
+        game["lotus_time_halved_pending"] = True
+
+    emit_lotus_state(code)
+
+    socketio.emit("lotus_hint_received", {
+        "hint": hint_text
+    }, to=sid)
+
+    socketio.emit("lotus_flash", {}, room=code)
+
+    socketio.emit("lotus_disturbed", {
+        "team": team_name,
+        "lotus_total_uses": game["lotus_total_uses"],
+        "lotus_death_threshold": game["lotus_death_threshold"],
+        "lotus_stage": game["lotus_stage"],
+        "lotus_dead": game["lotus_stage"] >= 3,
+        "message": f"The lotus flower was disturbed during {team_name}'s turn."
+    }, room=code)
 
 @socketio.on("submit_phrase")
 def submit_phrase(data):
@@ -1817,6 +2163,9 @@ def submit_phrase(data):
         "auto_submitted": False,
         "responses": game["responses"]
     }, room=code)
+
+    if game.get("lotus_time_halved_pending") and game["lotus_stage"] >= 3:
+        activate_lotus_time_halving(code)
 
     game["current_turn_index"] += 1
     start_next_turn(code)
