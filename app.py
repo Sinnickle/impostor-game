@@ -847,6 +847,55 @@ def emit_waiting_screen_to_player(sid, team_name, title="Waiting for host.", mes
 def emit_ready_screen_to_player(sid, team_name):
     socketio.emit("player_ready_prompt", {"team_name": team_name}, to=sid)
 
+def can_accept_waitlisted_team_now(game):
+    return game["state"] in {"lobby", "intro_wait", "intro_playing", "agreement"}
+
+
+def accept_waitlisted_team_into_game(code, team_name):
+    game = games[code]
+
+    if team_name not in game["waitlisted_teams"]:
+        return False, "That team is not currently waitlisted."
+
+    if not can_accept_waitlisted_team_now(game):
+        return False, "Waitlisted teams can only be accepted before the round begins."
+
+    sid = game["waitlisted_sids"].get(team_name)
+
+    if team_name in game["waitlisted_teams"]:
+        game["waitlisted_teams"].remove(team_name)
+
+    game["waitlisted_sids"].pop(team_name, None)
+
+    if team_name not in game["teams"]:
+        game["teams"].append(team_name)
+
+    game["scores"][team_name] = game["scores"].get(team_name, 0)
+
+    if sid:
+        game["team_sids"][team_name] = sid
+
+    game["impostor_count"] = clamp_impostor_count(game["impostor_count"], len(game["teams"]))
+
+    if game["state"] == "lobby":
+        if sid:
+            emit_waiting_screen_to_player(sid, team_name)
+
+    elif game["state"] in {"intro_wait", "intro_playing"}:
+        if sid:
+            emit_ready_screen_to_player(sid, team_name)
+
+    elif game["state"] == "agreement":
+        game["intro_ready"].add(team_name)
+        game["intro_finished"].add(team_name)
+        if sid:
+            emit_individual_post_intro_waiting_to_player(code, sid)
+
+    emit_roster_update(code)
+    emit_status(code, f"{team_name} was accepted from the waitlist.")
+
+    return True, None
+
 
 def emit_intro_video_to_player(sid, team_name):
     socketio.emit("player_intro_video", {"team_name": team_name}, to=sid)
@@ -1362,24 +1411,44 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
                 "message": f"Waiting for all teams to finish the intro before Round {game['round']} begins."
             }, to=sid)
         elif game["state"] == "role":
-            emit_round_started(code)
-            emit_private_role_info(code)
+            emit("host_role_overview", {
+                "round": game["round"],
+                "max_rounds": game["max_rounds"],
+                "word": game["word"],
+                "word_category": game["word_category"],
+                "theme": game["theme"],
+                "selected_categories": game["selected_categories"],
+                "impostor_count": game["impostor_count"],
+                "impostors": game["impostors"],
+                "order": game["order"],
+                "scores": game["scores"],
+            }, to=sid)
         elif game["state"] == "phrase":
-            emit_round_started(code)
-            emit_private_role_info(code)
+            emit("host_role_overview", {
+                "round": game["round"],
+                "max_rounds": game["max_rounds"],
+                "word": game["word"],
+                "word_category": game["word_category"],
+                "theme": game["theme"],
+                "selected_categories": game["selected_categories"],
+                "impostor_count": game["impostor_count"],
+                "impostors": game["impostors"],
+                "order": game["order"],
+                "scores": game["scores"],
+            }, to=sid)
             current_team = game["order"][game["current_turn_index"]] if game["current_turn_index"] < len(game["order"]) else None
             emit("start_turn", {
                 "current_team": current_team,
                 "turn_index": game["current_turn_index"] + 1,
                 "total_turns": len(game["order"]),
-                "seconds": PHRASE_TIME_LIMIT,
+                "seconds": get_phrase_time_limit(game),
                 "responses": game["responses"],
             }, to=sid)
         elif game["state"] == "voting":
             emit("start_voting", {
                 "teams": game["teams"],
                 "responses": game["responses"],
-                "time_limit": VOTING_TIME_LIMIT,
+                "time_limit": get_voting_time_limit(game),
             }, to=sid)
         elif game["state"] == "paused_after_result":
             emit("status_message", {
@@ -1403,7 +1472,9 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
         if team_name in game["intro_finished"]:
             emit_individual_post_intro_waiting_to_player(code, sid)
         elif team_name in game["intro_ready"]:
-            emit_intro_video_to_player(sid, team_name)
+            emit("status_message", {
+                "message": "Intro already in progress for your team."
+            }, to=sid)
         else:
             emit_ready_screen_to_player(sid, team_name)
 
@@ -1411,18 +1482,55 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
         emit_individual_post_intro_waiting_to_player(code, sid)
 
     elif game["state"] == "role":
-        emit_round_started(code)
-        emit_private_role_info(code)
+        if team_name in game["impostors"]:
+            emit("role_assignment", {
+                "role": "IMPOSTOR",
+                "word": None,
+                "round": game["round"],
+                "max_rounds": game["max_rounds"],
+                "order": game["order"],
+                "impostor_count": game["impostor_count"],
+                "selected_categories": game["selected_categories"],
+            }, to=sid)
+        else:
+            emit("role_assignment", {
+                "role": "HUMAN",
+                "word": game["word"],
+                "round": game["round"],
+                "max_rounds": game["max_rounds"],
+                "order": game["order"],
+                "impostor_count": game["impostor_count"],
+                "selected_categories": game["selected_categories"],
+            }, to=sid)
 
     elif game["state"] == "phrase":
-        emit_round_started(code)
-        emit_private_role_info(code)
+        if team_name in game["impostors"]:
+            emit("role_assignment", {
+                "role": "IMPOSTOR",
+                "word": None,
+                "round": game["round"],
+                "max_rounds": game["max_rounds"],
+                "order": game["order"],
+                "impostor_count": game["impostor_count"],
+                "selected_categories": game["selected_categories"],
+            }, to=sid)
+        else:
+            emit("role_assignment", {
+                "role": "HUMAN",
+                "word": game["word"],
+                "round": game["round"],
+                "max_rounds": game["max_rounds"],
+                "order": game["order"],
+                "impostor_count": game["impostor_count"],
+                "selected_categories": game["selected_categories"],
+            }, to=sid)
+
         current_team = game["order"][game["current_turn_index"]] if game["current_turn_index"] < len(game["order"]) else None
         emit("start_turn", {
             "current_team": current_team,
             "turn_index": game["current_turn_index"] + 1,
             "total_turns": len(game["order"]),
-            "seconds": PHRASE_TIME_LIMIT,
+            "seconds": get_phrase_time_limit(game),
             "responses": game["responses"],
         }, to=sid)
 
@@ -1430,7 +1538,7 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
         emit("start_voting", {
             "teams": game["teams"],
             "responses": game["responses"],
-            "time_limit": VOTING_TIME_LIMIT,
+            "time_limit": get_voting_time_limit(game),
         }, to=sid)
 
     elif game["state"] == "paused_after_result":
@@ -1504,6 +1612,36 @@ def create_game():
     code = make_code()
     games[code] = create_game_state()
     emit("game_created", {"code": code}, to=request.sid)
+
+@socketio.on("validate_join_request")
+def validate_join_request(data):
+    code = str(data.get("code", "")).strip().upper()
+    team_name = str(data.get("team_name", "")).strip()
+
+    if not code:
+        emit("join_validation_result", {
+            "ok": False,
+            "message": "Please enter a game code."
+        }, to=request.sid)
+        return
+
+    if not team_name:
+        emit("join_validation_result", {
+            "ok": False,
+            "message": "Please enter a team name."
+        }, to=request.sid)
+        return
+
+    if code not in games:
+        emit("join_validation_result", {
+            "ok": False,
+            "message": "That game code does not exist."
+        }, to=request.sid)
+        return
+
+    emit("join_validation_result", {
+        "ok": True
+    }, to=request.sid)
 
 
 @socketio.on("register_view")
@@ -1968,6 +2106,102 @@ def host_continue(data):
 
     emit("error", "Continue is not available right now.")
 
+@socketio.on("host_skip_remaining_intro")
+def host_skip_remaining_intro(data):
+    code = str(data.get("code", "")).strip().upper()
+    sid = request.sid
+
+    if code not in games:
+        emit("error", "Game code not found.")
+        return
+
+    game = games[code]
+
+    if sid != game["host_sid"]:
+        emit("error", "Only the host can skip the remaining intro.")
+        return
+
+    if game["state"] not in {"intro_wait", "intro_playing", "agreement"}:
+        emit("error", "Skip Remaining Intro is not available right now.")
+        return
+
+    unfinished_teams = [team for team in game["teams"] if team not in game["intro_finished"]]
+
+    if not unfinished_teams:
+        emit("error", "There are no remaining teams still in the intro.")
+        return
+
+    game["intro_ready"] = set(game["teams"])
+    game["intro_finished"] = set(game["teams"])
+    game["state"] = "agreement"
+
+    emit_roster_update(code)
+
+    for team in unfinished_teams:
+        team_sid = game["team_sids"].get(team)
+        if team_sid:
+            socketio.emit("skip_intro_sequence", {}, to=team_sid)
+
+    socketio.emit("agreement_phase", {
+        "message": "The host skipped the remaining intro. Host can press Continue to begin Round 1."
+    }, room=code)
+
+    emit_status(code, "The host skipped the remaining intro for teams still in it.")
+
+
+@socketio.on("host_accept_waitlisted_team")
+def host_accept_waitlisted_team(data):
+    code = str(data.get("code", "")).strip().upper()
+    sid = request.sid
+    team_name = str(data.get("team_name", "")).strip()
+
+    if code not in games:
+        emit("error", "Game code not found.")
+        return
+
+    game = games[code]
+
+    if sid != game["host_sid"]:
+        emit("error", "Only the host can accept waitlisted teams.")
+        return
+
+    ok, error_message = accept_waitlisted_team_into_game(code, team_name)
+    if not ok:
+        emit("error", error_message)
+        return
+
+
+@socketio.on("host_accept_all_waitlisted")
+def host_accept_all_waitlisted(data):
+    code = str(data.get("code", "")).strip().upper()
+    sid = request.sid
+
+    if code not in games:
+        emit("error", "Game code not found.")
+        return
+
+    game = games[code]
+
+    if sid != game["host_sid"]:
+        emit("error", "Only the host can accept waitlisted teams.")
+        return
+
+    if not game["waitlisted_teams"]:
+        emit("error", "There are no waitlisted teams to accept.")
+        return
+
+    if not can_accept_waitlisted_team_now(game):
+        emit("error", "Waitlisted teams can only be accepted before the round begins.")
+        return
+
+    accepted = []
+    for team_name in list(game["waitlisted_teams"]):
+        ok, _ = accept_waitlisted_team_into_game(code, team_name)
+        if ok:
+            accepted.append(team_name)
+
+    if accepted:
+        emit_status(code, f"Accepted waitlisted teams: {', '.join(accepted)}.")
 
 @socketio.on("restart_round")
 def restart_round(data):

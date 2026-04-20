@@ -58,6 +58,32 @@
         .muted {
             color: #bbbbbb;
         }
+
+        .warning-box {
+            display: none;
+            align-items: flex-start;
+            gap: 10px;
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 110, 110, 0.45);
+            background: rgba(120, 18, 18, 0.20);
+            color: #ffd4d4;
+        }
+
+        .warning-box.active {
+            display: flex;
+        }
+
+        .warning-icon {
+            font-size: 1.05rem;
+            line-height: 1.2;
+        }
+
+        .warning-text {
+            line-height: 1.4;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -74,7 +100,12 @@
             <h2>Join Game</h2>
             <input id="code" placeholder="Enter Code" maxlength="10">
             <input id="team" placeholder="Team Name" maxlength="30">
-            <button onclick="joinGame()">Join Game</button>
+            <button id="joinBtn" onclick="joinGame()">Join Game</button>
+
+            <div id="joinWarningBox" class="warning-box">
+                <div class="warning-icon">⚠</div>
+                <div id="joinWarningText" class="warning-text">Invalid game code.</div>
+            </div>
         </div>
     </div>
 
@@ -82,9 +113,30 @@
     <script>
         const socket = io();
 
+        const codeInputEl = document.getElementById("code");
+        const teamInputEl = document.getElementById("team");
+        const joinBtn = document.getElementById("joinBtn");
+        const joinWarningBox = document.getElementById("joinWarningBox");
+        const joinWarningText = document.getElementById("joinWarningText");
+
+        let pendingJoinPayload = null;
+
         socket.on("connect", () => {
             console.log("Connected to server");
         });
+
+        function showJoinWarning(message) {
+            joinWarningText.textContent = message;
+            joinWarningBox.classList.add("active");
+        }
+
+        function hideJoinWarning() {
+            joinWarningBox.classList.remove("active");
+            joinWarningText.textContent = "";
+        }
+
+        codeInputEl.addEventListener("input", hideJoinWarning);
+        teamInputEl.addEventListener("input", hideJoinWarning);
 
         function createGame() {
             localStorage.removeItem("teamName");
@@ -93,27 +145,52 @@
         }
 
         function joinGame() {
-            const codeInput = document.getElementById("code").value.trim().toUpperCase();
-            const teamInput = document.getElementById("team").value.trim();
+            const codeInput = codeInputEl.value.trim().toUpperCase();
+            const teamInput = teamInputEl.value.trim();
+
+            hideJoinWarning();
 
             if (!codeInput) {
-                alert("Enter a game code.");
+                showJoinWarning("Please enter a game code.");
                 return;
             }
 
             if (!teamInput) {
-                alert("Enter a team name.");
+                showJoinWarning("Please enter a team name.");
                 return;
             }
 
-            localStorage.setItem("teamName", teamInput);
-            localStorage.setItem("code", codeInput);
-            localStorage.setItem("isHost", "false");
+            pendingJoinPayload = {
+                code: codeInput,
+                team: teamInput
+            };
 
-            window.location.href = `/game?code=${encodeURIComponent(codeInput)}&team=${encodeURIComponent(teamInput)}`;
+            joinBtn.disabled = true;
+            socket.emit("validate_join_request", {
+                code: codeInput,
+                team_name: teamInput
+            });
         }
 
-       socket.on("game_created", (data) => {
+        socket.on("join_validation_result", (data) => {
+            joinBtn.disabled = false;
+
+            if (!data?.ok) {
+                showJoinWarning(data?.message || "That game code could not be found.");
+                pendingJoinPayload = null;
+                return;
+            }
+
+            if (!pendingJoinPayload) return;
+
+            localStorage.setItem("teamName", pendingJoinPayload.team);
+            localStorage.setItem("code", pendingJoinPayload.code);
+            localStorage.setItem("isHost", "false");
+
+            window.location.href = `/game?code=${encodeURIComponent(pendingJoinPayload.code)}&team=${encodeURIComponent(pendingJoinPayload.team)}`;
+        });
+
+        socket.on("game_created", (data) => {
             const code = data.code;
             localStorage.setItem("code", code);
             localStorage.setItem("isHost", "true");
@@ -121,7 +198,8 @@
         });
 
         socket.on("error", (msg) => {
-            alert(msg);
+            joinBtn.disabled = false;
+            showJoinWarning(msg || "Something went wrong.");
         });
     </script>
 </body>
