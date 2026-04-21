@@ -1379,7 +1379,8 @@
                 radial-gradient(circle at 84% 40%, rgba(229, 255, 201, 0.84) 0 1.6px, rgba(167, 242, 141, 0.34) 1.6px 4.3px, transparent 4.3px),
                 radial-gradient(circle at 22% 72%, rgba(255, 251, 214, 0.88) 0 1.5px, rgba(255, 220, 96, 0.38) 1.5px 4px, transparent 4px);
             background-size: 420px 260px;
-            animation: forestParticleDriftNear 20s linear infinite;
+            background-repeat: repeat;
+            animation: forestParticleDriftNear 24s linear infinite;
             filter: saturate(1.08) brightness(1.04);
         }
 
@@ -1392,7 +1393,8 @@
                 radial-gradient(circle at 82% 54%, rgba(226, 255, 204, 0.60) 0 1.1px, rgba(171, 255, 170, 0.14) 1.1px 3.2px, transparent 3.2px),
                 radial-gradient(circle at 26% 84%, rgba(255, 248, 208, 0.68) 0 1.1px, rgba(255, 220, 96, 0.16) 1.1px 3.1px, transparent 3.1px);
             background-size: 620px 360px;
-            animation: forestParticleDriftFar 32s linear infinite;
+            background-repeat: repeat;
+            animation: forestParticleDriftFar 38s linear infinite;
             filter: saturate(1.02) brightness(1.02);
         }
 
@@ -2161,18 +2163,22 @@
         @keyframes forestParticleDriftNear {
             0% {
                 transform: translate3d(0, 0, 0) scale(1);
+                background-position: 0px 0px;
             }
             100% {
-                transform: translate3d(48px, -24px, 0) scale(1.04);
+                transform: translate3d(0, 0, 0) scale(1);
+                background-position: 420px -260px;
             }
         }
 
         @keyframes forestParticleDriftFar {
             0% {
                 transform: translate3d(0, 0, 0) scale(1);
+                background-position: 0px 0px;
             }
             100% {
-                transform: translate3d(-34px, -18px, 0) scale(1.02);
+                transform: translate3d(0, 0, 0) scale(1);
+                background-position: -620px -360px;
             }
         }
 
