@@ -549,6 +549,37 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+
+        body.intro-performance-mode {
+            background-attachment: scroll !important;
+        }
+
+        body.intro-performance-mode #forestFxLayer,
+        body.intro-performance-mode .fire-edge-overlay {
+            display: none !important;
+        }
+
+        body.intro-performance-mode.player-mode::before,
+        body.intro-performance-mode.player-mode::after,
+        body.intro-performance-mode .player-mode::before,
+        body.intro-performance-mode .player-mode::after,
+        body.intro-performance-mode .player-mode .bulb-card::before,
+        body.intro-performance-mode .player-mode .bulb-card::after,
+        body.intro-performance-mode .player-mode .card::after {
+            content: none !important;
+            display: none !important;
+            animation: none !important;
+            box-shadow: none !important;
+            filter: none !important;
+            background: none !important;
+        }
+
+        body.intro-performance-mode #glitchLayer {
+            will-change: auto;
         }
 
         #introCaptions {
@@ -2391,7 +2422,7 @@
             }
         }
 
-                @keyframes lotusPurpleFlashDissipate {
+        @keyframes lotusPurpleFlashDissipate {
             0% {
                 opacity: 0;
                 transform: scale(1.01);
@@ -2586,7 +2617,7 @@
     <div id="playerVideoLayer">
         <div id="introCaptions"></div>
 
-        <video id="introVideo" playsinline preload="auto">
+        <video id="introVideo" playsinline preload="metadata">
             <source src="/static/intro.mp4" type="video/mp4">
         </video>
     </div>
@@ -3077,6 +3108,16 @@
             if (!introCaptions) return;
             introCaptions.innerHTML = "";
             introCaptions.dataset.currentCaptionIndex = "";
+        }
+
+        function enableIntroPerformanceMode() {
+            if (isHost) return;
+            body.classList.add("intro-performance-mode");
+        }
+
+        function disableIntroPerformanceMode() {
+            if (isHost) return;
+            body.classList.remove("intro-performance-mode");
         }
 
         function updateIntroCaptions() {
@@ -4016,6 +4057,7 @@
             introVideoStarted = false;
 
             stopThemeAudio();
+            disableIntroPerformanceMode();
 
             try {
                 glitchSound.pause();
@@ -4058,6 +4100,7 @@
             await sleep(180);
 
             await playThemeAudio();
+            disableIntroPerformanceMode();
 
             glitchStarted = false;
         }
@@ -4086,6 +4129,7 @@
             glitchStarted = false;
             glitchLayer.classList.remove("active");
 
+            enableIntroPerformanceMode();
             hidePlayerWhiteScreen();
             hideMainBoxes();
             stopThemeAudio();
@@ -4287,6 +4331,7 @@
             glitchLayer.classList.remove("active");
             await sleep(180);
             await playThemeAudio();
+            disableIntroPerformanceMode();
 
             introFinishedOnClient = true;
             socket.emit("player_intro_finished", { code });
