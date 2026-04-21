@@ -1350,6 +1350,10 @@
             transition: opacity 0.22s ease;
         }
 
+        .lag-fix-particles-disabled #forestFxLayer {
+            display: none !important;
+        }
+
         .player-mode.theme-forest #forestFxLayer {
             opacity: 1;
         }
@@ -2660,6 +2664,7 @@
                             <button id="continueBtn" class="hidden">Continue</button>
                             <button id="restartActionBtn" class="hidden">Restart Round</button>
                             <button id="skipRemainingIntroBtn" class="hidden">Skip Remaining Intro</button>
+                            <button id="lagFixToggleBtn">Lag Fix: OFF</button>
                         </div>
                         <div id="impostorCountHint" class="muted small-note">
                             1 impostor maximum with the current number of teams.
@@ -2850,6 +2855,7 @@
         let glitchStarted = false;
         let currentTheme = "casino";
         let currentMusicVolumePercent = 100;
+        let lagFixParticlesDisabled = false;
 
         let lotusStage = 1;
         let lotusTotalUses = 0;
@@ -2915,6 +2921,7 @@
         const continueBtn = document.getElementById("continueBtn");
         const restartActionBtn = document.getElementById("restartActionBtn");
         const skipRemainingIntroBtn = document.getElementById("skipRemainingIntroBtn");
+        const lagFixToggleBtn = document.getElementById("lagFixToggleBtn");
         const skipIntroCheckbox = document.getElementById("skipIntroCheckbox");
         const skipIntroOptionWrap = document.getElementById("skipIntroOptionWrap");
         const musicVolumeSlider = document.getElementById("musicVolumeSlider");
@@ -2990,7 +2997,15 @@
             return theme === "forest" ? "forest" : "casino";
         }
 
-                function clampMusicVolumePercent(value) {
+                function applyLagFixParticlesState() {
+            body.classList.toggle("lag-fix-particles-disabled", !!lagFixParticlesDisabled);
+
+            if (isHost && lagFixToggleBtn) {
+                lagFixToggleBtn.textContent = lagFixParticlesDisabled ? "Lag Fix: ON" : "Lag Fix: OFF";
+            }
+        }
+
+        function clampMusicVolumePercent(value) {
             const parsed = Number(value);
             if (!Number.isFinite(parsed)) return 100;
             return Math.max(0, Math.min(100, Math.round(parsed)));
@@ -4229,9 +4244,14 @@
             socket.emit("host_continue", { code });
         });
 
-                skipRemainingIntroBtn?.addEventListener("click", () => {
+        skipRemainingIntroBtn?.addEventListener("click", () => {
             if (!isHost) return;
             socket.emit("host_skip_remaining_intro", { code });
+        });
+
+        lagFixToggleBtn?.addEventListener("click", () => {
+            if (!isHost) return;
+            socket.emit("toggle_lag_fix_particles", { code });
         });
 
         acceptAllWaitlistBtn?.addEventListener("click", () => {
@@ -4343,7 +4363,9 @@
             currentState = data.state || currentState;
             roomCodeText.textContent = data.code || code || "-----";
             currentTheme = normalizeTheme(data?.theme || currentTheme);
+            lagFixParticlesDisabled = !!data?.lag_fix_particles_disabled;
             applyPlayerTheme(currentTheme);
+            applyLagFixParticlesState();
             setMusicVolumePercent(data?.music_volume ?? currentMusicVolumePercent);
 
             if (isHost) {
@@ -4408,6 +4430,11 @@
             setMusicVolumePercent(data?.music_volume ?? currentMusicVolumePercent);
         });
 
+        socket.on("lag_fix_particles_updated", (data) => {
+            lagFixParticlesDisabled = !!data?.lag_fix_particles_disabled;
+            applyLagFixParticlesState();
+        });
+
         socket.on("smart_ai_added", (data) => {
             if (!isHost) return;
 
@@ -4454,7 +4481,9 @@
 
             currentState = data.state || currentState;
             currentTheme = normalizeTheme(data?.theme || currentTheme);
+            lagFixParticlesDisabled = !!data?.lag_fix_particles_disabled;
             applyPlayerTheme(currentTheme);
+            applyLagFixParticlesState();
             setMusicVolumePercent(data?.music_volume ?? currentMusicVolumePercent);
             updateImpostorControls(data.impostor_count, data.max_impostors_allowed);
             syncHostControlsFromRoster(data);

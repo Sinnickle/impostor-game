@@ -361,6 +361,7 @@ def create_game_state():
         "impostor_count": 1,
         "theme": "casino",
         "music_volume": 100,
+        "lag_fix_particles_disabled": False,
         "selected_categories": DEFAULT_SELECTED_CATEGORIES[:],
         "word_pool": get_word_pool_for_categories(DEFAULT_SELECTED_CATEGORIES),
         "word_category": None,
@@ -829,6 +830,7 @@ def emit_roster_update(code):
         "impostor_count": game["impostor_count"],
         "theme": game["theme"],
         "music_volume": game["music_volume"],
+        "lag_fix_particles_disabled": game["lag_fix_particles_disabled"],
         "selected_categories": game["selected_categories"],
         "max_impostors_allowed": get_max_impostors_for_team_count(team_count),
         "intro_ready": sorted(list(game["intro_ready"])),
@@ -1088,6 +1090,7 @@ def reset_room_to_lobby_due_to_low_teams(code, message):
     game["lotus_starting_team_count"] = 0
     game["lotus_time_halved_active"] = False
     game["lotus_time_halved_pending"] = False
+    game["lag_fix_particles_disabled"] = False
 
     emit_roster_update(code)
     emit_lotus_state(code)
@@ -1387,6 +1390,8 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
         "team_name": team_name,
         "state": game["state"],
         "theme": game["theme"],
+        "music_volume": game["music_volume"],
+        "lag_fix_particles_disabled": game["lag_fix_particles_disabled"],
     }, to=sid)
 
     emit("roster_update", {
@@ -1399,6 +1404,7 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
         "impostor_count": game["impostor_count"],
         "theme": game["theme"],
         "music_volume": game["music_volume"],
+        "lag_fix_particles_disabled": game["lag_fix_particles_disabled"],
         "selected_categories": game["selected_categories"],
         "max_impostors_allowed": get_max_impostors_for_team_count(len(game["teams"])),
         "intro_ready": sorted(list(game["intro_ready"])),
@@ -1605,6 +1611,7 @@ def reset_to_round_one_new_game(code):
     game["lotus_starting_team_count"] = len(game["teams"])
     game["lotus_time_halved_active"] = False
     game["lotus_time_halved_pending"] = False
+    game["lag_fix_particles_disabled"] = False
 
     begin_round(code, preserved=False, preserve_order=False)
 
@@ -1845,6 +1852,34 @@ def set_music_volume(data):
     socketio.emit("music_volume_updated", {
         "music_volume": music_volume
     }, room=code)
+
+@socketio.on("toggle_lag_fix_particles")
+def toggle_lag_fix_particles(data):
+    code = str(data.get("code", "")).strip().upper()
+    sid = request.sid
+
+    if code not in games:
+        emit("error", "Game code not found.")
+        return
+
+    game = games[code]
+
+    if sid != game["host_sid"]:
+        emit("error", "Only the host can toggle lag fix.")
+        return
+
+    game["lag_fix_particles_disabled"] = not game.get("lag_fix_particles_disabled", False)
+
+    socketio.emit("lag_fix_particles_updated", {
+        "lag_fix_particles_disabled": game["lag_fix_particles_disabled"]
+    }, room=code)
+
+    emit_roster_update(code)
+
+    if game["lag_fix_particles_disabled"]:
+        emit_status(code, "Lag Fix enabled. Forest particles are now disabled.")
+    else:
+        emit_status(code, "Lag Fix disabled. Forest particles are now enabled.")
 
 @socketio.on("add_smart_ai")
 def add_smart_ai(data):
