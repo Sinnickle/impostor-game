@@ -551,6 +551,54 @@
             object-fit: cover;
         }
 
+        #introCaptions {
+            position: absolute;
+            left: 50%;
+            bottom: 6vh;
+            transform: translateX(-50%);
+            width: min(82vw, 1200px);
+            display: flex;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 91;
+            text-align: center;
+        }
+
+        .intro-caption-line {
+            display: inline-block;
+            max-width: 100%;
+            padding: 8px 14px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.68);
+            color: #ffffff;
+            font-family: "Inter", Arial, sans-serif;
+            font-size: clamp(18px, 2.15vw, 31px);
+            font-weight: 800;
+            line-height: 1.28;
+            letter-spacing: 0.01em;
+            text-shadow:
+                0 2px 6px rgba(0, 0, 0, 0.95),
+                0 0 2px rgba(0, 0, 0, 0.95);
+            box-shadow:
+                0 2px 14px rgba(0, 0, 0, 0.28);
+            opacity: 0;
+            transform: translateY(6px);
+            animation: introCaptionFadeIn 140ms ease-out forwards;
+            white-space: pre-line;
+            word-break: break-word;
+        }
+
+        @keyframes introCaptionFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         #glitchLayer {
             pointer-events: none;
             opacity: 0;
@@ -2536,6 +2584,8 @@
 
 <body>
     <div id="playerVideoLayer">
+        <div id="introCaptions"></div>
+
         <video id="introVideo" playsinline preload="auto">
             <source src="/static/intro.mp4" type="video/mp4">
         </video>
@@ -2826,6 +2876,35 @@
             forest_neglected: "/static/neglectedforest-music.mp3"
         };
 
+                const INTRO_CAPTIONS_DATA = [
+            { start: 2.0, end: 5.0, text: "Difficulty Level: King of Diamonds" },
+            { start: 5.0, end: 8.2, text: "Game: Impostor" },
+            { start: 8.2, end: 16.0, text: "All teams will be assigned one of two roles:\nHUMAN... or IMPOSTOR" },
+            { start: 16.0, end: 20.0, text: "There can be more than one Impostor\nper round" },
+            { start: 20.0, end: 24.5, text: "A computer science word will be revealed\nto all human teams" },
+            { start: 24.5, end: 29.0, text: "The word will NOT be revealed\nto the IMPOSTOR team" },
+            { start: 29.0, end: 34.0, text: "The HUMAN teams must correctly identify\nthe impostor." },
+            { start: 34.0, end: 40.0, text: "The IMPOSTOR must conceal their identity\nand deceive all others." },
+            { start: 40.0, end: 44.0, text: "Teams will proceed individually\nin an assigned order" },
+            { start: 44.0, end: 49.0, text: "Each team must submit a phrase,\nno longer than THREE words." },
+            { start: 49.0, end: 57.0, text: "The phrase must be related to the given word.\nIt is strictly prohibited to directly input the given word." },
+            { start: 57.0, end: 65.2, text: "Your phrase will be judged, analyzed,\nand questioned by other teams" },
+            { start: 65.2, end: 76.7, text: "Additionally, all teams, both human and impostor teams,\nhave the liberty to interact with the lotus flower during their turn\nfor a hint on the assigned word." },
+            { start: 76.7, end: 86.8, text: "However, interacting with the flower alerts all teams in the game\nduring your turn, and drains the life of the lotus flower\nas well as the surrounding environment." },
+            { start: 86.8, end: 99.5, text: "The lotus flower can only be used ONCE\nduring your team's turn, meaning teams know you've used\nthe hint to your advantage and can become suspicious." },
+            { start: 99.5, end: 106.0, text: "After all responses have been submitted,\nall teams must vote for a suspected Impostor" },
+            { start: 106.0, end: 112.5, text: "Alternatively, teams can vote for an additional round,\nwith the same roles and term" },
+            { start: 112.5, end: 120.5, text: "The votes are tallied by the game system,\nand the identities of each player are then revealed\nto all screens" },
+            { start: 120.5, end: 129.0, text: "If the IMPOSTOR team is correctly identified,\nall HUMAN teams are rewarded 2 points\nfor the duration of the game." },
+            { start: 129.0, end: 137.7, text: "However, if the IMPOSTOR team survives,\nthe IMPOSTOR team is rewarded 5 points\nfor the duration of the game." },
+            { start: 137.7, end: 145.8, text: "The point distribution marks the end of one round,\nstarting a new round with different roles\nand different words" },
+            { start: 145.8, end: 148.4, text: "The game will last for 3 rounds." },
+            { start: 148.4, end: 156.0, text: "By the end of the 3 rounds, the three team(s)\nwith the highest amount of points\nreceives a GAME CLEAR" },
+            { start: 156.0, end: 159.0, text: "All other teams will receive a GAME OVER" },
+            { start: 159.0, end: 167.7, text: "The IMPOSTOR game tests the extent\nof your Computer Science knowledge,\nas well as your ability to read or hide from others" },
+            { start: 167.7, end: 169.0, text: "The game will now begin." }
+        ];
+
         const params = new URLSearchParams(window.location.search);
         const code = (params.get("code") || localStorage.getItem("code") || "").trim().toUpperCase();
         const teamName = (params.get("team") || localStorage.getItem("teamName") || "").trim();
@@ -2876,6 +2955,7 @@
         const appShell = document.getElementById("appShell");
         const playerVideoLayer = document.getElementById("playerVideoLayer");
         const introVideo = document.getElementById("introVideo");
+        const introCaptions = document.getElementById("introCaptions");
         const bgMusic = document.getElementById("bgMusic");
         const forestAmbience = document.getElementById("forestAmbience");
         const glitchSound = document.getElementById("glitchSound");
@@ -2991,6 +3071,43 @@
 
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+                function clearIntroCaptions() {
+            if (!introCaptions) return;
+            introCaptions.innerHTML = "";
+            introCaptions.dataset.currentCaptionIndex = "";
+        }
+
+        function updateIntroCaptions() {
+            if (!introCaptions || !introVideo) return;
+
+            const currentTime = introVideo.currentTime;
+            let activeIndex = -1;
+
+            for (let i = 0; i < INTRO_CAPTIONS_DATA.length; i++) {
+                const cue = INTRO_CAPTIONS_DATA[i];
+                if (currentTime >= cue.start && currentTime <= cue.end) {
+                    activeIndex = i;
+                    break;
+                }
+            }
+
+            const currentRenderedIndex = introCaptions.dataset.currentCaptionIndex;
+
+            if (activeIndex === -1) {
+                if (currentRenderedIndex !== "") {
+                    clearIntroCaptions();
+                }
+                return;
+            }
+
+            if (currentRenderedIndex === String(activeIndex)) {
+                return;
+            }
+
+            introCaptions.dataset.currentCaptionIndex = String(activeIndex);
+            introCaptions.innerHTML = `<div class="intro-caption-line">${INTRO_CAPTIONS_DATA[activeIndex].text}</div>`;
         }
 
         function normalizeTheme(theme) {
@@ -3895,6 +4012,7 @@
                 introVideo.currentTime = 0;
             } catch (e) {}
 
+            clearIntroCaptions();
             introVideoStarted = false;
 
             stopThemeAudio();
@@ -3971,6 +4089,7 @@
             hidePlayerWhiteScreen();
             hideMainBoxes();
             stopThemeAudio();
+            clearIntroCaptions();
             setPhase("Introduction", "Watch the intro video. After it ends, your team will be marked finished.");
             show(playerVideoLayer);
 
@@ -3978,6 +4097,7 @@
                 if (!introVideoStarted || introVideo.ended) {
                     introVideo.currentTime = 0;
                 }
+
                 await introVideo.play();
                 introVideoStarted = true;
             } catch (e) {
@@ -4142,12 +4262,16 @@
         introVideo.addEventListener("timeupdate", async () => {
             if (isHost) return;
             if (!introVideo.duration) return;
+
+            updateIntroCaptions();
+
             if (glitchStarted) return;
 
             const timeLeft = introVideo.duration - introVideo.currentTime;
 
             if (timeLeft <= 2) {
                 glitchStarted = true;
+                clearIntroCaptions();
                 startGlitchVisual();
                 revealMainGameUnderFullGlitch("Waiting for others to watch the intro.");
             }
@@ -4156,6 +4280,8 @@
         introVideo.addEventListener("ended", async () => {
             if (isHost) return;
             if (introFinishedOnClient) return;
+
+            clearIntroCaptions();
 
             await sleep(GLITCH_DURATION_MS);
             glitchLayer.classList.remove("active");
