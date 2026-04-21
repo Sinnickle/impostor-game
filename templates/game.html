@@ -1370,6 +1370,7 @@
         }
 
         .player-mode.theme-forest #forestParticleLayer::before {
+            will-change: transform, background-position;
             opacity: 0.82;
             background-image:
                 radial-gradient(circle at 9% 18%, rgba(255, 247, 201, 0.95) 0 1.6px, rgba(255, 214, 80, 0.52) 1.6px 4.1px, transparent 4.1px),
@@ -1378,13 +1379,14 @@
                 radial-gradient(circle at 66% 26%, rgba(255, 247, 196, 0.92) 0 1.4px, rgba(255, 216, 82, 0.42) 1.4px 3.8px, transparent 3.8px),
                 radial-gradient(circle at 84% 40%, rgba(229, 255, 201, 0.84) 0 1.6px, rgba(167, 242, 141, 0.34) 1.6px 4.3px, transparent 4.3px),
                 radial-gradient(circle at 22% 72%, rgba(255, 251, 214, 0.88) 0 1.5px, rgba(255, 220, 96, 0.38) 1.5px 4px, transparent 4px);
-            background-size: 420px 260px;
+            background-size: 520px 320px;
             background-repeat: repeat;
-            animation: forestParticleDriftNear 24s linear infinite;
-            filter: saturate(1.08) brightness(1.04);
+            animation: forestParticleDriftNear 36s linear infinite;
+            filter: none;
         }
 
         .player-mode.theme-forest #forestParticleLayer::after {
+            will-change: transform, background-position;
             opacity: 0.52;
             background-image:
                 radial-gradient(circle at 14% 22%, rgba(255, 255, 224, 0.72) 0 1px, rgba(255, 220, 100, 0.18) 1px 3px, transparent 3px),
@@ -1392,13 +1394,14 @@
                 radial-gradient(circle at 62% 18%, rgba(255, 251, 214, 0.70) 0 1px, rgba(255, 215, 88, 0.16) 1px 3px, transparent 3px),
                 radial-gradient(circle at 82% 54%, rgba(226, 255, 204, 0.60) 0 1.1px, rgba(171, 255, 170, 0.14) 1.1px 3.2px, transparent 3.2px),
                 radial-gradient(circle at 26% 84%, rgba(255, 248, 208, 0.68) 0 1.1px, rgba(255, 220, 96, 0.16) 1.1px 3.1px, transparent 3.1px);
-            background-size: 620px 360px;
+            background-size: 760px 420px;
             background-repeat: repeat;
-            animation: forestParticleDriftFar 38s linear infinite;
-            filter: saturate(1.02) brightness(1.02);
+            animation: forestParticleDriftFar 52s linear infinite;
+            filter: none;
         }
 
         .player-mode.theme-forest.forest-neglected #forestParticleLayer::before {
+            will-change: transform, background-position;
             opacity: 0.78;
             background-image:
                 radial-gradient(circle at 10% 16%, rgba(255, 237, 208, 0.90) 0 1.4px, rgba(255, 142, 58, 0.54) 1.4px 4px, transparent 4px),
@@ -1407,12 +1410,14 @@
                 radial-gradient(circle at 70% 28%, rgba(255, 229, 198, 0.84) 0 1.3px, rgba(255, 108, 30, 0.40) 1.3px 3.8px, transparent 3.8px),
                 radial-gradient(circle at 88% 44%, rgba(255, 221, 188, 0.76) 0 1.4px, rgba(255, 94, 26, 0.34) 1.4px 4px, transparent 4px),
                 radial-gradient(circle at 24% 74%, rgba(255, 233, 206, 0.42) 0 1.6px, rgba(172, 172, 172, 0.12) 1.6px 4.8px, transparent 4.8px);
-            background-size: 420px 260px;
-            animation: forestParticleDriftNear 18s linear infinite;
-            filter: saturate(1.05) brightness(0.98);
+            background-size: 520px 320px;
+            background-repeat: repeat;
+            animation: forestParticleDriftNear 36s linear infinite;
+            filter: none;
         }
 
         .player-mode.theme-forest.forest-neglected #forestParticleLayer::after {
+            will-change: transform, background-position;
             opacity: 0.44;
             background-image:
                 radial-gradient(circle at 16% 24%, rgba(255, 226, 198, 0.54) 0 1px, rgba(255, 118, 42, 0.16) 1px 3px, transparent 3px),
@@ -1420,9 +1425,10 @@
                 radial-gradient(circle at 64% 20%, rgba(255, 234, 204, 0.48) 0 1px, rgba(255, 128, 50, 0.15) 1px 3px, transparent 3px),
                 radial-gradient(circle at 84% 56%, rgba(205, 205, 205, 0.30) 0 1.1px, rgba(145, 145, 145, 0.08) 1.1px 3.3px, transparent 3.3px),
                 radial-gradient(circle at 28% 84%, rgba(255, 226, 196, 0.40) 0 1px, rgba(255, 112, 38, 0.12) 1px 3px, transparent 3px);
-            background-size: 620px 360px;
-            animation: forestParticleDriftFar 28s linear infinite;
-            filter: saturate(1) brightness(0.96);
+            background-size: 760px 420px;
+            background-repeat: repeat;
+            animation: forestParticleDriftFar 52s linear infinite;
+            filter: none;
         }
 
         #forestLeavesLayer {
@@ -2167,7 +2173,7 @@
             }
             100% {
                 transform: translate3d(0, 0, 0) scale(1);
-                background-position: 420px -260px;
+                background-position: 520px -320px;
             }
         }
 
@@ -2178,7 +2184,7 @@
             }
             100% {
                 transform: translate3d(0, 0, 0) scale(1);
-                background-position: -620px -360px;
+                background-position: -760px -420px;
             }
         }
 
