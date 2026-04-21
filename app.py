@@ -263,6 +263,14 @@ def sanitize_theme(raw_theme):
     theme = str(raw_theme or "casino").strip().lower()
     return theme if theme in {"casino", "forest"} else "casino"
 
+def sanitize_music_volume(raw_value):
+    try:
+        value = int(round(float(raw_value)))
+    except (TypeError, ValueError):
+        value = 100
+
+    return max(0, min(100, value))
+
 
 def sanitize_selected_categories(raw_categories):
     if not isinstance(raw_categories, list):
@@ -352,6 +360,7 @@ def create_game_state():
 
         "impostor_count": 1,
         "theme": "casino",
+        "music_volume": 100,
         "selected_categories": DEFAULT_SELECTED_CATEGORIES[:],
         "word_pool": get_word_pool_for_categories(DEFAULT_SELECTED_CATEGORIES),
         "word_category": None,
@@ -819,6 +828,7 @@ def emit_roster_update(code):
         "max_rounds": game["max_rounds"],
         "impostor_count": game["impostor_count"],
         "theme": game["theme"],
+        "music_volume": game["music_volume"],
         "selected_categories": game["selected_categories"],
         "max_impostors_allowed": get_max_impostors_for_team_count(team_count),
         "intro_ready": sorted(list(game["intro_ready"])),
@@ -1388,6 +1398,7 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
         "max_rounds": game["max_rounds"],
         "impostor_count": game["impostor_count"],
         "theme": game["theme"],
+        "music_volume": game["music_volume"],
         "selected_categories": game["selected_categories"],
         "max_impostors_allowed": get_max_impostors_for_team_count(len(game["teams"])),
         "intro_ready": sorted(list(game["intro_ready"])),
@@ -1813,6 +1824,27 @@ def set_theme(data):
     game["theme"] = sanitize_theme(data.get("theme"))
     emit_roster_update(code)
 
+@socketio.on("set_music_volume")
+def set_music_volume(data):
+    code = str(data.get("code", "")).strip().upper()
+    sid = request.sid
+
+    if code not in games:
+        emit("error", "Game code not found.")
+        return
+
+    game = games[code]
+
+    if sid != game["host_sid"]:
+        emit("error", "Only the host can change music volume.")
+        return
+
+    music_volume = sanitize_music_volume(data.get("music_volume", 100))
+    game["music_volume"] = music_volume
+
+    socketio.emit("music_volume_updated", {
+        "music_volume": music_volume
+    }, room=code)
 
 @socketio.on("add_smart_ai")
 def add_smart_ai(data):

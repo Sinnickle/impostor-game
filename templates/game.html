@@ -1333,72 +1333,220 @@
                 linear-gradient(180deg, rgba(14, 8, 7, 0.08), rgba(18, 9, 7, 0.34));
         }
 
-        .player-mode.theme-forest::after {
-            content: "";
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 0;
-            opacity: 1;
-            background-image:
-                radial-gradient(circle, rgba(255,250,214,1) 0 1.2px, rgba(255,224,74,0.96) 2.2px, rgba(255,204,34,0.52) 4.2px, transparent 7px),
-                radial-gradient(circle, rgba(255,248,205,0.98) 0 1.1px, rgba(255,220,64,0.90) 2px, rgba(255,200,28,0.46) 3.8px, transparent 6.5px),
-                radial-gradient(circle, rgba(255,246,196,0.96) 0 1px, rgba(255,216,58,0.84) 1.9px, rgba(255,196,22,0.40) 3.5px, transparent 6px),
-                radial-gradient(circle, rgba(255,243,188,0.94) 0 0.95px, rgba(255,212,52,0.78) 1.8px, rgba(255,192,18,0.34) 3.2px, transparent 5.4px),
-                radial-gradient(circle, rgba(255,250,210,0.92) 0 1.2px, rgba(255,226,80,0.70) 2.2px, rgba(255,205,34,0.28) 4px, transparent 6.8px),
-                radial-gradient(circle, rgba(255,252,220,0.90) 0 1px, rgba(255,232,98,0.62) 1.9px, rgba(255,212,52,0.22) 3.4px, transparent 5.8px),
-                radial-gradient(circle, rgba(255,253,226,0.88) 0 0.9px, rgba(255,236,112,0.52) 1.8px, transparent 4.8px),
-                radial-gradient(circle, rgba(255,245,190,0.84) 0 0.85px, rgba(255,214,64,0.42) 1.6px, transparent 4.2px);
-            background-size:
-                120px 84px,
-                165px 116px,
-                220px 154px,
-                286px 200px,
-                360px 252px,
-                470px 330px,
-                600px 420px,
-                760px 532px;
-            background-position:
-                4% 8%,
-                15% 26%,
-                34% 14%,
-                56% 34%,
-                74% 16%,
-                24% 70%,
-                82% 62%,
-                60% 82%;
-            filter: saturate(1.18) brightness(1.04);
-            animation:
-                forestParticlesGlow 4.8s ease-in-out infinite alternate,
-                forestParticlesDriftSoft 18s ease-in-out infinite alternate;
+        .player-mode.theme-forest::after,
+        .player-mode.theme-forest.forest-neglected::after {
+            content: none;
+            background: none;
+            animation: none;
         }
 
-        .player-mode.theme-forest.forest-neglected::after {
-            content: "";
+        #forestFxLayer {
             position: fixed;
             inset: 0;
             pointer-events: none;
             z-index: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.22s ease;
+        }
+
+        .player-mode.theme-forest #forestFxLayer {
             opacity: 1;
+        }
+
+        #forestParticleLayer,
+        #forestLeavesLayer {
+            position: absolute;
+            inset: 0;
+        }
+
+        #forestParticleLayer::before,
+        #forestParticleLayer::after {
+            content: "";
+            position: absolute;
+            inset: -8%;
+            pointer-events: none;
+            will-change: transform, opacity;
+        }
+
+        .player-mode.theme-forest #forestParticleLayer::before {
+            opacity: 0.82;
             background-image:
-                radial-gradient(circle, rgba(255,236,205,0.94) 0 1px, rgba(255,136,52,0.92) 2px, rgba(255,88,25,0.40) 3.7px, transparent 6px),
-                radial-gradient(circle, rgba(255,224,188,0.90) 0 0.95px, rgba(255,118,38,0.80) 1.8px, rgba(255,76,20,0.32) 3.2px, transparent 5.6px),
-                radial-gradient(circle, rgba(255,244,226,0.46) 0 1.4px, rgba(198,198,198,0.18) 3px, transparent 7px),
-                radial-gradient(circle, rgba(255,228,196,0.22) 0 2px, rgba(122,122,122,0.12) 4px, transparent 9px);
-            background-size:
-                140px 98px,
-                210px 150px,
-                320px 228px,
-                500px 360px;
-            background-position:
-                7% 10%,
-                58% 22%,
-                26% 68%,
-                82% 74%;
-            filter: saturate(1.08) brightness(0.98);
-            animation:
-                emberParticlesGlow 3.8s ease-in-out infinite alternate,
-                forestParticlesDriftSoft 16s ease-in-out infinite alternate;
+                radial-gradient(circle at 9% 18%, rgba(255, 247, 201, 0.95) 0 1.6px, rgba(255, 214, 80, 0.52) 1.6px 4.1px, transparent 4.1px),
+                radial-gradient(circle at 28% 34%, rgba(255, 252, 220, 0.92) 0 1.3px, rgba(255, 224, 102, 0.44) 1.3px 3.7px, transparent 3.7px),
+                radial-gradient(circle at 48% 16%, rgba(236, 255, 202, 0.88) 0 1.8px, rgba(171, 255, 170, 0.36) 1.8px 4.8px, transparent 4.8px),
+                radial-gradient(circle at 66% 26%, rgba(255, 247, 196, 0.92) 0 1.4px, rgba(255, 216, 82, 0.42) 1.4px 3.8px, transparent 3.8px),
+                radial-gradient(circle at 84% 40%, rgba(229, 255, 201, 0.84) 0 1.6px, rgba(167, 242, 141, 0.34) 1.6px 4.3px, transparent 4.3px),
+                radial-gradient(circle at 22% 72%, rgba(255, 251, 214, 0.88) 0 1.5px, rgba(255, 220, 96, 0.38) 1.5px 4px, transparent 4px);
+            background-size: 420px 260px;
+            animation: forestParticleDriftNear 20s linear infinite;
+            filter: saturate(1.08) brightness(1.04);
+        }
+
+        .player-mode.theme-forest #forestParticleLayer::after {
+            opacity: 0.52;
+            background-image:
+                radial-gradient(circle at 14% 22%, rgba(255, 255, 224, 0.72) 0 1px, rgba(255, 220, 100, 0.18) 1px 3px, transparent 3px),
+                radial-gradient(circle at 38% 46%, rgba(228, 255, 210, 0.64) 0 1.2px, rgba(171, 255, 170, 0.16) 1.2px 3.3px, transparent 3.3px),
+                radial-gradient(circle at 62% 18%, rgba(255, 251, 214, 0.70) 0 1px, rgba(255, 215, 88, 0.16) 1px 3px, transparent 3px),
+                radial-gradient(circle at 82% 54%, rgba(226, 255, 204, 0.60) 0 1.1px, rgba(171, 255, 170, 0.14) 1.1px 3.2px, transparent 3.2px),
+                radial-gradient(circle at 26% 84%, rgba(255, 248, 208, 0.68) 0 1.1px, rgba(255, 220, 96, 0.16) 1.1px 3.1px, transparent 3.1px);
+            background-size: 620px 360px;
+            animation: forestParticleDriftFar 32s linear infinite;
+            filter: saturate(1.02) brightness(1.02);
+        }
+
+        .player-mode.theme-forest.forest-neglected #forestParticleLayer::before {
+            opacity: 0.78;
+            background-image:
+                radial-gradient(circle at 10% 16%, rgba(255, 237, 208, 0.90) 0 1.4px, rgba(255, 142, 58, 0.54) 1.4px 4px, transparent 4px),
+                radial-gradient(circle at 30% 32%, rgba(255, 225, 194, 0.84) 0 1.2px, rgba(255, 120, 38, 0.42) 1.2px 3.6px, transparent 3.6px),
+                radial-gradient(circle at 50% 18%, rgba(255, 236, 214, 0.48) 0 1.3px, rgba(188, 188, 188, 0.18) 1.3px 4.4px, transparent 4.4px),
+                radial-gradient(circle at 70% 28%, rgba(255, 229, 198, 0.84) 0 1.3px, rgba(255, 108, 30, 0.40) 1.3px 3.8px, transparent 3.8px),
+                radial-gradient(circle at 88% 44%, rgba(255, 221, 188, 0.76) 0 1.4px, rgba(255, 94, 26, 0.34) 1.4px 4px, transparent 4px),
+                radial-gradient(circle at 24% 74%, rgba(255, 233, 206, 0.42) 0 1.6px, rgba(172, 172, 172, 0.12) 1.6px 4.8px, transparent 4.8px);
+            background-size: 420px 260px;
+            animation: forestParticleDriftNear 18s linear infinite;
+            filter: saturate(1.05) brightness(0.98);
+        }
+
+        .player-mode.theme-forest.forest-neglected #forestParticleLayer::after {
+            opacity: 0.44;
+            background-image:
+                radial-gradient(circle at 16% 24%, rgba(255, 226, 198, 0.54) 0 1px, rgba(255, 118, 42, 0.16) 1px 3px, transparent 3px),
+                radial-gradient(circle at 40% 48%, rgba(215, 215, 215, 0.36) 0 1.1px, rgba(150, 150, 150, 0.08) 1.1px 3.4px, transparent 3.4px),
+                radial-gradient(circle at 64% 20%, rgba(255, 234, 204, 0.48) 0 1px, rgba(255, 128, 50, 0.15) 1px 3px, transparent 3px),
+                radial-gradient(circle at 84% 56%, rgba(205, 205, 205, 0.30) 0 1.1px, rgba(145, 145, 145, 0.08) 1.1px 3.3px, transparent 3.3px),
+                radial-gradient(circle at 28% 84%, rgba(255, 226, 196, 0.40) 0 1px, rgba(255, 112, 38, 0.12) 1px 3px, transparent 3px);
+            background-size: 620px 360px;
+            animation: forestParticleDriftFar 28s linear infinite;
+            filter: saturate(1) brightness(0.96);
+        }
+
+        #forestLeavesLayer {
+            opacity: 0;
+            transition: opacity 0.22s ease;
+        }
+
+        .player-mode.theme-forest #forestLeavesLayer {
+            opacity: 1;
+        }
+
+        .forest-leaf {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 18px;
+            height: 12px;
+            border-radius: 90% 10% 90% 10%;
+            opacity: 0.74;
+            will-change: transform, opacity;
+            animation: forestLeafFly 16s linear infinite;
+            background:
+                linear-gradient(135deg, rgba(243, 255, 206, 0.96) 0%, rgba(173, 244, 126, 0.92) 48%, rgba(96, 170, 70, 0.88) 100%);
+            box-shadow:
+                0 0 8px rgba(179, 255, 153, 0.14),
+                inset 0 0 2px rgba(255,255,255,0.22);
+            transform: translate3d(-12vw, 0, 0) rotate(0deg);
+        }
+
+        .player-mode.theme-forest.forest-neglected .forest-leaf {
+            background:
+                linear-gradient(135deg, rgba(255, 213, 162, 0.92) 0%, rgba(204, 94, 34, 0.92) 52%, rgba(92, 44, 29, 0.92) 100%);
+            box-shadow:
+                0 0 6px rgba(255, 118, 44, 0.12),
+                inset 0 0 2px rgba(255,255,255,0.12);
+            opacity: 0.68;
+        }
+
+        .forest-leaf:nth-child(1) {
+            left: 6%;
+            top: 8%;
+            width: 14px;
+            height: 10px;
+            animation-duration: 14s;
+            animation-delay: -1s;
+        }
+
+        .forest-leaf:nth-child(2) {
+            left: 18%;
+            top: 20%;
+            width: 18px;
+            height: 12px;
+            animation-duration: 18s;
+            animation-delay: -7s;
+        }
+
+        .forest-leaf:nth-child(3) {
+            left: 30%;
+            top: 12%;
+            width: 16px;
+            height: 11px;
+            animation-duration: 17s;
+            animation-delay: -12s;
+        }
+
+        .forest-leaf:nth-child(4) {
+            left: 42%;
+            top: 28%;
+            width: 20px;
+            height: 13px;
+            animation-duration: 20s;
+            animation-delay: -4s;
+        }
+
+        .forest-leaf:nth-child(5) {
+            left: 56%;
+            top: 16%;
+            width: 15px;
+            height: 10px;
+            animation-duration: 15s;
+            animation-delay: -9s;
+        }
+
+        .forest-leaf:nth-child(6) {
+            left: 66%;
+            top: 34%;
+            width: 19px;
+            height: 12px;
+            animation-duration: 22s;
+            animation-delay: -14s;
+        }
+
+        .forest-leaf:nth-child(7) {
+            left: 76%;
+            top: 10%;
+            width: 13px;
+            height: 9px;
+            animation-duration: 13s;
+            animation-delay: -3s;
+        }
+
+        .forest-leaf:nth-child(8) {
+            left: 84%;
+            top: 24%;
+            width: 17px;
+            height: 11px;
+            animation-duration: 19s;
+            animation-delay: -11s;
+        }
+
+        .forest-leaf:nth-child(9) {
+            left: 12%;
+            top: 46%;
+            width: 15px;
+            height: 10px;
+            animation-duration: 16s;
+            animation-delay: -6s;
+        }
+
+        .forest-leaf:nth-child(10) {
+            left: 72%;
+            top: 54%;
+            width: 18px;
+            height: 12px;
+            animation-duration: 21s;
+            animation-delay: -15s;
         }
 
         .player-mode.theme-forest .main-panel > .card,
@@ -2010,37 +2158,39 @@
             }
         }
 
-        @keyframes forestParticlesDriftA {
+        @keyframes forestParticleDriftNear {
             0% {
-                transform: translate3d(0px, 0px, 0px) scale(1);
+                transform: translate3d(0, 0, 0) scale(1);
             }
             100% {
-                transform: translate3d(26px, -18px, 0px) scale(1.04);
+                transform: translate3d(48px, -24px, 0) scale(1.04);
             }
         }
 
-        @keyframes forestParticlesDriftB {
+        @keyframes forestParticleDriftFar {
             0% {
-                background-position:
-                    3% 12%,
-                    18% 34%,
-                    42% 20%,
-                    63% 44%,
-                    76% 17%,
-                    22% 72%,
-                    54% 78%,
-                    88% 66%;
+                transform: translate3d(0, 0, 0) scale(1);
             }
             100% {
-                background-position:
-                    8% 6%,
-                    24% 27%,
-                    48% 26%,
-                    58% 38%,
-                    82% 10%,
-                    28% 66%,
-                    60% 72%,
-                    92% 58%;
+                transform: translate3d(-34px, -18px, 0) scale(1.02);
+            }
+        }
+
+        @keyframes forestLeafFly {
+            0% {
+                transform: translate3d(-10vw, 0vh, 0) rotate(0deg);
+                opacity: 0;
+            }
+            8% {
+                opacity: 0.78;
+            }
+            50% {
+                transform: translate3d(6vw, 8vh, 0) rotate(140deg);
+                opacity: 0.72;
+            }
+            100% {
+                transform: translate3d(18vw, 18vh, 0) rotate(320deg);
+                opacity: 0;
             }
         }
 
@@ -2383,6 +2533,22 @@
     <div id="glitchLayer"></div>
     <div id="lotusFlashOverlay"></div>
 
+    <div id="forestFxLayer" aria-hidden="true">
+        <div id="forestParticleLayer"></div>
+        <div id="forestLeavesLayer">
+            <span class="forest-leaf"></span>
+            <span class="forest-leaf"></span>
+            <span class="forest-leaf"></span>
+            <span class="forest-leaf"></span>
+            <span class="forest-leaf"></span>
+            <span class="forest-leaf"></span>
+            <span class="forest-leaf"></span>
+            <span class="forest-leaf"></span>
+            <span class="forest-leaf"></span>
+            <span class="forest-leaf"></span>
+        </div>
+    </div>
+
     <div id="playerWhiteScreen">
         <div class="white-screen-inner">
             <div id="playerWhiteScreenTitle" class="white-screen-title">Waiting for host...</div>
@@ -2468,6 +2634,10 @@
                                 <option value="casino" selected>Casino</option>
                                 <option value="forest">Forest</option>
                             </select>
+
+                            <label for="musicVolumeSlider" class="muted small-note" style="font-weight: 800;">Music Vol</label>
+                            <input id="musicVolumeSlider" type="range" min="0" max="100" value="100" style="width: 130px; padding: 0;">
+                            <span id="musicVolumeValue" class="pill" style="min-width: 58px;">100%</span>
 
                             <input id="roundCountInput" type="number" min="1" max="20" value="3" style="width: 110px;">
                             <button id="saveRoundsBtn">Save Rounds</button>
@@ -2667,6 +2837,7 @@
         let forestAmbienceStarted = false;
         let glitchStarted = false;
         let currentTheme = "casino";
+        let currentMusicVolumePercent = 100;
 
         let lotusStage = 1;
         let lotusTotalUses = 0;
@@ -2734,6 +2905,8 @@
         const skipRemainingIntroBtn = document.getElementById("skipRemainingIntroBtn");
         const skipIntroCheckbox = document.getElementById("skipIntroCheckbox");
         const skipIntroOptionWrap = document.getElementById("skipIntroOptionWrap");
+        const musicVolumeSlider = document.getElementById("musicVolumeSlider");
+        const musicVolumeValue = document.getElementById("musicVolumeValue");
         const wordCategoryCheckboxes = Array.from(document.querySelectorAll(".word-category-checkbox"));
         const categorySummary = document.getElementById("categorySummary");
 
@@ -2805,6 +2978,64 @@
             return theme === "forest" ? "forest" : "casino";
         }
 
+                function clampMusicVolumePercent(value) {
+            const parsed = Number(value);
+            if (!Number.isFinite(parsed)) return 100;
+            return Math.max(0, Math.min(100, Math.round(parsed)));
+        }
+
+        function syncHostMusicVolumeControls() {
+            if (!musicVolumeSlider || !musicVolumeValue) return;
+            musicVolumeSlider.value = String(currentMusicVolumePercent);
+            musicVolumeValue.textContent = `${currentMusicVolumePercent}%`;
+        }
+
+        function getMusicVolumeMultiplier() {
+            return clampMusicVolumePercent(currentMusicVolumePercent) / 100;
+        }
+
+        function getScaledBgMusicVolume(baseVolume) {
+            return Math.max(0, Math.min(1, baseVolume * getMusicVolumeMultiplier()));
+        }
+
+        function applyLiveMusicVolume() {
+            if (isHost) {
+                syncHostMusicVolumeControls();
+                return;
+            }
+
+            if (!bgMusic) return;
+
+            if (currentTheme === "forest" && lotusIsDead) {
+                bgMusic.volume = getScaledBgMusicVolume(PLAYER_NEGLECTED_FOREST_MUSIC_VOLUME);
+                return;
+            }
+
+            if (currentTheme === "forest") {
+                bgMusic.volume = getScaledBgMusicVolume(PLAYER_FOREST_MUSIC_VOLUME);
+                return;
+            }
+
+            bgMusic.volume = getScaledBgMusicVolume(PLAYER_BG_MUSIC_VOLUME);
+        }
+
+        function setMusicVolumePercent(value, options = {}) {
+            const { emitToServer = false } = options;
+            currentMusicVolumePercent = clampMusicVolumePercent(value);
+            syncHostMusicVolumeControls();
+
+            if (!isHost) {
+                applyLiveMusicVolume();
+            }
+
+            if (emitToServer && isHost && code) {
+                socket.emit("set_music_volume", {
+                    code,
+                    music_volume: currentMusicVolumePercent
+                });
+            }
+        }
+
         function getDesiredBgMusicSrc() {
             if (currentTheme === "forest" && lotusIsDead) {
                 return THEME_AUDIO_MAP.forest_neglected;
@@ -2873,7 +3104,7 @@
 
                 try {
                     bgMusic.muted = false;
-                    bgMusic.volume = PLAYER_NEGLECTED_FOREST_MUSIC_VOLUME;
+                    bgMusic.volume = getScaledBgMusicVolume(PLAYER_NEGLECTED_FOREST_MUSIC_VOLUME);
                     bgMusic.pause();
                     bgMusic.currentTime = 0;
                     await bgMusic.play();
@@ -3082,7 +3313,7 @@
 
                     try {
                         bgMusic.muted = false;
-                        bgMusic.volume = PLAYER_NEGLECTED_FOREST_MUSIC_VOLUME;
+                        bgMusic.volume = getScaledBgMusicVolume(PLAYER_NEGLECTED_FOREST_MUSIC_VOLUME);
 
                         if (!bgMusicStarted || bgMusic.paused) {
                             bgMusic.pause();
@@ -3113,7 +3344,7 @@
 
                 try {
                     bgMusic.muted = false;
-                    bgMusic.volume = PLAYER_FOREST_MUSIC_VOLUME;
+                    bgMusic.volume = getScaledBgMusicVolume(PLAYER_FOREST_MUSIC_VOLUME);
 
                     if (!bgMusicStarted || bgMusic.paused) {
                         bgMusic.pause();
@@ -3138,7 +3369,7 @@
 
             try {
                 bgMusic.muted = false;
-                bgMusic.volume = PLAYER_BG_MUSIC_VOLUME;
+                bgMusic.volume = getScaledBgMusicVolume(PLAYER_BG_MUSIC_VOLUME);
 
                 if (!bgMusicStarted || bgMusic.paused) {
                     bgMusic.pause();
@@ -3929,6 +4160,11 @@
             });
         });
 
+        musicVolumeSlider?.addEventListener("input", () => {
+            if (!isHost) return;
+            setMusicVolumePercent(musicVolumeSlider.value, { emitToServer: true });
+        });
+
         saveRoundsBtn?.addEventListener("click", () => {
             if (!isHost) return;
             const rounds = Math.max(1, Math.min(20, parseInt(roundCountInput.value || "3", 10) || 3));
@@ -4096,6 +4332,7 @@
             roomCodeText.textContent = data.code || code || "-----";
             currentTheme = normalizeTheme(data?.theme || currentTheme);
             applyPlayerTheme(currentTheme);
+            setMusicVolumePercent(data?.music_volume ?? currentMusicVolumePercent);
 
             if (isHost) {
                 identityText.textContent = "HOST";
@@ -4155,6 +4392,10 @@
             updateImpostorControls(data?.impostor_count, data?.max_impostors_allowed);
         });
 
+        socket.on("music_volume_updated", (data) => {
+            setMusicVolumePercent(data?.music_volume ?? currentMusicVolumePercent);
+        });
+
         socket.on("smart_ai_added", (data) => {
             if (!isHost) return;
 
@@ -4202,6 +4443,7 @@
             currentState = data.state || currentState;
             currentTheme = normalizeTheme(data?.theme || currentTheme);
             applyPlayerTheme(currentTheme);
+            setMusicVolumePercent(data?.music_volume ?? currentMusicVolumePercent);
             updateImpostorControls(data.impostor_count, data.max_impostors_allowed);
             syncHostControlsFromRoster(data);
 
