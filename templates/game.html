@@ -551,18 +551,6 @@
             object-fit: cover;
         }
 
-        #introVideo::cue {
-            color: #ffffff;
-            background: rgba(0, 0, 0, 0.72);
-            font-family: "Inter", Arial, sans-serif;
-            font-size: clamp(18px, 2.05vw, 31px);
-            font-weight: 800;
-            line-height: 1.25;
-            text-shadow:
-                0 2px 6px rgba(0, 0, 0, 0.95),
-                0 0 2px rgba(0, 0, 0, 0.95);
-        }
-
         #glitchLayer {
             pointer-events: none;
             opacity: 0;
@@ -2550,14 +2538,6 @@
     <div id="playerVideoLayer">
         <video id="introVideo" playsinline preload="auto">
             <source src="/static/intro.mp4" type="video/mp4">
-            <track
-                id="introCaptionsTrack"
-                kind="captions"
-                src="/static/intro-captions.vtt"
-                srclang="en"
-                label="English"
-                default
-            >
         </video>
     </div>
 
@@ -2896,7 +2876,6 @@
         const appShell = document.getElementById("appShell");
         const playerVideoLayer = document.getElementById("playerVideoLayer");
         const introVideo = document.getElementById("introVideo");
-        const introCaptionsTrack = document.getElementById("introCaptionsTrack");
         const bgMusic = document.getElementById("bgMusic");
         const forestAmbience = document.getElementById("forestAmbience");
         const glitchSound = document.getElementById("glitchSound");
@@ -3012,22 +2991,6 @@
 
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
-                function forceIntroCaptionsOn() {
-            if (!introVideo || !introVideo.textTracks) return;
-
-            try {
-                for (let i = 0; i < introVideo.textTracks.length; i++) {
-                    introVideo.textTracks[i].mode = "disabled";
-                }
-
-                if (introVideo.textTracks[0]) {
-                    introVideo.textTracks[0].mode = "showing";
-                }
-            } catch (e) {
-                console.log("Could not force intro captions on.", e);
-            }
         }
 
         function normalizeTheme(theme) {
@@ -4015,10 +3978,7 @@
                 if (!introVideoStarted || introVideo.ended) {
                     introVideo.currentTime = 0;
                 }
-
-                forceIntroCaptionsOn();
                 await introVideo.play();
-                forceIntroCaptionsOn();
                 introVideoStarted = true;
             } catch (e) {
                 statusDiv.textContent = "Video autoplay was blocked. Press play manually if needed.";
@@ -4178,14 +4138,6 @@
             setPhase("Game Over", "Final standings are now shown.");
             statusDiv.textContent = "Game over.";
         }
-
-        introVideo.addEventListener("loadedmetadata", () => {
-            forceIntroCaptionsOn();
-        });
-
-        introVideo.addEventListener("play", () => {
-            forceIntroCaptionsOn();
-        });
 
         introVideo.addEventListener("timeupdate", async () => {
             if (isHost) return;
