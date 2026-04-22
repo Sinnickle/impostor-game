@@ -4362,6 +4362,8 @@ as well as your ability to read or hide from others</p>
             `;
 
             const topThree = sortedScores.slice(0, 3);
+            const remainingTeams = sortedScores.slice(3);
+
             topThreeList.innerHTML = topThree.map(([team, score], index) => `
                 <div class="leaderboard-item">
                     <span><span class="place-badge">#${index + 1}</span> ${team}</span>
@@ -4369,12 +4371,19 @@ as well as your ability to read or hide from others</p>
                 </div>
             `).join("");
 
-            fullLeaderboardList.innerHTML = sortedScores.map(([team, score], index) => `
-                <div class="leaderboard-item">
-                    <span><span class="place-badge">#${index + 1}</span> ${team}</span>
-                    <span class="score-badge">${score}</span>
-                </div>
-            `).join("");
+            if (remainingTeams.length) {
+                fullLeaderboardList.innerHTML = `
+                    <h3 style="margin-top: 18px;">Remaining Teams</h3>
+                    ${remainingTeams.map(([team, score], index) => `
+                        <div class="leaderboard-item">
+                            <span><span class="place-badge">#${index + 4}</span> ${team}</span>
+                            <span class="score-badge">${score}</span>
+                        </div>
+                    `).join("")}
+                `;
+            } else {
+                fullLeaderboardList.innerHTML = "";
+            }
 
             setPhase("Game Over", "Final standings are now shown.");
             statusDiv.textContent = "Game over.";
