@@ -2732,6 +2732,8 @@
                                 <option value="forest">Forest</option>
                             </select>
 
+                            <button id="bgMusicMuteToggleBtn">BG Music: ON</button>
+
                             <label for="musicVolumeSlider" class="muted small-note" style="font-weight: 800;">Music Vol</label>
                             <input id="musicVolumeSlider" type="range" min="0" max="100" value="100" style="width: 130px; padding: 0;">
                             <span id="musicVolumeValue" class="pill" style="min-width: 58px;">100%</span>
@@ -3042,6 +3044,7 @@ as well as your ability to read or hide from others</p>
         let glitchStarted = false;
         let currentTheme = "casino";
         let currentMusicVolumePercent = 30;
+        let bgMusicMuted = false;
         let lagFixParticlesDisabled = false;
 
         let lotusStage = 1;
@@ -3112,6 +3115,7 @@ as well as your ability to read or hide from others</p>
         const lagFixToggleBtn = document.getElementById("lagFixToggleBtn");
         const skipIntroCheckbox = document.getElementById("skipIntroCheckbox");
         const skipIntroOptionWrap = document.getElementById("skipIntroOptionWrap");
+        const bgMusicMuteToggleBtn = document.getElementById("bgMusicMuteToggleBtn");
         const musicVolumeSlider = document.getElementById("musicVolumeSlider");
         const musicVolumeValue = document.getElementById("musicVolumeValue");
         const wordCategoryCheckboxes = Array.from(document.querySelectorAll(".word-category-checkbox"));
@@ -3247,9 +3251,15 @@ as well as your ability to read or hide from others</p>
         }
 
         function syncHostMusicVolumeControls() {
-            if (!musicVolumeSlider || !musicVolumeValue) return;
-            musicVolumeSlider.value = String(currentMusicVolumePercent);
-            musicVolumeValue.textContent = `${currentMusicVolumePercent}%`;
+            if (musicVolumeSlider && musicVolumeValue) {
+                musicVolumeSlider.value = String(currentMusicVolumePercent);
+                musicVolumeValue.textContent = `${currentMusicVolumePercent}%`;
+                musicVolumeSlider.disabled = !!bgMusicMuted;
+            }
+
+            if (bgMusicMuteToggleBtn) {
+                bgMusicMuteToggleBtn.textContent = bgMusicMuted ? "BG Music: OFF" : "BG Music: ON";
+            }
         }
 
         function getMusicVolumeMultiplier() {
@@ -3267,6 +3277,11 @@ as well as your ability to read or hide from others</p>
             }
 
             if (!bgMusic) return;
+
+            if (bgMusicMuted) {
+                bgMusic.volume = 0;
+                return;
+            }
 
             if (currentTheme === "forest" && lotusIsDead) {
                 bgMusic.volume = getScaledBgMusicVolume(PLAYER_NEGLECTED_FOREST_MUSIC_VOLUME);
@@ -3294,6 +3309,23 @@ as well as your ability to read or hide from others</p>
                 socket.emit("set_music_volume", {
                     code,
                     music_volume: currentMusicVolumePercent
+                });
+            }
+        }
+
+        function setBgMusicMuted(value, options = {}) {
+            const { emitToServer = false } = options;
+            bgMusicMuted = !!value;
+            syncHostMusicVolumeControls();
+
+            if (!isHost) {
+                applyLiveMusicVolume();
+            }
+
+            if (emitToServer && isHost && code) {
+                socket.emit("set_bg_music_muted", {
+                    code,
+                    bg_music_muted: bgMusicMuted
                 });
             }
         }
@@ -4443,8 +4475,14 @@ as well as your ability to read or hide from others</p>
             });
         });
 
+                bgMusicMuteToggleBtn?.addEventListener("click", () => {
+            if (!isHost) return;
+            setBgMusicMuted(!bgMusicMuted, { emitToServer: true });
+        });
+
         musicVolumeSlider?.addEventListener("input", () => {
             if (!isHost) return;
+            if (bgMusicMuted) return;
             setMusicVolumePercent(musicVolumeSlider.value, { emitToServer: true });
         });
 
@@ -4620,9 +4658,14 @@ as well as your ability to read or hide from others</p>
             roomCodeText.textContent = data.code || code || "-----";
             currentTheme = normalizeTheme(data?.theme || currentTheme);
             lagFixParticlesDisabled = !!data?.lag_fix_particles_disabled;
+            bgMusicMuted = !!data?.bg_music_muted;
             applyPlayerTheme(currentTheme);
             applyLagFixParticlesState();
             setMusicVolumePercent(data?.music_volume ?? currentMusicVolumePercent);
+            syncHostMusicVolumeControls();
+            if (!isHost) {
+                applyLiveMusicVolume();
+            }
 
             if (isHost) {
                 identityText.textContent = "HOST";
@@ -4686,6 +4729,10 @@ as well as your ability to read or hide from others</p>
             setMusicVolumePercent(data?.music_volume ?? currentMusicVolumePercent);
         });
 
+        socket.on("bg_music_muted_updated", (data) => {
+            setBgMusicMuted(!!data?.bg_music_muted);
+        });
+
         socket.on("lag_fix_particles_updated", (data) => {
             lagFixParticlesDisabled = !!data?.lag_fix_particles_disabled;
             applyLagFixParticlesState();
@@ -4738,9 +4785,14 @@ as well as your ability to read or hide from others</p>
             currentState = data.state || currentState;
             currentTheme = normalizeTheme(data?.theme || currentTheme);
             lagFixParticlesDisabled = !!data?.lag_fix_particles_disabled;
+            bgMusicMuted = !!data?.bg_music_muted;
             applyPlayerTheme(currentTheme);
             applyLagFixParticlesState();
             setMusicVolumePercent(data?.music_volume ?? currentMusicVolumePercent);
+            syncHostMusicVolumeControls();
+            if (!isHost) {
+                applyLiveMusicVolume();
+            }
             updateImpostorControls(data.impostor_count, data.max_impostors_allowed);
             syncHostControlsFromRoster(data);
 

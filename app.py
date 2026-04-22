@@ -361,6 +361,7 @@ def create_game_state():
         "impostor_count": 1,
         "theme": "casino",
         "music_volume": 100,
+        "bg_music_muted": False,
         "lag_fix_particles_disabled": False,
         "selected_categories": DEFAULT_SELECTED_CATEGORIES[:],
         "word_pool": get_word_pool_for_categories(DEFAULT_SELECTED_CATEGORIES),
@@ -830,6 +831,7 @@ def emit_roster_update(code):
         "impostor_count": game["impostor_count"],
         "theme": game["theme"],
         "music_volume": game["music_volume"],
+        "bg_music_muted": game["bg_music_muted"],
         "lag_fix_particles_disabled": game["lag_fix_particles_disabled"],
         "selected_categories": game["selected_categories"],
         "max_impostors_allowed": get_max_impostors_for_team_count(team_count),
@@ -1391,6 +1393,7 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
         "state": game["state"],
         "theme": game["theme"],
         "music_volume": game["music_volume"],
+        "bg_music_muted": game["bg_music_muted"],
         "lag_fix_particles_disabled": game["lag_fix_particles_disabled"],
     }, to=sid)
 
@@ -1404,6 +1407,7 @@ def send_full_sync_to_sid(code, sid, is_host, team_name):
         "impostor_count": game["impostor_count"],
         "theme": game["theme"],
         "music_volume": game["music_volume"],
+        "bg_music_muted": game["bg_music_muted"],
         "lag_fix_particles_disabled": game["lag_fix_particles_disabled"],
         "selected_categories": game["selected_categories"],
         "max_impostors_allowed": get_max_impostors_for_team_count(len(game["teams"])),
@@ -1852,6 +1856,34 @@ def set_music_volume(data):
     socketio.emit("music_volume_updated", {
         "music_volume": music_volume
     }, room=code)
+
+@socketio.on("set_bg_music_muted")
+def set_bg_music_muted(data):
+    code = str(data.get("code", "")).strip().upper()
+    sid = request.sid
+
+    if code not in games:
+        emit("error", "Game code not found.")
+        return
+
+    game = games[code]
+
+    if sid != game["host_sid"]:
+        emit("error", "Only the host can mute background music.")
+        return
+
+    game["bg_music_muted"] = bool(data.get("bg_music_muted", False))
+
+    socketio.emit("bg_music_muted_updated", {
+        "bg_music_muted": game["bg_music_muted"]
+    }, room=code)
+
+    emit_roster_update(code)
+
+    if game["bg_music_muted"]:
+        emit_status(code, "Background music muted.")
+    else:
+        emit_status(code, "Background music unmuted.")
 
 @socketio.on("toggle_lag_fix_particles")
 def toggle_lag_fix_particles(data):
